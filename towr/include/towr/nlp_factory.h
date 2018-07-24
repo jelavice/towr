@@ -128,6 +128,7 @@ private:
   std::vector<PhaseNodes::Ptr> MakeEndeffectorVariables() const;
   std::vector<PhaseNodes::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
+  std::vector<PhaseNodes::Ptr> MakeWheelVariables() const;
 
   // constraints
   ContraintPtrVec GetConstraint(Parameters::ConstraintName name) const;

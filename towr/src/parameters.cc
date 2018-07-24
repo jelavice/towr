@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace towr {
 
+bool Parameters::robot_has_wheels_ = false;
+
 Parameters::Parameters ()
 {
   // optimization variables
@@ -77,7 +79,7 @@ Parameters::SetKinematicConstraint ()
 void
 Parameters::SetForceConstraint()
 {
-  force_limit_in_normal_direction_ = 1000.0; //for the anymal
+  //force_limit_in_normal_direction_ = 1000.0; //for the anymal
   force_limit_in_normal_direction_ = 30000.0; //for the excavator
   constraints_.push_back(Force);
 }

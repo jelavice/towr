@@ -269,7 +269,7 @@ private:
                    bounds_final_ang_pos,
                    bounds_final_ang_vel;
 
-  bool robot_has_wheels_;
+  static bool robot_has_wheels_;
 
 };
 
