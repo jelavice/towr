@@ -59,7 +59,7 @@ struct RobotModel {
   /**
    * @brief Examples robots for which kinematic and dynamic models exist.
    */
-  enum Robot { Monoped, Biped, Hyq, Anymal, ROBOT_COUNT };
+  enum Robot { Monoped, Biped, Hyq, Anymal, m545, ROBOT_COUNT };
 
 
   RobotModel() = default;
@@ -75,7 +75,8 @@ const static std::map<RobotModel::Robot, std::string> robot_names =
   {RobotModel::Monoped, "Monoped"},
   {RobotModel::Biped,   "Biped"},
   {RobotModel::Hyq,     "Hyq"},
-  {RobotModel::Anymal,  "Anymal"}
+  {RobotModel::Anymal,  "Anymal"},
+  {RobotModel::m545, "m545"}
 };
 
 } /* namespace towr */

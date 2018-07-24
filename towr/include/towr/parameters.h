@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 #include <array>
+#include <towr/models/robot_model.h>
+
 
 namespace towr {
 
@@ -164,6 +166,8 @@ struct Parameters {
    * @brief Default parameters to use.
    */
   Parameters();
+  Parameters(const DynamicModel *model);
+
   virtual ~Parameters() = default;
 
   /// Number and initial duration of each foot's swing and stance phases.
@@ -264,6 +268,9 @@ private:
                    bounds_final_lin_vel,
                    bounds_final_ang_pos,
                    bounds_final_ang_vel;
+
+  bool robot_has_wheels_;
+
 };
 
 } // namespace towr

@@ -41,7 +41,7 @@ Parameters::Parameters ()
 {
   // optimization variables
   duration_base_polynomial_ = 0.1;
-  force_polynomials_per_stance_phase_ = 3;
+  force_polynomials_per_stance_phase_ = 10;
   ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
 
   // these are the basic constraints that always have to be set
@@ -57,6 +57,7 @@ Parameters::Parameters ()
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
 }
+
 
 void
 Parameters::SetDynamicConstraint ()
@@ -76,7 +77,8 @@ Parameters::SetKinematicConstraint ()
 void
 Parameters::SetForceConstraint()
 {
-  force_limit_in_normal_direction_ = 1000;
+  force_limit_in_normal_direction_ = 1000.0; //for the anymal
+  force_limit_in_normal_direction_ = 30000.0; //for the excavator
   constraints_.push_back(Force);
 }
 
