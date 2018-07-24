@@ -67,7 +67,7 @@ public:
   using OptNodeIs = int;
   using NodeIds   = std::vector<int>;
 
-  enum Type {Force, Motion};
+  enum Type {Force, Motion, WheelAngle, WheelForce};
 
   /**
    * @brief Holds semantic information each polynomial in spline.
@@ -204,6 +204,8 @@ private:
   GetOptNodeToNodeMappings(const std::vector<PolyInfo>&);
 
   std::vector<int> GetAdjacentPolyIds(int node_id) const;
+
+  int GetTypeDimension(Type phase_node_type);
 };
 
 } /* namespace towr */

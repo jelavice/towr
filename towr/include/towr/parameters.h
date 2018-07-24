@@ -197,6 +197,8 @@ struct Parameters {
    */
   void PenalizeEndeffectorForces();
 
+  static bool robot_has_wheels_;
+
 private:
   /// Which constraints should be used in the optimization problem.
   UsedConstraints constraints_;
@@ -269,7 +271,6 @@ private:
                    bounds_final_ang_pos,
                    bounds_final_ang_vel;
 
-  static bool robot_has_wheels_;
 
 };
 

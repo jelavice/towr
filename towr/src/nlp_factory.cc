@@ -59,8 +59,10 @@ NlpFactory::VariablePtrVec NlpFactory::GetVariableSets()
   auto ee_force = MakeForceVariables();
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
 
-  auto ee_wheels = MakeWheelVariables();
-  vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
+  if (Parameters::robot_has_wheels_) {
+    auto ee_wheels = MakeWheelVariables();
+    vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
+  }
 
   auto contact_schedule = MakeContactScheduleVariables();
   if (params_.IsOptimizeTimings()) {
@@ -182,25 +184,36 @@ std::vector<PhaseDurations::Ptr> NlpFactory::MakeContactScheduleVariables() cons
 std::vector<PhaseNodes::Ptr> NlpFactory::MakeWheelVariables() const
 {
   std::vector<PhaseNodes::Ptr> vars;
-//  //todo make wheel forces here
-//  double T = params_.GetTotalTime();
-//  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-//    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
-//                                              params_.ee_in_contact_at_start_.at(ee),
-//                                              id::EEForceNodes(ee),
-//                                              params_.force_polynomials_per_stance_phase_,
-//                                              PhaseNodes::ForceWheels);
-//
-//    // initialize with mass of robot distributed equally on all legs
-//    double m = model_.dynamic_model_->m();
-//    double g = model_.dynamic_model_->g();
-//
-//    Vector3d f_stance(0.0, 0.0, m * g / params_.GetEECount());
-//    nodes->InitializeNodesTowardsGoal(f_stance, f_stance, T);
-//    vars.push_back(nodes);
-//  }
 
-  //todo make wheel angles here
+  double T = params_.GetTotalTime();
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
+                                              params_.ee_in_contact_at_start_.at(ee),
+                                              id::WheelForceNodes(ee),
+                                              params_.force_polynomials_per_stance_phase_,
+                                              PhaseNodes::WheelForce);
+
+    // initialize with mass of robot distributed equally on all legs
+
+    Vector3d f_wheels(0.0, 0.0, 0.0);
+    nodes->InitializeNodesTowardsGoal(f_wheels, f_wheels, T);
+    vars.push_back(nodes);
+  }
+
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
+                                              params_.ee_in_contact_at_start_.at(ee),
+                                              id::WheelAngleNodes(ee),
+                                              params_.force_polynomials_per_stance_phase_,
+                                              PhaseNodes::WheelAngle);
+
+    // initialize with mass of robot distributed equally on all legs
+
+    Eigen::VectorXd wheel_angle(1);
+    wheel_angle << 0.0;
+    nodes->InitializeNodesTowardsGoal(wheel_angle, wheel_angle, T);
+    vars.push_back(nodes);
+  }
 
   return vars;
 }
