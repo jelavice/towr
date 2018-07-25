@@ -107,6 +107,8 @@ private:
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
   //todo implement
   std::vector<NodesVariablesPhaseBased::Ptr> MakeWheelVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesWithWheels() const;
+
 
   // constraints
   ContraintPtrVec GetConstraint(Parameters::ConstraintName name) const;

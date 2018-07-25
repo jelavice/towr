@@ -203,7 +203,6 @@ public:
   OptIndexMap GetPhaseBasedEEParameterization ();
 };
 
-
 /**
  * @brief Variables fully defining the endeffector forces.
  *
@@ -239,6 +238,17 @@ public:
                          const std::string& name,
                          int n_polys_in_changing_phase);
   virtual ~NodesVariablesWheelAngle() = default;
+  OptIndexMap GetPhaseBasedEEParameterization ();
+};
+
+
+class NodesVariablesEEMotionWithWheels : public NodesVariablesPhaseBased {
+public:
+  NodesVariablesEEMotionWithWheels(int phase_count,
+                         bool is_in_contact_at_start,
+                         const std::string& name,
+                         int n_polys_in_changing_phase);
+  virtual ~NodesVariablesEEMotionWithWheels() = default;
   OptIndexMap GetPhaseBasedEEParameterization ();
 };
 

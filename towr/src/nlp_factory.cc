@@ -53,23 +53,28 @@ NlpFactory::VariablePtrVec NlpFactory::GetVariableSets()
   auto base_motion = MakeBaseVariables();
   vars.insert(vars.end(), base_motion.begin(), base_motion.end());
 
-  auto ee_motion = MakeEndeffectorVariables();
-  vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
+  std::vector<NodesVariablesPhaseBased::Ptr> ee_motion;
+  if (Parameters::robot_has_wheels_) {
+    ee_motion = MakeEndeffectorVariablesWithWheels();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+  } else {
+    ee_motion = MakeEndeffectorVariables();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+  }
   auto ee_force = MakeForceVariables();
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
 
-//TODO fix this
-//  if (Parameters::robot_has_wheels_) {
-//    auto ee_wheels = MakeWheelVariables();
-//    vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
-//  }
+  if (Parameters::robot_has_wheels_) {
+    auto ee_wheels = MakeWheelVariables();
+    vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
+  }
 
   auto contact_schedule = MakeContactScheduleVariables();
   if (params_.IsOptimizeTimings()) {
     vars.insert(vars.end(), contact_schedule.begin(), contact_schedule.end());
   }
 
+  //todo add my variables to the spline holder I guess
   // stores these readily constructed spline, independent of whether the
   // nodes and durations these depend on are optimized over
   spline_holder_ = SplineHolder(base_motion.at(0),  // linear
@@ -119,6 +124,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeEndeffectorVariables(
   // Endeffector Motions
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
+
     auto nodes = std::make_shared<NodesVariablesEEMotion>(params_.GetPhaseCount(ee),
                                                           params_.ee_in_contact_at_start_.at(ee),
                                                           id::EEMotionNodes(ee),
@@ -179,7 +185,6 @@ std::vector<PhaseDurations::Ptr> NlpFactory::MakeContactScheduleVariables() cons
   return vars;
 }
 
-//TODO fix this add wheel variables I guess
 std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeWheelVariables() const
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
@@ -203,6 +208,37 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeWheelVariables() cons
     Eigen::VectorXd angle_wheel(1);
     angle_wheel(0) = 0.0;
     nodes->SetByLinearInterpolation(angle_wheel, angle_wheel, T);  // stay constant
+    vars.push_back(nodes);
+  }
+
+  return vars;
+}
+
+std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeEndeffectorVariablesWithWheels() const
+{
+  std::vector<NodesVariablesPhaseBased::Ptr> vars;
+
+  // Endeffector Motions
+  double T = params_.GetTotalTime();
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+
+    //todo maybe chenge the naming slightly
+    auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
+        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
+        params_.ee_polynomials_per_swing_phase_);
+
+    // initialize towards final footholds
+    double yaw = final_base_.ang.p().z();
+    Eigen::Vector3d euler(0.0, 0.0, yaw);
+    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+    Vector3d final_ee_pos_W = final_base_.lin.p()
+        + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+    double x = final_ee_pos_W.x();
+    double y = final_ee_pos_W.y();
+    double z = terrain_->GetHeight(x, y);
+    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+
+    nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
     vars.push_back(nodes);
   }
 
