@@ -101,9 +101,23 @@ std::vector<PhaseNodes::PolyInfo> BuildPolyInfos(int phase_count, bool is_in_con
   return polynomial_info;
 }
 
+unsigned int GetTypeDimension(PhaseNodes::Type phase_node_type)
+{
+  if (phase_node_type == PhaseNodes::Motion)
+    return 3;
+  else if (phase_node_type == PhaseNodes::Force)
+    return 3;
+  else if (phase_node_type == PhaseNodes::WheelForce)
+    return 3;
+  else if (phase_node_type == PhaseNodes::WheelAngle)
+    return 1;
+  else
+    throw std::runtime_error("Phase node not defined");  // phase-node type not defined
+}
+
 PhaseNodes::PhaseNodes(int phase_count, bool is_in_contact_at_start, const std::string& name,
                        int n_polys_in_changing_phase, Type type)
-    : Nodes(3, name)
+    : Nodes(GetTypeDimension(type), name)
 {
   polynomial_info_ = BuildPolyInfos(phase_count, is_in_contact_at_start, n_polys_in_changing_phase,
                                     type);
@@ -119,20 +133,6 @@ PhaseNodes::PhaseNodes(int phase_count, bool is_in_contact_at_start, const std::
     SetBoundsEEForce();
   else
     assert(false);  // phase-node type not defined
-}
-
-int PhaseNodes::GetTypeDimension(Type phase_node_type)
-{
-  if (phase_node_type == Motion)
-    return 3;
-  else if (phase_node_type == Force)
-    return 3;
-  else if (phase_node_type == WheelForce)
-    return 3;
-  else if (phase_node_type == WheelAngle)
-    return 1;
-  else
-    throw std::runtime_error("Phase node not defined");  // phase-node type not defined
 }
 
 PhaseNodes::VecDurations PhaseNodes::ConvertPhaseToPolyDurations(

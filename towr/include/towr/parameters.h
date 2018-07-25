@@ -247,6 +247,8 @@ private:
   /// Number of polynomials to parameterize each contact force during stance phase.
   int force_polynomials_per_stance_phase_;
 
+  int ee_polynomials_per_phase_;
+
   /// The maximum allowable force [N] in normal direction
   double force_limit_in_normal_direction_;
 

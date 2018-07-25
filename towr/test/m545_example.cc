@@ -23,6 +23,7 @@ int main()
 
   // Kinematic limits and dynamic parameters of the hopper
   RobotModel model(RobotModel::m545);
+  Parameters::robot_has_wheels_ = true;
 
   // set the initial position of the hopper
   BaseState initial_base;

@@ -205,7 +205,6 @@ private:
 
   std::vector<int> GetAdjacentPolyIds(int node_id) const;
 
-  int GetTypeDimension(Type phase_node_type);
 };
 
 } /* namespace towr */

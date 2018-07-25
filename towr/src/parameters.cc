@@ -43,8 +43,10 @@ Parameters::Parameters ()
 {
   // optimization variables
   duration_base_polynomial_ = 0.1;
-  force_polynomials_per_stance_phase_ = 10;
-  ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
+  ee_polynomials_per_phase_ = 10;
+
+  force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ = ee_polynomials_per_phase_;
+  //ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
 
   // these are the basic constraints that always have to be set
   constraints_.push_back(Terrain);
