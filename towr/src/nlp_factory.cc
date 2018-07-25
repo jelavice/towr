@@ -62,10 +62,10 @@ NlpFactory::GetVariableSets ()
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
 
 //TODO fix this
-  if (Parameters::robot_has_wheels_) {
-    auto ee_wheels = MakeWheelVariables();
-    vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
-  }
+//  if (Parameters::robot_has_wheels_) {
+//    auto ee_wheels = MakeWheelVariables();
+//    vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
+//  }
 
   auto contact_schedule = MakeContactScheduleVariables();
   if (params_.IsOptimizeTimings()) {
@@ -189,43 +189,43 @@ NlpFactory::MakeContactScheduleVariables () const
   return vars;
 }
 
-//TODO fix this add wheel variables I guess
-std::vector<PhaseNodes::Ptr> NlpFactory::MakeWheelVariables() const
-{
-  std::vector<PhaseNodes::Ptr> vars;
-
-  double T = params_.GetTotalTime();
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
-                                              params_.ee_in_contact_at_start_.at(ee),
-                                              id::WheelForceNodes(ee),
-                                              params_.force_polynomials_per_stance_phase_,
-                                              PhaseNodes::WheelForce);
-
-    // initialize with mass of robot distributed equally on all legs
-
-    Vector3d f_wheels(0.0, 0.0, 0.0);
-    nodes->InitializeNodesTowardsGoal(f_wheels, f_wheels, T);
-    vars.push_back(nodes);
-  }
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
-                                              params_.ee_in_contact_at_start_.at(ee),
-                                              id::WheelAngleNodes(ee),
-                                              params_.force_polynomials_per_stance_phase_,
-                                              PhaseNodes::WheelAngle);
-
-    // initialize with mass of robot distributed equally on all legs
-
-    Eigen::VectorXd wheel_angle(1);
-    wheel_angle << 0.0;
-    nodes->InitializeNodesTowardsGoal(wheel_angle, wheel_angle, T);
-    vars.push_back(nodes);
-  }
-
-  return vars;
-}
+////TODO fix this add wheel variables I guess
+//std::vector<PhaseNodes::Ptr> NlpFactory::MakeWheelVariables() const
+//{
+//  std::vector<PhaseNodes::Ptr> vars;
+//
+//  double T = params_.GetTotalTime();
+//  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+//    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
+//                                              params_.ee_in_contact_at_start_.at(ee),
+//                                              id::WheelForceNodes(ee),
+//                                              params_.force_polynomials_per_stance_phase_,
+//                                              PhaseNodes::WheelForce);
+//
+//    // initialize with mass of robot distributed equally on all legs
+//
+//    Vector3d f_wheels(0.0, 0.0, 0.0);
+//    nodes->InitializeNodesTowardsGoal(f_wheels, f_wheels, T);
+//    vars.push_back(nodes);
+//  }
+//
+//  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+//    auto nodes = std::make_shared<PhaseNodes>(params_.GetPhaseCount(ee),
+//                                              params_.ee_in_contact_at_start_.at(ee),
+//                                              id::WheelAngleNodes(ee),
+//                                              params_.force_polynomials_per_stance_phase_,
+//                                              PhaseNodes::WheelAngle);
+//
+//    // initialize with mass of robot distributed equally on all legs
+//
+//    Eigen::VectorXd wheel_angle(1);
+//    wheel_angle << 0.0;
+//    nodes->InitializeNodesTowardsGoal(wheel_angle, wheel_angle, T);
+//    vars.push_back(nodes);
+//  }
+//
+//  return vars;
+//}
 
 
 

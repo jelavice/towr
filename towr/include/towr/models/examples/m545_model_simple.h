@@ -8,7 +8,7 @@
 #pragma once
 
 #include <towr/models/kinematic_model.h>
-#include <towr/models/centroidal_model.h>
+#include <towr/models/single_rigid_body_dynamics.h>
 #include <towr/models/endeffector_mappings.h>
 
 namespace towr {
@@ -40,9 +40,9 @@ public:
   }
 };
 
-class M545DynamicModel : public CentroidalModel {
+class M545DynamicModel : public SingleRigidBodyDynamics {
 public:
-  M545DynamicModel() : CentroidalModel(3700.0,
+  M545DynamicModel() : SingleRigidBodyDynamics(3700.0,
                       2485.29, 1640.58, 1600.99, 0.0, 0.0, 0.0,
                       4) {}
 };

@@ -105,7 +105,7 @@ private:
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
-  std::vector<PhaseNodes::Ptr> MakeWheelVariables() const;
+  //std::vector<PhaseNodes::Ptr> MakeWheelVariables() const;
 
   // constraints
   ContraintPtrVec GetConstraint(Parameters::ConstraintName name) const;
