@@ -216,6 +216,29 @@ public:
   OptIndexMap GetPhaseBasedEEParameterization ();
 };
 
+
+//todo implement
+class NodesVariablesWheelForce : public NodesVariablesPhaseBased {
+public:
+  NodesVariablesWheelForce(int phase_count,
+                         bool is_in_contact_at_start,
+                         const std::string& name,
+                         int n_polys_in_changing_phase);
+  virtual ~NodesVariablesWheelForce() = default;
+  OptIndexMap GetPhaseBasedEEParameterization ();
+};
+
+//todo implement
+class NodesVariablesWheelAngle : public NodesVariablesPhaseBased {
+public:
+  NodesVariablesWheelAngle(int phase_count,
+                         bool is_in_contact_at_start,
+                         const std::string& name,
+                         int n_polys_in_changing_phase);
+  virtual ~NodesVariablesWheelAngle() = default;
+  OptIndexMap GetPhaseBasedEEParameterization ();
+};
+
 } /* namespace towr */
 
 #endif /* TOWR_VARIABLES_PHASE_NODES_H_ */
