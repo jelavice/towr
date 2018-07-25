@@ -90,6 +90,8 @@ NodesVariablesPhaseBased::NodesVariablesPhaseBased(int phase_count, bool first_p
     int n_nodes = polynomial_info_.size() + 1;
     nodes_ = std::vector<Node>(n_nodes, Node(n_dim_));
 
+    isDrivingNode_ = true;
+
   }
 
 }

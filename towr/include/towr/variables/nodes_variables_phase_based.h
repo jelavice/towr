@@ -97,7 +97,8 @@ class NodesVariablesPhaseBased : public NodesVariables
                            int n_polys_in_changing_phase, unsigned int dimension = towr::k3D);
 
   NodesVariablesPhaseBased(int phase_count, bool first_phase_constant, const std::string& var_name,
-                           int n_polys_in_changing_phase, Type type, unsigned int dimension = towr::k3D);
+                           int n_polys_in_changing_phase, Type type, unsigned int dimension =
+                               towr::k3D);
 
   virtual ~NodesVariablesPhaseBased() = default;
 
@@ -169,6 +170,11 @@ class NodesVariablesPhaseBased : public NodesVariables
    */
   virtual bool IsInConstantPhase(int polynomial_id) const;
 
+  bool IsDrivingNode()
+  {
+    return isDrivingNode_;
+  }
+
  protected:
   /**
    * @brief Assign optimization variables to the correct node values.
@@ -185,6 +191,7 @@ class NodesVariablesPhaseBased : public NodesVariables
 
   void SetNumberOfVariables(int n_variables);
 
+
  private:
   /** @brief semantic information associated with each polynomial */
   std::vector<PolyInfo> polynomial_info_;
@@ -194,6 +201,9 @@ class NodesVariablesPhaseBased : public NodesVariables
 
   /** @brief IDs of the polynomial to the left and right of node_id. */
   std::vector<int> GetAdjacentPolyIds(int node_id) const;
+
+  bool isDrivingNode_ = false;
+
 };
 
 /**
