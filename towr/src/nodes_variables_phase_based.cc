@@ -230,9 +230,10 @@ NodesVariablesEEMotion::NodesVariablesEEMotion(int phase_count, bool is_in_conta
   SetNumberOfVariables(index_to_node_value_info_.size());
 }
 
-NodesVariablesEEForce::OptIndexMap NodesVariablesEEMotion::GetPhaseBasedEEParameterization()
+NodesVariablesEEMotion::OptIndexMap NodesVariablesEEMotion::GetPhaseBasedEEParameterization()
 {
   OptIndexMap index_map;
+
 
   int idx = 0;  // index in variables set
   for (int node_id = 0; node_id < nodes_.size(); ++node_id) {
@@ -387,7 +388,7 @@ NodesVariablesWheelAngle::OptIndexMap NodesVariablesWheelAngle::GetPhaseBasedEEP
     }
     // swing node (next one will also be swing, so handle that one too)
     else {
-      // forces can't exist during swing phase, so no need to be optimized
+      // wheel angles don't exist during swing phase, so no need to be optimized
       // -> all node values simply set to zero.
       nodes_.at(id).at(kPos).setZero();
       nodes_.at(id + 1).at(kPos).setZero();
@@ -407,7 +408,7 @@ NodesVariablesEEMotionWithWheels::NodesVariablesEEMotionWithWheels(int phase_cou
                                                                    const std::string& name,
                                                                    int n_polys_in_changing_phase)
     : NodesVariablesPhaseBased(phase_count, is_in_contact_at_start,  // contact phase for motion is constant
-                               name, n_polys_in_changing_phase)
+                               name, n_polys_in_changing_phase, Type::MotionWithWheels)
 {
   index_to_node_value_info_ = GetPhaseBasedEEParameterization();
   SetNumberOfVariables(index_to_node_value_info_.size());
@@ -417,42 +418,19 @@ NodesVariablesEEMotionWithWheels::OptIndexMap NodesVariablesEEMotionWithWheels::
 {
   OptIndexMap index_map;
 
-  //TODO tear this down completely
-
   int idx = 0;  // index in variables set
   for (int node_id = 0; node_id < nodes_.size(); ++node_id) {
-    // swing node:
+    //always true I guess
     if (!IsConstantNode(node_id)) {
       for (int dim = 0; dim < GetDim(); ++dim) {
         // intermediate way-point position of swing motion are optimized
         index_map[idx++].push_back(NodeValueInfo(node_id, kPos, dim));
-
-        // velocity in vertical direction fixed to zero and not optimized.
-        // Since we often choose two polynomials per swing-phase, this restricts
-        // the swing to have reached it's extreme at half-time and creates
-        // smoother stepping motions.
-        if (dim == Z)
-          nodes_.at(node_id).at(kVel).z() = 0.0;
-        else
-          // velocity in x,y dimension during swing fully optimized.
-          index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+        index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
       }
     }
     // stance node (next one will also be stance, so handle that one too):
     else {
-      // ensure that foot doesn't move by not even optimizing over velocities
-      nodes_.at(node_id).at(kVel).setZero();
-      nodes_.at(node_id + 1).at(kVel).setZero();
-
-      // position of foot is still an optimization variable used for
-      // both start and end node of that polynomial
-      for (int dim = 0; dim < GetDim(); ++dim) {
-        index_map[idx].push_back(NodeValueInfo(node_id, kPos, dim));
-        index_map[idx].push_back(NodeValueInfo(node_id + 1, kPos, dim));
-        idx++;
-      }
-
-      node_id += 1;  // already added next constant node, so skip
+      // will not really encounter any non constant nodes
     }
   }
 

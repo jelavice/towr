@@ -37,14 +37,12 @@ int main()
 
   const double z_nominal_b = 0.0;
 
-
-
   towr::TOWR::FeetPos nominal_stance(4);
 
-  nominal_stance.at(towr::QuadrupedIDs::LF) << x_nominal_b_front,   y_nominal_b_front, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::RF) << x_nominal_b_front,  -y_nominal_b_front, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind,   y_nominal_b_hind, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind,  -y_nominal_b_hind, z_nominal_b;
+  nominal_stance.at(towr::QuadrupedIDs::LF) << x_nominal_b_front, y_nominal_b_front, z_nominal_b;
+  nominal_stance.at(towr::QuadrupedIDs::RF) << x_nominal_b_front, -y_nominal_b_front, z_nominal_b;
+  nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
+  nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
   // define the desired goal state of the hopper
   BaseState goal;
@@ -57,11 +55,13 @@ int main()
   // by the optimizer. The number of swing and stance phases however is fixed.
   // alternating stance and swing:     ____-----_____-----_____-----_____
 
-  for (int i =0; i < 4; ++i) {
+  for (int i = 0; i < 4; ++i) {
     params.ee_phase_durations_.push_back( { 1.0 });
     params.ee_in_contact_at_start_.push_back(true);
   }
-  params.SetSwingConstraint();
+
+  if (Parameters::robot_has_wheels_ == false)
+    params.SetSwingConstraint();
 
   // Pass this information to the actual solver
   TOWR towr;
@@ -69,7 +69,7 @@ int main()
   towr.SetParameters(goal, params, model, terrain);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
-  //solver->SetOption("jacobian_approximation", "finite-difference-values");
+  solver->SetOption("jacobian_approximation", "finite-difference-values");
   towr.SolveNLP(solver);
 
   auto x = towr.GetSolution();
@@ -120,6 +120,6 @@ int main()
 
     cout << endl;
 
-    t += 0.2;
+    t += 0.1;
   }
 }

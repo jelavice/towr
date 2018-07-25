@@ -69,6 +69,7 @@ TerrainConstraint::GetValues () const
   return g;
 }
 
+//todo change the constraint so that the driving nodes can also be on the terrain maybe
 TerrainConstraint::VecBound
 TerrainConstraint::GetBounds () const
 {
