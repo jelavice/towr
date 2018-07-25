@@ -1,38 +1,37 @@
 /******************************************************************************
-Copyright (c) 2018, Alexander W. Winkler. All rights reserved.
+ Copyright (c) 2018, Alexander W. Winkler. All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
+ * Redistributions of source code must retain the above copyright notice, this
+ list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+ * Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation
+ and/or other materials provided with the distribution.
 
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+ * Neither the name of the copyright holder nor the names of its
+ contributors may be used to endorse or promote products derived from
+ this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************************************************************/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
 
 #ifndef TOWR_VARIABLES_PHASE_NODES_H_
 #define TOWR_VARIABLES_PHASE_NODES_H_
 
 #include "nodes_variables.h"
 #include <towr/variables/cartesian_dimensions.h>
-
 
 namespace towr {
 
@@ -58,22 +57,31 @@ namespace towr {
  *
  * @ingroup Variables
  */
-class NodesVariablesPhaseBased : public NodesVariables {
-public:
-  using Ptr         = std::shared_ptr<NodesVariablesPhaseBased>;
-  using NodeIds     = std::vector<int>;
+class NodesVariablesPhaseBased : public NodesVariables
+{
+ public:
+  using Ptr = std::shared_ptr<NodesVariablesPhaseBased>;
+  using NodeIds = std::vector<int>;
   using OptIndexMap = std::map<int, std::vector<NodeValueInfo> >;
 
-enum Type {Force, Motion, WheelAngle, WheelForce};
+  enum Type
+  {
+    Force,
+    Motion,
+    WheelAngle,
+    WheelForce,
+    MotionWithWheels
+  };
 
   /**
    * @brief Holds semantic information each polynomial in spline.
    */
-  struct PolyInfo {
-    int phase_; ///< The phase ID this polynomial represents.
-    int poly_in_phase_; ///< is this the 1st, 2nd, ... polynomial or this phase.
-    int n_polys_in_phase_; ///< the number of polynomials used for this phase.
-    bool is_constant_; ///< Does this polynomial represent a constant phase.
+  struct PolyInfo
+  {
+    int phase_;  ///< The phase ID this polynomial represents.
+    int poly_in_phase_;  ///< is this the 1st, 2nd, ... polynomial or this phase.
+    int n_polys_in_phase_;  ///< the number of polynomials used for this phase.
+    bool is_constant_;  ///< Does this polynomial represent a constant phase.
     PolyInfo(int phase, int poly_in_phase, int n_polys_in_phase, bool is_const);
   };
 
@@ -85,11 +93,11 @@ enum Type {Force, Motion, WheelAngle, WheelForce};
    * @param n_polys_in_changing_phase  How many polynomials should be used to
    *                                   paramerize each non-constant phase.
    */
-  NodesVariablesPhaseBased (int phase_count,
-                            bool first_phase_constant,
-                            const std::string& var_name,
-                            int n_polys_in_changing_phase,
-                            unsigned int dimension = towr::k3D);
+  NodesVariablesPhaseBased(int phase_count, bool first_phase_constant, const std::string& var_name,
+                           int n_polys_in_changing_phase, unsigned int dimension = towr::k3D);
+
+  NodesVariablesPhaseBased(int phase_count, bool first_phase_constant, const std::string& var_name,
+                           int n_polys_in_changing_phase, Type type, unsigned int dimension = towr::k3D);
 
   virtual ~NodesVariablesPhaseBased() = default;
 
@@ -161,7 +169,7 @@ enum Type {Force, Motion, WheelAngle, WheelForce};
    */
   virtual bool IsInConstantPhase(int polynomial_id) const;
 
-protected:
+ protected:
   /**
    * @brief Assign optimization variables to the correct node values.
    *
@@ -170,13 +178,14 @@ protected:
    * derived Motion and Force classes.
    */
   OptIndexMap index_to_node_value_info_;
-  std::vector<NodeValueInfo> GetNodeValuesInfo(int idx) const override {
+  std::vector<NodeValueInfo> GetNodeValuesInfo(int idx) const override
+  {
     return index_to_node_value_info_.at(idx);
   }
 
   void SetNumberOfVariables(int n_variables);
 
-private:
+ private:
   /** @brief semantic information associated with each polynomial */
   std::vector<PolyInfo> polynomial_info_;
 
@@ -187,20 +196,18 @@ private:
   std::vector<int> GetAdjacentPolyIds(int node_id) const;
 };
 
-
 /**
  * @brief Variables fully defining the endeffector motion.
  *
  * @ingroup Variables
  */
-class NodesVariablesEEMotion : public NodesVariablesPhaseBased {
-public:
-  NodesVariablesEEMotion(int phase_count,
-                         bool is_in_contact_at_start,
-                         const std::string& name,
+class NodesVariablesEEMotion : public NodesVariablesPhaseBased
+{
+ public:
+  NodesVariablesEEMotion(int phase_count, bool is_in_contact_at_start, const std::string& name,
                          int n_polys_in_changing_phase);
   virtual ~NodesVariablesEEMotion() = default;
-  OptIndexMap GetPhaseBasedEEParameterization ();
+  OptIndexMap GetPhaseBasedEEParameterization();
 };
 
 /**
@@ -208,48 +215,42 @@ public:
  *
  * @ingroup Variables
  */
-class NodesVariablesEEForce : public NodesVariablesPhaseBased {
-public:
-  NodesVariablesEEForce(int phase_count,
-                         bool is_in_contact_at_start,
-                         const std::string& name,
-                         int n_polys_in_changing_phase);
+class NodesVariablesEEForce : public NodesVariablesPhaseBased
+{
+ public:
+  NodesVariablesEEForce(int phase_count, bool is_in_contact_at_start, const std::string& name,
+                        int n_polys_in_changing_phase);
   virtual ~NodesVariablesEEForce() = default;
-  OptIndexMap GetPhaseBasedEEParameterization ();
+  OptIndexMap GetPhaseBasedEEParameterization();
 };
 
-
 //todo implement
-class NodesVariablesWheelForce : public NodesVariablesPhaseBased {
-public:
-  NodesVariablesWheelForce(int phase_count,
-                         bool is_in_contact_at_start,
-                         const std::string& name,
-                         int n_polys_in_changing_phase);
+class NodesVariablesWheelForce : public NodesVariablesPhaseBased
+{
+ public:
+  NodesVariablesWheelForce(int phase_count, bool is_in_contact_at_start, const std::string& name,
+                           int n_polys_in_changing_phase);
   virtual ~NodesVariablesWheelForce() = default;
-  OptIndexMap GetPhaseBasedEEParameterization ();
+  OptIndexMap GetPhaseBasedEEParameterization();
 };
 
 //todo implement
-class NodesVariablesWheelAngle : public NodesVariablesPhaseBased {
-public:
-  NodesVariablesWheelAngle(int phase_count,
-                         bool is_in_contact_at_start,
-                         const std::string& name,
-                         int n_polys_in_changing_phase);
+class NodesVariablesWheelAngle : public NodesVariablesPhaseBased
+{
+ public:
+  NodesVariablesWheelAngle(int phase_count, bool is_in_contact_at_start, const std::string& name,
+                           int n_polys_in_changing_phase);
   virtual ~NodesVariablesWheelAngle() = default;
-  OptIndexMap GetPhaseBasedEEParameterization ();
+  OptIndexMap GetPhaseBasedEEParameterization();
 };
 
-
-class NodesVariablesEEMotionWithWheels : public NodesVariablesPhaseBased {
-public:
-  NodesVariablesEEMotionWithWheels(int phase_count,
-                         bool is_in_contact_at_start,
-                         const std::string& name,
-                         int n_polys_in_changing_phase);
+class NodesVariablesEEMotionWithWheels : public NodesVariablesPhaseBased
+{
+ public:
+  NodesVariablesEEMotionWithWheels(int phase_count, bool is_in_contact_at_start,
+                                   const std::string& name, int n_polys_in_changing_phase);
   virtual ~NodesVariablesEEMotionWithWheels() = default;
-  OptIndexMap GetPhaseBasedEEParameterization ();
+  OptIndexMap GetPhaseBasedEEParameterization();
 };
 
 } /* namespace towr */
