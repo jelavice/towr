@@ -60,13 +60,14 @@ BuildPolyInfos (int phase_count, bool first_phase_constant,
 NodesVariablesPhaseBased::NodesVariablesPhaseBased (int phase_count,
                                                     bool first_phase_constant,
                                                     const std::string& name,
-                                                    int n_polys_in_changing_phase)
+                                                    int n_polys_in_changing_phase,
+                                                    unsigned int dimension /*= k3D*/)
     :NodesVariables(name)
 {
   polynomial_info_ = BuildPolyInfos(phase_count, first_phase_constant, n_polys_in_changing_phase);
 
   //todo change the dimension here
-  n_dim_ = k3D;
+  n_dim_ = dimension;
   int n_nodes = polynomial_info_.size()+1;
   nodes_  = std::vector<Node>(n_nodes, Node(n_dim_));
 }
@@ -356,7 +357,8 @@ NodesVariablesWheelAngle::NodesVariablesWheelAngle(int phase_count,
     :NodesVariablesPhaseBased(phase_count,
                               !is_in_contact_at_start, // contact phase for force is non-constant
                               name,
-                              n_polys_in_changing_phase)
+                              n_polys_in_changing_phase,
+                              1 /* dimension is only one*/)
 {
   index_to_node_value_info_ = GetPhaseBasedEEParameterization();
   SetNumberOfVariables(index_to_node_value_info_.size());

@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TOWR_VARIABLES_PHASE_NODES_H_
 
 #include "nodes_variables.h"
+#include <towr/variables/cartesian_dimensions.h>
+
 
 namespace towr {
 
@@ -86,7 +88,8 @@ enum Type {Force, Motion, WheelAngle, WheelForce};
   NodesVariablesPhaseBased (int phase_count,
                             bool first_phase_constant,
                             const std::string& var_name,
-                            int n_polys_in_changing_phase);
+                            int n_polys_in_changing_phase,
+                            unsigned int dimension = towr::k3D);
 
   virtual ~NodesVariablesPhaseBased() = default;
 
