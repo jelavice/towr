@@ -68,7 +68,8 @@ static std::string WheelAngleNodes(uint ee)
   return wheel_angle_nodes + std::to_string(ee);
 }
 
-static std::string WheelForceNodes(uint ee){
+static std::string WheelForceNodes(uint ee)
+{
   return wheel_force_nodes + std::to_string(ee);
 }
 

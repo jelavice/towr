@@ -120,6 +120,7 @@ private:
   ContraintPtrVec MakeSwingConstraint() const;
   ContraintPtrVec MakeBaseRangeOfMotionConstraint() const;
   ContraintPtrVec MakeBaseAccConstraint() const;
+  ContraintPtrVec MakeWheelConstraint() const;
 
   // costs
   CostPtrVec GetCost(const Parameters::CostName& id, double weight) const;

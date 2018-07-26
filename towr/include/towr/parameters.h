@@ -143,7 +143,8 @@ struct Parameters {
                         Force,          ///< sets ForceConstraint
                         Swing,          ///< sets SwingConstraint
                         BaseRom,        ///< sets BaseMotionConstraint
-                        BaseAcc         ///< sets SplineAccConstraint
+                        BaseAcc,         ///< sets SplineAccConstraint
+                        WheelHeading
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -264,6 +265,9 @@ private:
    * @brief Ensures unilateral forces and inside the friction cone.
    */
   void SetForceConstraint();
+
+
+  void SetWheelConstraint();
 
   /// which dimensions (x,y,z) of the final base state should be bounded
   std::vector<int> bounds_final_lin_pos,

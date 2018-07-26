@@ -46,7 +46,7 @@ int main()
 
   // define the desired goal state of the hopper
   BaseState goal;
-  goal.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
+  goal.lin.at(towr::kPos) << 1.0, 1.0, 0.95;
 
   // Parameters that define the motion. See c'tor for default values or
   // other values that can be modified.
@@ -56,7 +56,7 @@ int main()
   // alternating stance and swing:     ____-----_____-----_____-----_____
 
   for (int i = 0; i < 4; ++i) {
-    params.ee_phase_durations_.push_back( { 1.0 });
+    params.ee_phase_durations_.push_back( { 2.0 });
     params.ee_in_contact_at_start_.push_back(true);
   }
 
@@ -70,7 +70,7 @@ int main()
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
-  solver->SetOption("max_cpu_time", 40.0);
+  solver->SetOption("max_cpu_time", 100.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
   towr.SolveNLP(solver);
 
@@ -80,7 +80,7 @@ int main()
   using namespace std;
   cout.precision(2);
   cout << fixed;
-  cout << "\n====================\n anymal trajectory: \n====================\n";
+  cout << "\n====================\n m545 trajectory: \n====================\n";
 
   double t = 0.0;
   while (t <= x.base_linear_->GetTotalTime() + 1e-5) {

@@ -42,8 +42,8 @@ bool Parameters::robot_has_wheels_ = false;
 Parameters::Parameters ()
 {
   // optimization variables
-  duration_base_polynomial_ = 0.1;
-  ee_polynomials_per_phase_ = 4;
+  duration_base_polynomial_ = 0.1; //affect number of variables
+  ee_polynomials_per_phase_ = 5;
 
   force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ = ee_polynomials_per_phase_;
   //ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
@@ -53,6 +53,9 @@ Parameters::Parameters ()
   SetDynamicConstraint();
   SetKinematicConstraint();
   SetForceConstraint();
+
+  if (robot_has_wheels_)
+    SetWheelConstraint();
 
   bounds_final_lin_pos = {X,Y};
   bounds_final_lin_vel = {X,Y,Z};
@@ -66,7 +69,8 @@ Parameters::Parameters ()
 void
 Parameters::SetDynamicConstraint ()
 {
-  dt_constraint_dynamic_ = 0.1;
+  //dt_constraint_dynamic_ = 0.1; // anymal
+  dt_constraint_dynamic_ = 0.2; // excavator, affects number of constraints
   constraints_.push_back(Dynamic);
   constraints_.push_back(BaseAcc); // so accelerations don't jump between splines
 }
@@ -74,7 +78,8 @@ Parameters::SetDynamicConstraint ()
 void
 Parameters::SetKinematicConstraint ()
 {
-  dt_constraint_range_of_motion_ = 0.08;
+  //dt_constraint_range_of_motion_ = 0.08; //anymal
+  dt_constraint_range_of_motion_ = 0.16; // excavator
   constraints_.push_back(EndeffectorRom);
 }
 
@@ -84,6 +89,12 @@ Parameters::SetForceConstraint()
   //force_limit_in_normal_direction_ = 1000.0; //for the anymal
   force_limit_in_normal_direction_ = 30000.0; //for the excavator
   constraints_.push_back(Force);
+}
+
+void
+Parameters::SetWheelConstraint()
+{
+  constraints_.push_back(WheelHeading);
 }
 
 void

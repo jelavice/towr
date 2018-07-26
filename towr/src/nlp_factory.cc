@@ -40,6 +40,7 @@
 #include <towr/constraints/terrain_constraint.h>
 #include <towr/constraints/total_duration_constraint.h>
 #include <towr/constraints/spline_acc_constraint.h>
+#include <towr/constraints/wheel_direction_constraint.h>
 
 #include <towr/costs/node_cost.h>
 #include <towr/variables/nodes_variables_all.h>
@@ -274,6 +275,8 @@ NlpFactory::ContraintPtrVec NlpFactory::GetConstraint(Parameters::ConstraintName
       return MakeSwingConstraint();
     case Parameters::BaseAcc:
       return MakeBaseAccConstraint();
+    case Parameters::WheelHeading:
+      return MakeWheelConstraint();
     default:
       throw std::runtime_error("constraint not defined!");
   }
@@ -342,6 +345,18 @@ NlpFactory::ContraintPtrVec NlpFactory::MakeForceConstraint() const
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto c = std::make_shared<ForceConstraint>(terrain_, params_.force_limit_in_normal_direction_,
                                                ee);
+    constraints.push_back(c);
+  }
+
+  return constraints;
+}
+
+NlpFactory::ContraintPtrVec NlpFactory::MakeWheelConstraint() const
+{
+  ContraintPtrVec constraints;
+
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto c = std::make_shared<WheelDirectionConstraint>(ee);
     constraints.push_back(c);
   }
 
