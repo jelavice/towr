@@ -39,6 +39,7 @@ namespace towr {
 
 RobotModel::RobotModel(Robot robot)
 {
+  robot_name_ = robot_names.at(robot);
   switch (robot) {
     case Monoped:
       dynamic_model_ = std::make_shared<MonopedDynamicModel>();

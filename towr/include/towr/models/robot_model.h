@@ -75,6 +75,7 @@ struct RobotModel {
 
   KinematicModel::Ptr kinematic_model_;
   DynamicModel::Ptr   dynamic_model_;
+  std::string robot_name_;
 };
 
 

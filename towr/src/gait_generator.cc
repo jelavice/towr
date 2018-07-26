@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace towr {
 
-
+//todo implement the m545 gait generator
 GaitGenerator::Ptr
 GaitGenerator::MakeGaitGenerator(int leg_count)
 {
