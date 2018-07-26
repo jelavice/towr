@@ -47,11 +47,14 @@ ForceConstraint::ForceConstraint (const HeightMap::Ptr& terrain,
   n_constraints_per_node_ = 1 + 2*k2D; // positive normal force + 4 friction pyramid constraints
 }
 
+
+//todo add here the wheel forces
+
 void
 ForceConstraint::InitVariableDependedQuantities (const VariablesPtr& x)
 {
   ee_force_  = x->GetComponent<NodesVariablesPhaseBased>(id::EEForceNodes(ee_));
-  ee_motion_ = x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionNodes(ee_));
+  ee_motion_ = x->GetComponent<NodesVariablesPhaseBased>(id::EEMotionNodes(ee_)); //this are swing or driving nodes
 
   pure_stance_force_node_ids_ = ee_force_->GetIndicesOfNonConstantNodes();
 

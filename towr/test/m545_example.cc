@@ -69,7 +69,9 @@ int main()
   towr.SetParameters(goal, params, model, terrain);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
-  solver->SetOption("jacobian_approximation", "finite-difference-values");
+  solver->SetOption("linear_solver", "ma57");
+  solver->SetOption("max_cpu_time", 40.0);
+  //solver->SetOption("jacobian_approximation", "finite-difference-values");
   towr.SolveNLP(solver);
 
   auto x = towr.GetSolution();

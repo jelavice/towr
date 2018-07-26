@@ -43,7 +43,7 @@ Parameters::Parameters ()
 {
   // optimization variables
   duration_base_polynomial_ = 0.1;
-  ee_polynomials_per_phase_ = 10;
+  ee_polynomials_per_phase_ = 4;
 
   force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ = ee_polynomials_per_phase_;
   //ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
