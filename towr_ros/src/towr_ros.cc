@@ -120,6 +120,8 @@ void TowrRos::UserCommandCallback(const TowrCommandMsg& msg)
 
   if (model.robot_name_ == "m545")
     Parameters::robot_has_wheels_ = true;
+  else
+    Parameters::robot_has_wheels_ = false;
 
   int n_ee = model.kinematic_model_->GetNumberOfEndeffectors();
   auto gait_gen_ = GaitGenerator::MakeGaitGenerator(n_ee);
