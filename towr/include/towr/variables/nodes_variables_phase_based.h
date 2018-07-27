@@ -176,9 +176,8 @@ class NodesVariablesPhaseBased : public NodesVariables
     return isDrivingNode_;
   }
 
-  void SetPhaseDurations( const PhaseDurations* phase_durations);
+  double GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations);
 
-  const PhaseDurations *getPhaseDurations();
 
  protected:
   /**
@@ -195,8 +194,6 @@ class NodesVariablesPhaseBased : public NodesVariables
   }
 
   void SetNumberOfVariables(int n_variables);
-
-  double GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations);
 
 
  private:

@@ -11,15 +11,15 @@
 
 namespace towr {
 
-WheelDirectionConstraint::WheelDirectionConstraint(EE ee)
+WheelDirectionConstraint::WheelDirectionConstraint(EE ee, const SplineHolder *spline_holder)
     : ifopt::ConstraintSet(kSpecifyLater, "wheel-" + id::WheelAngleNodes(ee))
 {
 
   n_constraints_per_node_ = 1;  // wheel direction on the x and y
   ee_ = ee;
+  spline_holder_ = spline_holder;
 }
 
-//todo add here the wheel forces
 
 void WheelDirectionConstraint::InitVariableDependedQuantities(const VariablesPtr& x)
 {
@@ -44,6 +44,16 @@ Eigen::VectorXd WheelDirectionConstraint::GetValues() const
 
     Vector3d v = motion_nodes.at(node_id).v();
     double angle = angle_nodes.at(node_id).p()(0);  // eigen type
+
+    //first get the phase durations
+    auto phase_durations = spline_holder_->phase_durations_.at(ee_)->GetPhaseDurations();
+
+    //first get the time
+    double time_at_node = ee_wheel_angles_->GetTimeAtCurrentNode(node_id, phase_durations);
+
+    //todo get current base yaw angle
+    double base_yaw = spline_holder_->base_angular_->GetPoint(time_at_node).p()(Z);
+
 
     g(row++) = v.x() * std::sin(angle) - v.y() * std::cos(angle);
 

@@ -38,7 +38,7 @@ class WheelDirectionConstraint : public ifopt::ConstraintSet
   using Vector3d = Eigen::Vector3d;
   using EE = uint;
 
-  WheelDirectionConstraint(EE endeffector_id);
+  WheelDirectionConstraint(EE endeffector_id, const SplineHolder *spline_holder);
   virtual ~WheelDirectionConstraint() = default;
 
   void InitVariableDependedQuantities(const VariablesPtr& x) override;
@@ -52,8 +52,7 @@ class WheelDirectionConstraint : public ifopt::ConstraintSet
   NodesVariablesPhaseBased::Ptr ee_motion_;  ///< the current xyz foot positions.
   EE ee_;
 
-  NodeSpline::Ptr base_linear_;
-  NodeSpline::Ptr base_angular_;
+  const SplineHolder *spline_holder_;
 
   int n_constraints_per_node_;  ///< number of constraint for each node.
 

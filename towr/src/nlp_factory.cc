@@ -357,7 +357,7 @@ NlpFactory::ContraintPtrVec NlpFactory::MakeWheelConstraint() const
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared<WheelDirectionConstraint>(ee);
+    auto c = std::make_shared<WheelDirectionConstraint>(ee, &spline_holder_);
     constraints.push_back(c);
   }
 
