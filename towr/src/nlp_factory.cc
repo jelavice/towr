@@ -192,16 +192,6 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeWheelVariables() cons
 
   double T = params_.GetTotalTime();
 
-//  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-//    auto nodes = std::make_shared<NodesVariablesWheelForce>(
-//        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::WheelForceNodes(ee),
-//        params_.force_polynomials_per_stance_phase_);
-//
-//    Vector3d f_wheel(0.0, 0.0, 0.0);
-//    nodes->SetByLinearInterpolation(f_wheel, f_wheel, T);  // stay constant
-//    vars.push_back(nodes);
-//  }
-
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto nodes = std::make_shared<NodesVariablesWheelAngle>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::WheelAngleNodes(ee),
@@ -224,7 +214,6 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeEndeffectorVariablesW
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
-    //todo maybe chenge the naming slightly
     auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
         params_.ee_polynomials_per_swing_phase_);

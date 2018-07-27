@@ -105,7 +105,6 @@ private:
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
-  //todo implement
   std::vector<NodesVariablesPhaseBased::Ptr> MakeWheelVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesWithWheels() const;
 

@@ -46,7 +46,7 @@ int main()
 
   // define the desired goal state of the hopper
   BaseState goal;
-  goal.lin.at(towr::kPos) << 1.0, 1.0, 0.95;
+  goal.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
   // Parameters that define the motion. See c'tor for default values or
   // other values that can be modified.
@@ -56,7 +56,7 @@ int main()
   // alternating stance and swing:     ____-----_____-----_____-----_____
 
   for (int i = 0; i < 4; ++i) {
-    params.ee_phase_durations_.push_back( { 2.0 });
+    params.ee_phase_durations_.push_back( { 1.0 });
     params.ee_in_contact_at_start_.push_back(true);
   }
 
@@ -71,8 +71,15 @@ int main()
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
   solver->SetOption("max_cpu_time", 100.0);
-  //solver->SetOption("jacobian_approximation", "finite-difference-values");
+  solver->SetOption("max_iter", 1);
+  solver->SetOption("derivative_test", "first-order");
+  solver->SetOption("print_level", 4);
+  solver->SetOption("derivative_test_perturbation", 1e-5);
+  solver->SetOption("derivative_test_tol", 1e-4);
+
   towr.SolveNLP(solver);
+
+  return 0;
 
   auto x = towr.GetSolution();
 

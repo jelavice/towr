@@ -70,7 +70,6 @@ class NodesVariablesPhaseBased : public NodesVariables
     Force,
     Motion,
     WheelAngle,
-    WheelForce,
     MotionWithWheels
   };
 
@@ -235,16 +234,6 @@ class NodesVariablesEEForce : public NodesVariablesPhaseBased
   NodesVariablesEEForce(int phase_count, bool is_in_contact_at_start, const std::string& name,
                         int n_polys_in_changing_phase);
   virtual ~NodesVariablesEEForce() = default;
-  OptIndexMap GetPhaseBasedEEParameterization();
-};
-
-//todo implement
-class NodesVariablesWheelForce : public NodesVariablesPhaseBased
-{
- public:
-  NodesVariablesWheelForce(int phase_count, bool is_in_contact_at_start, const std::string& name,
-                           int n_polys_in_changing_phase);
-  virtual ~NodesVariablesWheelForce() = default;
   OptIndexMap GetPhaseBasedEEParameterization();
 };
 
