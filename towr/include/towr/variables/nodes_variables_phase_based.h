@@ -176,15 +176,9 @@ class NodesVariablesPhaseBased : public NodesVariables
     return isDrivingNode_;
   }
 
-  void SetPhaseDurations( const PhaseDurations* phase_durations){
-    phase_durations_ = phase_durations;
-  }
+  void SetPhaseDurations( const PhaseDurations* phase_durations);
 
-  const PhaseDurations *getPhaseDurations(){
-    if (phase_durations_ == nullptr)
-      throw std::runtime_error("Phase durations is a nullptr");
-    return phase_durations_;
-  }
+  const PhaseDurations *getPhaseDurations();
 
  protected:
   /**
@@ -202,9 +196,7 @@ class NodesVariablesPhaseBased : public NodesVariables
 
   void SetNumberOfVariables(int n_variables);
 
-  double GetTimeAtCurrentNode(int node_id);
-
-  const PhaseDurations* phase_durations_ = nullptr;
+  double GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations);
 
 
  private:

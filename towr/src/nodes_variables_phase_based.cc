@@ -222,11 +222,11 @@ void NodesVariablesPhaseBased::SetNumberOfVariables(int n_variables)
   SetRows(n_variables);
 }
 
-double NodesVariablesPhaseBased::GetTimeAtCurrentNode(int node_id)
+double NodesVariablesPhaseBased::GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations)
 {
   double curr_time = 0.0;
 
-  VecDurations polynomial_durations  = ConvertPhaseToPolyDurations(phase_durations_->GetPhaseDurations());
+  VecDurations polynomial_durations  = ConvertPhaseToPolyDurations(phase_durations);
 
   for (int i =0; i < node_id; ++i){
     curr_time += polynomial_durations.at(i);
