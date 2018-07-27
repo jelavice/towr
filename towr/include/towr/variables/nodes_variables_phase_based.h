@@ -31,6 +31,7 @@
 #define TOWR_VARIABLES_PHASE_NODES_H_
 
 #include "nodes_variables.h"
+#include <towr/variables/phase_durations.h>
 #include <towr/variables/cartesian_dimensions.h>
 
 namespace towr {
@@ -175,6 +176,16 @@ class NodesVariablesPhaseBased : public NodesVariables
     return isDrivingNode_;
   }
 
+  void SetPhaseDurations( const PhaseDurations* phase_durations){
+    phase_durations_ = phase_durations;
+  }
+
+  const PhaseDurations *getPhaseDurations(){
+    if (phase_durations_ == nullptr)
+      throw std::runtime_error("Phase durations is a nullptr");
+    return phase_durations_;
+  }
+
  protected:
   /**
    * @brief Assign optimization variables to the correct node values.
@@ -190,6 +201,10 @@ class NodesVariablesPhaseBased : public NodesVariables
   }
 
   void SetNumberOfVariables(int n_variables);
+
+  double GetTimeAtCurrentNode(int node_id);
+
+  const PhaseDurations* phase_durations_ = nullptr;
 
 
  private:

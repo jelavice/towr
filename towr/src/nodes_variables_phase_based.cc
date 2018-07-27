@@ -222,6 +222,20 @@ void NodesVariablesPhaseBased::SetNumberOfVariables(int n_variables)
   SetRows(n_variables);
 }
 
+double NodesVariablesPhaseBased::GetTimeAtCurrentNode(int node_id)
+{
+  double curr_time = 0.0;
+
+  VecDurations polynomial_durations  = ConvertPhaseToPolyDurations(phase_durations_->GetPhaseDurations());
+
+  for (int i =0; i < node_id; ++i){
+    curr_time += polynomial_durations.at(i);
+  }
+
+  return curr_time;
+
+}
+
 NodesVariablesEEMotion::NodesVariablesEEMotion(int phase_count, bool is_in_contact_at_start,
                                                const std::string& name,
                                                int n_polys_in_changing_phase)
@@ -235,7 +249,6 @@ NodesVariablesEEMotion::NodesVariablesEEMotion(int phase_count, bool is_in_conta
 NodesVariablesEEMotion::OptIndexMap NodesVariablesEEMotion::GetPhaseBasedEEParameterization()
 {
   OptIndexMap index_map;
-
 
   int idx = 0;  // index in variables set
   for (int node_id = 0; node_id < nodes_.size(); ++node_id) {

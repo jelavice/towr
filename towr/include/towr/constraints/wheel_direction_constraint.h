@@ -12,6 +12,9 @@
 #include <towr/variables/nodes_variables_phase_based.h>
 #include <towr/terrain/height_map.h> // for friction cone
 
+#include <towr/variables/spline.h>
+#include <towr/variables/spline_holder.h>
+
 namespace towr {
 
 /**
@@ -48,6 +51,9 @@ class WheelDirectionConstraint : public ifopt::ConstraintSet
   NodesVariablesPhaseBased::Ptr ee_wheel_angles_;  ///< the current xyz foot forces.
   NodesVariablesPhaseBased::Ptr ee_motion_;  ///< the current xyz foot positions.
   EE ee_;
+
+  NodeSpline::Ptr base_linear_;
+  NodeSpline::Ptr base_angular_;
 
   int n_constraints_per_node_;  ///< number of constraint for each node.
 
