@@ -27,7 +27,7 @@ int main()
 
   // set the initial position of the hopper
   BaseState initial_base;
-  initial_base.lin.at(kPos).z() = 0.95;
+  initial_base.lin.at(kPos) << 0.0, 0.0, 0.95;
 
   const double x_nominal_b_front = 2.7;
   const double y_nominal_b_front = 1.6;
@@ -46,7 +46,7 @@ int main()
 
   // define the desired goal state of the hopper
   BaseState goal;
-  goal.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
+  goal.lin.at(towr::kPos) << 1.0, 0.0, 0.95;
 
   // Parameters that define the motion. See c'tor for default values or
   // other values that can be modified.
@@ -55,8 +55,16 @@ int main()
   // by the optimizer. The number of swing and stance phases however is fixed.
   // alternating stance and swing:     ____-----_____-----_____-----_____
 
+  const double duration = 3.0;
+  params.SetNumberEEPolynomials(8);
+  params.SetDynamicConstraintDt(0.2);
+  params.SetRangeOfMotionConstraintDt(0.2);
+
+  //must be called to override the constructor
+  params.SetConstraints();
+
   for (int i = 0; i < 4; ++i) {
-    params.ee_phase_durations_.push_back( { 1.0 });
+    params.ee_phase_durations_.push_back( { duration });
     params.ee_in_contact_at_start_.push_back(true);
   }
 
@@ -71,15 +79,16 @@ int main()
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
   solver->SetOption("max_cpu_time", 100.0);
-  solver->SetOption("max_iter", 1);
-  solver->SetOption("derivative_test", "first-order");
-  solver->SetOption("print_level", 4);
-  solver->SetOption("derivative_test_perturbation", 1e-5);
-  solver->SetOption("derivative_test_tol", 1e-4);
+  solver->SetOption("jacobian_approximation", "finite-difference-values");
+
+
+//  solver->SetOption("max_iter", 1);
+//  solver->SetOption("derivative_test", "first-order");
+//  solver->SetOption("print_level", 4);
+//  solver->SetOption("derivative_test_perturbation", 1e-5);
+//  solver->SetOption("derivative_test_tol", 1e-4);
 
   towr.SolveNLP(solver);
-
-  return 0;
 
   auto x = towr.GetSolution();
 
@@ -129,6 +138,6 @@ int main()
 
     cout << endl;
 
-    t += 0.1;
+    t += 0.5;
   }
 }

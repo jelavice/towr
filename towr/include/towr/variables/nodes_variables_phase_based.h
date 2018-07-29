@@ -237,7 +237,6 @@ class NodesVariablesEEForce : public NodesVariablesPhaseBased
   OptIndexMap GetPhaseBasedEEParameterization();
 };
 
-//todo implement
 class NodesVariablesWheelAngle : public NodesVariablesPhaseBased
 {
  public:

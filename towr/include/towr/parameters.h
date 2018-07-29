@@ -198,6 +198,14 @@ struct Parameters {
 
   static bool robot_has_wheels_;
 
+  void SetNumberEEPolynomials(int n);
+
+  void SetDynamicConstraintDt(double dt);
+
+  void SetRangeOfMotionConstraintDt(double dt);
+
+  void SetConstraints();
+
 private:
   /// Which constraints should be used in the optimization problem.
   UsedConstraints constraints_;

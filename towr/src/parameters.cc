@@ -43,19 +43,16 @@ Parameters::Parameters ()
 {
   // optimization variables
   duration_base_polynomial_ = 0.1; //affect number of variables
-  ee_polynomials_per_phase_ = 5;
+  ee_polynomials_per_swing_phase_ = 2;
+  force_polynomials_per_stance_phase_ = 3;
+  dt_constraint_range_of_motion_ = 0.08; //anymal
 
-  force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ = ee_polynomials_per_phase_;
-  //ee_polynomials_per_swing_phase_ = 2; // so step can at least lift leg
+  // all the shit for the anymal
+  force_limit_in_normal_direction_ = 1000.0; //for the anymal
+
 
   // these are the basic constraints that always have to be set
-  constraints_.push_back(Terrain);
-  SetDynamicConstraint();
-  SetKinematicConstraint();
-  SetForceConstraint();
-
-  if (robot_has_wheels_)
-    SetWheelConstraint();
+  SetConstraints();
 
   bounds_final_lin_pos = {X,Y};
   bounds_final_lin_vel = {X,Y,Z};
@@ -65,12 +62,36 @@ Parameters::Parameters ()
   // such as e.g. initial and endeffector,...
 }
 
+void Parameters::SetNumberEEPolynomials(int n) {
+  //todo fix this such that we don't have to have the the same number of polynomials
+  force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ = ee_polynomials_per_phase_ = n;
+}
+
+void Parameters::SetDynamicConstraintDt(double dt){
+  dt_constraint_dynamic_ = dt;
+}
+
+void Parameters::SetRangeOfMotionConstraintDt(double dt){
+  dt_constraint_range_of_motion_ = dt;
+}
+
+void Parameters::SetConstraints(){
+  // first clear the shit from the constructor
+  constraints_.clear();
+
+  //now reset all the constraints with new quentities
+  constraints_.push_back(Terrain);
+  SetDynamicConstraint();
+  SetKinematicConstraint();
+  SetForceConstraint();
+
+  if (robot_has_wheels_)
+    SetWheelConstraint();
+}
 
 void
 Parameters::SetDynamicConstraint ()
 {
-  //dt_constraint_dynamic_ = 0.1; // anymal
-  dt_constraint_dynamic_ = 0.2; // excavator, affects number of constraints
   constraints_.push_back(Dynamic);
   constraints_.push_back(BaseAcc); // so accelerations don't jump between splines
 }
@@ -78,16 +99,13 @@ Parameters::SetDynamicConstraint ()
 void
 Parameters::SetKinematicConstraint ()
 {
-  //dt_constraint_range_of_motion_ = 0.08; //anymal
-  dt_constraint_range_of_motion_ = 0.16; // excavator
   constraints_.push_back(EndeffectorRom);
 }
 
 void
 Parameters::SetForceConstraint()
 {
-  //force_limit_in_normal_direction_ = 1000.0; //for the anymal
-  force_limit_in_normal_direction_ = 30000.0; //for the excavator
+
   constraints_.push_back(Force);
 }
 
