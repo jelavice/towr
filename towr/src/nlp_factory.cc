@@ -65,8 +65,9 @@ NlpFactory::VariablePtrVec NlpFactory::GetVariableSets()
   auto ee_force = MakeForceVariables();
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
 
+  std::vector<NodesVariablesPhaseBased::Ptr> ee_wheels;
   if (Parameters::robot_has_wheels_) {
-    auto ee_wheels = MakeWheelVariables();
+    ee_wheels = MakeWheelVariables();
     vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
   }
 
@@ -75,13 +76,19 @@ NlpFactory::VariablePtrVec NlpFactory::GetVariableSets()
     vars.insert(vars.end(), contact_schedule.begin(), contact_schedule.end());
   }
 
-  //todo add my variables to the spline holder I guess
   // stores these readily constructed spline, independent of whether the
   // nodes and durations these depend on are optimized over
-  spline_holder_ = SplineHolder(base_motion.at(0),  // linear
-                                base_motion.at(1),  // angular
-                                params_.GetBasePolyDurations(), ee_motion, ee_force,
-                                contact_schedule, params_.IsOptimizeTimings());
+
+  if (Parameters::robot_has_wheels_ == false)
+    spline_holder_ = SplineHolder(base_motion.at(0),  // linear
+                                  base_motion.at(1),  // angular
+                                  params_.GetBasePolyDurations(), ee_motion, ee_force,
+                                  contact_schedule, params_.IsOptimizeTimings());
+  else
+    spline_holder_ = SplineHolder(base_motion.at(0),  // linear
+                                  base_motion.at(1),  // angular
+                                  params_.GetBasePolyDurations(), ee_motion, ee_force, ee_wheels,
+                                  contact_schedule, params_.IsOptimizeTimings());
   return vars;
 }
 
