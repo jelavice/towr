@@ -58,6 +58,7 @@ class WheelDirectionConstraint : public ifopt::ConstraintSet
 
   //todo move this to parameters class
   const double max_turning_angle_ = 40.0 * M_PI / 180.0;
+  const double max_velocity = 2.0; // m/s
 
   /**
    * The are those Hermite-nodes that shape the polynomial during the

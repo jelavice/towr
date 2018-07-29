@@ -17,7 +17,7 @@ WheelDirectionConstraint::WheelDirectionConstraint(EE ee, const SplineHolder *sp
     : ifopt::ConstraintSet(kSpecifyLater, "wheel-" + id::WheelAngleNodes(ee))
 {
 
-  n_constraints_per_node_ = 2;  // wheel direction on the x and y
+  n_constraints_per_node_ = 4;  // wheel direction on the x and y
   ee_ = ee;
   spline_holder_ = spline_holder;
 
@@ -45,6 +45,7 @@ Eigen::VectorXd WheelDirectionConstraint::GetValues() const
   for (int node_id : stance_nodes_ids_) {
 
     Vector3d v = motion_nodes.at(node_id).v();
+
     Eigen::VectorXd angleTemp = angle_nodes.at(node_id).p();  // eigen type
 
     //std::cout << "Agnle size: " << angleTemp.size() << std::endl;
@@ -65,6 +66,9 @@ Eigen::VectorXd WheelDirectionConstraint::GetValues() const
 
     g(row++) = angle - base_yaw;
     g(row++) = v.x() * std::sin(angle) - v.y() * std::cos(angle);
+    g(row++) = v.x();
+    g(row++) = v.y();
+
 
   }
 
@@ -78,6 +82,8 @@ WheelDirectionConstraint::VecBound WheelDirectionConstraint::GetBounds() const
   for (int f_node_id : stance_nodes_ids_) {
     bounds.push_back(ifopt::Bounds(-max_turning_angle_, max_turning_angle_));
     bounds.push_back(ifopt::BoundZero);
+    bounds.push_back(ifopt::Bounds(-max_velocity, max_velocity));
+    bounds.push_back(ifopt::Bounds(-max_velocity, max_velocity));
   }
 
   return bounds;
@@ -86,7 +92,6 @@ WheelDirectionConstraint::VecBound WheelDirectionConstraint::GetBounds() const
 //TODO accomodate for new constraints
 void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& jac) const
 {
-
 
   if (var_set == ee_wheel_angles_->GetName()) {
 
@@ -120,9 +125,18 @@ void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& 
 
       Vector3d derivative(std::sin(angle), -std::cos(angle), 0.0);
 
-      for (auto dim : { X, Y, Z }) {
+
+      //the complicated velocity constraint
+      int row_reset = row;
+      for (auto dim : { X, Y }) {
         int idx = ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(node_id, kVel, dim));
-        jac.coeffRef(row, idx) = derivative(dim);  // unilateral force
+        jac.coeffRef(row_reset, idx) = derivative(dim);
+      }
+      ++row_reset;
+
+      for (auto dim : { X, Y }) {
+        int idx = ee_motion_->GetOptIndex(NodesVariables::NodeValueInfo(node_id, kVel, dim));
+        jac.coeffRef(row_reset++, idx) = 1.0;
       }
 
       row += n_constraints_per_node_;
@@ -143,7 +157,7 @@ void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& 
 
       //update angular rows in the big jacobian
       //read only the last row of the small jacobian
-      jac.middleRows(row, 1) = - jacobian.middleRows(Z,1);
+      jac.middleRows(row, 1) = -jacobian.middleRows(Z, 1);
 
       row += n_constraints_per_node_;
     }
