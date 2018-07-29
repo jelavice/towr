@@ -56,6 +56,9 @@ class WheelDirectionConstraint : public ifopt::ConstraintSet
 
   int n_constraints_per_node_;  ///< number of constraint for each node.
 
+  //todo move this to parameters class
+  const double max_turning_angle_ = 40.0 * M_PI / 180.0;
+
   /**
    * The are those Hermite-nodes that shape the polynomial during the
    * stance phases, while all the others are already set to zero force (swing)

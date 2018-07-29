@@ -239,7 +239,7 @@ double NodesVariablesPhaseBased::GetTimeAtCurrentNode(int node_id, const PhaseDu
 NodesVariablesEEMotion::NodesVariablesEEMotion(int phase_count, bool is_in_contact_at_start,
                                                const std::string& name,
                                                int n_polys_in_changing_phase)
-    : NodesVariablesPhaseBased(phase_count, is_in_contact_at_start,  // contact phase for motion is constant
+    : NodesVariablesPhaseBased(phase_count, is_in_contact_at_start,  // contact phase for motion is not constant anymore
                                name, n_polys_in_changing_phase)
 {
   index_to_node_value_info_ = GetPhaseBasedEEParameterization();

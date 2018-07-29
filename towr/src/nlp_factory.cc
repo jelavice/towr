@@ -204,9 +204,14 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFactory::MakeWheelVariables() cons
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::WheelAngleNodes(ee),
         params_.force_polynomials_per_stance_phase_);
 
-    Eigen::VectorXd angle_wheel(1);
+    Eigen::VectorXd angle_wheel(1), angle_wheel_final(1);
     angle_wheel(0) = 0.0;
-    nodes->SetByLinearInterpolation(angle_wheel, angle_wheel, T);  // stay constant
+
+    //set it to the final  base stance
+    Eigen::Vector2d heading= (final_base_.lin.p() - initial_base_.lin.p()).head(2);
+
+    angle_wheel_final(0) = 10.0 / 180.0 * M_PI * 0.0;
+    nodes->SetByLinearInterpolation(angle_wheel, angle_wheel_final, T);  // stay constant
     vars.push_back(nodes);
   }
 
