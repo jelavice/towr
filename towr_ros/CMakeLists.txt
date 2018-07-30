@@ -97,6 +97,13 @@ target_link_libraries(rosbag_geom_msg_extractor
   ${catkin_LIBRARIES}
 )
 
+add_executable(m545-example 
+  test/m545_example.cc
+)
+target_link_libraries(m545-example
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##

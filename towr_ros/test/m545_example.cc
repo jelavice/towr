@@ -5,34 +5,104 @@
  *      Author: jelavice
  */
 
+#include <towr/terrain/examples/height_map_examples.h>
+
 #include <cmath>
 
-#include <towr/terrain/examples/height_map_examples.h>
-#include <towr/models/robot_model.h>
-#include <towr/towr.h>
-#include <towr/models/endeffector_mappings.h>
-
-#include <ifopt/ipopt_solver.h>
-
+#include <string>
 
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
 #include <xpp_states/robot_state_cartesian.h>
 #include <xpp_msgs/RobotStateCartesian.h>
-#include <xpp_msgs/RobotParameters.h>
-#include <towr_ros/TowrCommand.h>
 
+#include <towr/towr.h>
+#include <towr_ros/towr_ros.h>
 
+#include <ifopt/ipopt_solver.h>
 
+#include <std_msgs/Int32.h>
+
+#include <xpp_states/convert.h>
+#include <xpp_msgs/topic_names.h>
+#include <xpp_msgs/TerrainInfo.h>
+
+#include <towr/initialization/gait_generator.h>
+#include <towr/terrain/height_map.h>
+#include <towr/variables/euler_converter.h>
+
+#include <towr_ros/topic_names.h>
+#include <towr_ros/towr_xpp_ee_map.h>
+
+using namespace xpp;
 using namespace towr;
 
-using XppVec         = std::vector<xpp::RobotStateCartesian>;
+using XppVec = std::vector<xpp::RobotStateCartesian>;
 using TowrCommandMsg = towr_ros::TowrCommand;
-using Vector3d       = Eigen::Vector3d;
+using Vector3d = Eigen::Vector3d;
+
+const double visualization_dt = 0.2;
+
+XppVec GetTrajectory(const SplineHolder &solution)
+{
+
+  XppVec trajectory;
+  double t = 0.0;
+  double T = solution.base_linear_->GetTotalTime();
+
+  EulerConverter base_angular(solution.base_angular_);
+
+  while (t <= T + 1e-5) {
+    int n_ee = solution.ee_motion_.size();
+    xpp::RobotStateCartesian state(n_ee);
+
+    state.base_.lin = ToXpp(solution.base_linear_->GetPoint(t));
+
+    state.base_.ang.q = base_angular.GetQuaternionBaseToWorld(t);
+    state.base_.ang.w = base_angular.GetAngularVelocityInWorld(t);
+    state.base_.ang.wd = base_angular.GetAngularAccelerationInWorld(t);
+
+    for (int ee_towr = 0; ee_towr < n_ee; ++ee_towr) {
+      int ee_xpp = ToXppEndeffector(n_ee, ee_towr).first;
+
+      state.ee_contact_.at(ee_xpp) = solution.phase_durations_.at(ee_towr)->IsContactPhase(t);
+      state.ee_motion_.at(ee_xpp) = ToXpp(solution.ee_motion_.at(ee_towr)->GetPoint(t));
+      state.ee_forces_.at(ee_xpp) = solution.ee_force_.at(ee_towr)->GetPoint(t).p();
+    }
+
+    state.t_global_ = t;
+    trajectory.push_back(state);
+    t += visualization_dt;
+  }
+
+  return trajectory;
+}
+
+void TowrRos::SaveTrajectoryInRosbag(rosbag::Bag& bag, const XppVec& traj,
+                                     const std::string& topic) const
+{
+  for (const auto state : traj) {
+    auto timestamp = ::ros::Time(state.t_global_ + 1e-6);  // t=0.0 throws ROS exception
+
+    xpp_msgs::RobotStateCartesian msg;
+    msg = xpp::Convert::ToRos(state);
+    bag.write(topic, timestamp, msg);
+
+    xpp_msgs::TerrainInfo terrain_msg;
+    for (auto ee : state.ee_motion_.ToImpl()) {
+      Vector3d n = terrain_->GetNormalizedBasis(HeightMap::Normal, ee.p_.x(), ee.p_.y());
+      terrain_msg.surface_normals.push_back(xpp::Convert::ToRos<geometry_msgs::Vector3>(n));
+      terrain_msg.friction_coeff = terrain_->GetFrictionCoeff();
+    }
+
+    bag.write(xpp_msgs::terrain_info, timestamp, terrain_msg);
+  }
+}
 
 int main()
 {
+
   // terrain
   auto terrain = std::make_shared<FlatGround>(0.0);
 
@@ -42,7 +112,7 @@ int main()
 
   // set the initial position of the hopper
   BaseState initial_base;
-  initial_base.lin.at(kPos) << 0.0, 0.0, 0.95;
+  initial_base.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
   const double x_nominal_b_front = 2.7;
   const double y_nominal_b_front = 1.6;
@@ -97,7 +167,6 @@ int main()
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-
 //  solver->SetOption("max_iter", 1);
 //  solver->SetOption("derivative_test", "first-order");
 //  solver->SetOption("print_level", 4);
@@ -149,7 +218,6 @@ int main()
     cout << "RF: " << x.ee_wheel_angles_.at(RF)->GetPoint(t).p() << "\t[N]" << endl;
     cout << "LH: " << x.ee_wheel_angles_.at(LH)->GetPoint(t).p() << "\t[N]" << endl;
     cout << "RH: " << x.ee_wheel_angles_.at(RH)->GetPoint(t).p() << "\t[N]" << endl;
-
 
 //    bool contact = x.phase_durations_.at(LF)->IsContactPhase(t);
 //    std::string foot_in_contact = contact ? "yes" : "no";
