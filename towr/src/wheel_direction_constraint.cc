@@ -17,7 +17,7 @@ WheelDirectionConstraint::WheelDirectionConstraint(EE ee, const SplineHolder *sp
     : ifopt::ConstraintSet(kSpecifyLater, "wheel-" + id::WheelAngleNodes(ee))
 {
 
-  n_constraints_per_node_ = 4;  // wheel direction on the x and y
+  n_constraints_per_node_ = 5;  // wheel direction on the x and y
   ee_ = ee;
   spline_holder_ = spline_holder;
 
@@ -46,10 +46,10 @@ Eigen::VectorXd WheelDirectionConstraint::GetValues() const
 
     Vector3d v = motion_nodes.at(node_id).v();
 
-    Eigen::VectorXd angleTemp = angle_nodes.at(node_id).p();  // eigen type
 
     //std::cout << "Agnle size: " << angleTemp.size() << std::endl;
-    double angle = angleTemp(0);
+    double angle = angle_nodes.at(node_id).p()(0);
+    double angleRate = angle_nodes.at(node_id).v()(0);
 
     //first get the phase durations
     auto phase_durations = spline_holder_->phase_durations_.at(ee_)->GetPhaseDurations();
@@ -65,6 +65,7 @@ Eigen::VectorXd WheelDirectionConstraint::GetValues() const
     //now add more constraints
 
     g(row++) = angle - base_yaw;
+    g(row++) = angleRate;
     g(row++) = v.x() * std::sin(angle) - v.y() * std::cos(angle);
     g(row++) = v.x();
     g(row++) = v.y();
@@ -81,9 +82,10 @@ WheelDirectionConstraint::VecBound WheelDirectionConstraint::GetBounds() const
 
   for (int f_node_id : stance_nodes_ids_) {
     bounds.push_back(ifopt::Bounds(-max_turning_angle_, max_turning_angle_));
+    bounds.push_back(ifopt::Bounds(-max_turning_rate_, max_turning_rate_));
     bounds.push_back(ifopt::BoundZero);
-    bounds.push_back(ifopt::Bounds(-max_velocity, max_velocity));
-    bounds.push_back(ifopt::Bounds(-max_velocity, max_velocity));
+    bounds.push_back(ifopt::Bounds(-max_velocity_, max_velocity_));
+    bounds.push_back(ifopt::Bounds(-max_velocity_, max_velocity_));
   }
 
   return bounds;
@@ -105,10 +107,12 @@ void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& 
       double angle = angle_nodes.at(node_id).p()(0);  // eigen Xd type
 
       auto dim = X;
-      int idx = ee_wheel_angles_->GetOptIndex(NodesVariables::NodeValueInfo(node_id, kPos, dim));
+      int idxPos = ee_wheel_angles_->GetOptIndex(NodesVariables::NodeValueInfo(node_id, kPos, dim));
+      int idxVel = ee_wheel_angles_->GetOptIndex(NodesVariables::NodeValueInfo(node_id, kVel, dim));
 
-      jac.coeffRef(row_reset++, idx) = 1.0;
-      jac.coeffRef(row_reset++, idx) = v.x() * std::cos(angle) + v.y() * std::sin(angle);  // unilateral force
+      jac.coeffRef(row_reset++, idxPos) = 1.0;
+      jac.coeffRef(row_reset++, idxVel) = 1.0;
+      jac.coeffRef(row_reset++, idxPos) = v.x() * std::cos(angle) + v.y() * std::sin(angle);  // unilateral force
 
       row += n_constraints_per_node_;
     }
@@ -116,7 +120,7 @@ void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& 
 
   if (var_set == ee_motion_->GetName()) {
 
-    int row = 1;
+    int row = 2;
     auto angle_nodes = ee_wheel_angles_->GetNodes();
     auto motion_nodes = ee_motion_->GetNodes();
     for (int node_id : stance_nodes_ids_) {
@@ -153,11 +157,12 @@ void WheelDirectionConstraint::FillJacobianBlock(std::string var_set, Jacobian& 
 
       double time_at_node = ee_wheel_angles_->GetTimeAtCurrentNode(node_id, phase_durations);
 
-      auto jacobian = spline_holder_->base_angular_->GetJacobianWrtNodes(time_at_node, kPos);
+      Jacobian jacobian = spline_holder_->base_angular_->GetJacobianWrtNodes(time_at_node, kPos);
 
       //update angular rows in the big jacobian
       //read only the last row of the small jacobian
-      jac.middleRows(row, 1) = -jacobian.middleRows(Z, 1);
+      // this is apprarently sketchy cause of the memory leak
+      jac.middleRows(row, 1) = (-jacobian.middleRows(Z, 1)).eval();
 
       row += n_constraints_per_node_;
     }
