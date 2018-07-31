@@ -46,7 +46,7 @@ int main()
 
   // define the desired goal state of the hopper
   BaseState goal;
-  goal.lin.at(towr::kPos) << 1.0, 1.0, 0.95;
+  goal.lin.at(towr::kPos) << 1.0, 0.0, 0.95;
 
   // Parameters that define the motion. See c'tor for default values or
   // other values that can be modified.
@@ -56,9 +56,9 @@ int main()
   // alternating stance and swing:     ____-----_____-----_____-----_____
 
   const double duration = 2.0;
-  params.SetNumberEEPolynomials(5);
-  params.SetDynamicConstraintDt(0.2);
-  params.SetRangeOfMotionConstraintDt(0.2);
+  params.SetNumberEEPolynomials(10);
+  params.SetDynamicConstraintDt(0.1);
+  params.SetRangeOfMotionConstraintDt(0.1);
 
   //must be called to override the constructor
   params.SetConstraints();
@@ -78,7 +78,8 @@ int main()
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
-  solver->SetOption("max_cpu_time", 60.0);
+  solver->SetOption("ma57_pre_alloc", 3.0);
+  solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
 
@@ -90,7 +91,7 @@ int main()
 
   towr.SolveNLP(solver);
 
-//  return 0;
+  //return 0;
 
   auto x = towr.GetSolution();
 
@@ -110,23 +111,23 @@ int main()
     Eigen::Vector3d rad = x.base_angular_->GetPoint(t).p();
     cout << (rad / M_PI * 180).transpose() << "\t[deg]" << endl;
 
-    cout << "Feet position x,y,z:          \n";
-    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-
-    cout << "Feet velocity x,y,z:          \n";
-    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-
-    cout << "Contact force x,y,z:          \n";
-    cout << "LF: " << x.ee_force_.at(LF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "RF: " << x.ee_force_.at(RF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "LH: " << x.ee_force_.at(LH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "RH: " << x.ee_force_.at(RH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
+//    cout << "Feet position x,y,z:          \n";
+//    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
+//    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
+//    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
+//    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
+//
+//    cout << "Feet velocity x,y,z:          \n";
+//    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
+//    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
+//    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
+//    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
+//
+//    cout << "Contact force x,y,z:          \n";
+//    cout << "LF: " << x.ee_force_.at(LF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
+//    cout << "RF: " << x.ee_force_.at(RF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
+//    cout << "LH: " << x.ee_force_.at(LH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
+//    cout << "RH: " << x.ee_force_.at(RH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
 
     cout << "Wheel angle:          \n";
     cout << "LF: " << x.ee_wheel_angles_.at(LF)->GetPoint(t).p() << "\t[N]" << endl;
@@ -135,24 +136,24 @@ int main()
     cout << "RH: " << x.ee_wheel_angles_.at(RH)->GetPoint(t).p() << "\t[N]" << endl;
 
 
-    bool contact = x.phase_durations_.at(LF)->IsContactPhase(t);
-    std::string foot_in_contact = contact ? "yes" : "no";
-    cout << " LF Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(RF)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " RF Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(LH)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " LH Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(RH)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " RH Foot in contact:              \t" + foot_in_contact << endl;
+//    bool contact = x.phase_durations_.at(LF)->IsContactPhase(t);
+//    std::string foot_in_contact = contact ? "yes" : "no";
+//    cout << " LF Foot in contact:              \t" + foot_in_contact << endl;
+//
+//    contact = x.phase_durations_.at(RF)->IsContactPhase(t);
+//    foot_in_contact = contact ? "yes" : "no";
+//    cout << " RF Foot in contact:              \t" + foot_in_contact << endl;
+//
+//    contact = x.phase_durations_.at(LH)->IsContactPhase(t);
+//    foot_in_contact = contact ? "yes" : "no";
+//    cout << " LH Foot in contact:              \t" + foot_in_contact << endl;
+//
+//    contact = x.phase_durations_.at(RH)->IsContactPhase(t);
+//    foot_in_contact = contact ? "yes" : "no";
+//    cout << " RH Foot in contact:              \t" + foot_in_contact << endl;
 
     cout << endl;
 
-    t += 0.2;
+    t += 0.5;
   }
 }

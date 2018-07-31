@@ -98,7 +98,7 @@ target_link_libraries(rosbag_geom_msg_extractor
 )
 
 add_executable(m545-example 
-  test/m545_example.cc
+  test/m545_example_ros.cc
 )
 target_link_libraries(m545-example
   ${catkin_LIBRARIES}
