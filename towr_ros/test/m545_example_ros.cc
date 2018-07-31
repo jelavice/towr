@@ -42,7 +42,7 @@ using XppVec = std::vector<xpp::RobotStateCartesian>;
 using TowrCommandMsg = towr_ros::TowrCommand;
 using Vector3d = Eigen::Vector3d;
 
-const double visualization_dt = 0.2;
+const double visualization_dt = 0.1;
 
 XppVec GetTrajectory(const SplineHolder &solution)
 {
@@ -86,7 +86,7 @@ void SaveTrajectoryInRosbag(rosbag::Bag& bag, const XppVec& traj, const std::str
 {
   for (const auto state : traj) {
     auto timestamp = ::ros::Time(state.t_global_ + 1e-6);  // t=0.0 throws ROS exception
-    std::cout << "ros time stamp: " << timestamp.toSec() << std::endl;
+
     xpp_msgs::RobotStateCartesian msg;
     msg = xpp::Convert::ToRos(state);
 
