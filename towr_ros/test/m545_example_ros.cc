@@ -69,26 +69,31 @@ XppVec GetTrajectory(const SplineHolder &solution)
       state.ee_contact_.at(ee_xpp) = solution.phase_durations_.at(ee_towr)->IsContactPhase(t);
       state.ee_motion_.at(ee_xpp) = ToXpp(solution.ee_motion_.at(ee_towr)->GetPoint(t));
       state.ee_forces_.at(ee_xpp) = solution.ee_force_.at(ee_towr)->GetPoint(t).p();
+      state.wheel_angles_.at(ee_xpp) = solution.ee_wheel_angles_.at(ee_towr)->GetPoint(t).p()(0);
     }
 
     state.t_global_ = t;
     trajectory.push_back(state);
     t += visualization_dt;
-//    std::cout << "Here is t: " << t << std::endl;
-//    std::cout << "State Base: " << state.base_.lin.p_.transpose() << std::endl;
+
   }
 
   return trajectory;
 }
 
-void SaveTrajectoryInRosbag(rosbag::Bag& bag, const XppVec& traj,
-                                     const std::string& topic, const HeightMap *terrain)
+void SaveTrajectoryInRosbag(rosbag::Bag& bag, const XppVec& traj, const std::string& topic,
+                            const HeightMap *terrain)
 {
   for (const auto state : traj) {
     auto timestamp = ::ros::Time(state.t_global_ + 1e-6);  // t=0.0 throws ROS exception
-    std::cout << "ros time stamp: " <<  timestamp.toSec() << std::endl;
+    std::cout << "ros time stamp: " << timestamp.toSec() << std::endl;
     xpp_msgs::RobotStateCartesian msg;
     msg = xpp::Convert::ToRos(state);
+
+    //todo remove the hack
+    for (auto wheel_angle : state.wheel_angles_.ToImpl())
+      msg.wheel_angles.push_back(wheel_angle);
+
     bag.write(topic, timestamp, msg);
 
     xpp_msgs::TerrainInfo terrain_msg;
