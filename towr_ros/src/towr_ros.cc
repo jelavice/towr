@@ -56,13 +56,16 @@ TowrRos::TowrRos()
   robot_parameters_pub_ = n.advertise < xpp_msgs::RobotParameters > (xpp_msgs::robot_parameters, 1);
 
   solver_ = std::make_shared<ifopt::IpoptSolver>();  // could also use SNOPT here
-  solver_->SetOption("linear_solver", "mumps");
+  //solver_->SetOption("linear_solver", "mumps");
   solver_->SetOption("linear_solver", "ma57");
+  solver_->SetOption("ma57_pre_alloc", 3.0);
   solver_->SetOption("jacobian_approximation", "exact");
+  //solver_->SetOption("jacobian_approximation", "finite-difference-values");
+
 //  solver_->SetOption("derivative_test", "first-order");
 //  solver_->SetOption("max_iter", 0);
-  solver_->SetOption("max_cpu_time", 40.0);
-  solver_->SetOption("print_level", 5);
+  solver_->SetOption("max_cpu_time", 80.0);
+  // solver_->SetOption("print_level", 4);
 
   visualization_dt_ = 0.02;
 }
@@ -117,10 +120,17 @@ void TowrRos::UserCommandCallback(const TowrCommandMsg& msg)
 
   // solver parameters
   Parameters params;
+  const double driving_phase_duration = 6.0;
 
-  if (model.robot_name_ == "m545")
+  if (model.robot_name_ == "m545") {
     Parameters::robot_has_wheels_ = true;
-  else
+    params.SetNumberEEPolynomials(30);
+    params.SetDynamicConstraintDt(0.1);
+    params.SetRangeOfMotionConstraintDt(0.1);
+
+    //must be called to override the constructor
+    params.SetConstraints();
+  } else
     Parameters::robot_has_wheels_ = false;
 
   int n_ee = model.kinematic_model_->GetNumberOfEndeffectors();
@@ -129,8 +139,7 @@ void TowrRos::UserCommandCallback(const TowrCommandMsg& msg)
   gait_gen_->SetCombo(id_gait);
   for (int ee = 0; ee < n_ee; ++ee) {
     if (Parameters::robot_has_wheels_) {
-      //todo remove the magic
-      params.ee_phase_durations_.push_back( { 2.0 });
+      params.ee_phase_durations_.push_back( { driving_phase_duration });
       params.ee_in_contact_at_start_.push_back(true);
     } else {
       params.ee_phase_durations_.push_back(gait_gen_->GetPhaseDurations(msg.total_duration, ee));
