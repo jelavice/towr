@@ -38,14 +38,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace towr {
 
 /**
- * @brief Holds pointers to fully constructed splines, that are linked to the
- *        optimization variables.
+ * @brief Builds splines from node values (pos/vel) and durations.
  *
- * This is independent from whether they are added as optimization variables.
+ * These splines are linked to the optimization variables, so change as the
+ * nodes or durations change. This is a convenience class to not have
+ * to construct the splines from the variables new every time.
  */
 struct SplineHolder {
   /**
-   * @brief Fully initializes this object.
+   * @brief Fully construct all splines.
    * @param base_lin  The nodes describing the base linear motion.
    * @param base_ang  The nodes describing the base angular motion.
    * @param base_poly_durations The durations of each base polynomial.
@@ -62,7 +63,14 @@ struct SplineHolder {
                 std::vector<PhaseDurations::Ptr> phase_durations,
                 bool ee_durations_change);
 
-  SplineHolder (NodesVariables::Ptr base_lin,
+  /**
+   * @brief Attention, nothing initialized.
+   */
+  SplineHolder () = default;
+
+
+//todo see about this constructor
+SplineHolder (NodesVariables::Ptr base_lin,
                   NodesVariables::Ptr base_ang,
                   const std::vector<double>& base_poly_durations,
                   std::vector<NodesVariablesPhaseBased::Ptr> ee_motion,
@@ -70,8 +78,6 @@ struct SplineHolder {
                   std::vector<NodesVariablesPhaseBased::Ptr> ee_wheel_angles,
                   std::vector<PhaseDurations::Ptr> phase_durations,
                   bool ee_durations_change);
-
-  SplineHolder () = default;
 
   NodeSpline::Ptr base_linear_;
   NodeSpline::Ptr base_angular_;

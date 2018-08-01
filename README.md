@@ -20,12 +20,13 @@ Features:
 :heavy_check_mark: [ROS]/[catkin] integration (optional).  
 :heavy_check_mark: Light-weight ([~6k lines](https://i.imgur.com/gP3gv34.png) of code) makes it easy to use and extend.  
 
+<br>
+
 <p align="center">
   <a href="#install">Install</a> •
   <a href="#run">Run</a> •
   <a href="#develop">Develop</a> •
   <a href="#contribute">Contribute</a> •
-  <a href="#bugs-and-feature-requests">Issues</a> •
   <a href="#publications">Publications</a> •
   <a href="#authors">Authors</a>
 </p>
@@ -94,6 +95,7 @@ We provide a [ROS]-wrapper for the pure cmake towr library, which adds a keyboar
   
 * Use: Include in your catkin project by adding to your *CMakeLists.txt* 
   ```cmake
+  add_compile_options(-std=c++11)
   find_package(catkin COMPONENTS towr) 
   include_directories(${catkin_INCLUDE_DIRS})
   target_link_libraries(foo ${catkin_LIBRARIES})
@@ -112,30 +114,31 @@ We provide a [ROS]-wrapper for the pure cmake towr library, which adds a keyboar
   ```
   Click in the xterm terminal and hit 'o'. 
   
-  Information about how to tune the paramters can be found [here](http://docs.ros.org/api/towr/html/group__Parameters.html) 
+  Information about how to tune the paramters can be found [here](http://docs.ros.org/api/towr/html/group__Parameters.html). 
   
 ## Develop
-Useful information for developers: [:arrow_right: doxygen documentation](http://docs.ros.org/kinetic/api/towr/html/). 
-
-#### Code Overview
- * To understand the architecture of the code and which are the relevant classes
-and parameters to customize or build on, please see [Modules](http://docs.ros.org/api/towr/html/modules.html).
+#### Library overview
+ * The relevant classes and parameters to build on are collected [modules](http://docs.ros.org/api/towr/html/modules.html).
  * A nice graphical overview as UML can be seen [here](http://docs.ros.org/api/towr/html/inherits.html).
+ * The [doxygen documentation](http://docs.ros.org/api/towr/html/) provides helpul information for developers.
 
 #### Problem formulation
- * This code formulates the variables, costs and constraints using [ifopt](https://github.com/ethz-adrl/ifopt), so it makes sense to first briefly familiarize with the syntax using [this example](https://github.com/ethz-adrl/ifopt/blob/master/ifopt_core/test/ifopt/test_vars_constr_cost.h). 
+ * This code formulates the variables, costs and constraints using ifopt, so it makes sense to briefly familiarize with the syntax using [this example].
+ * A minimal towr example without ROS, formulating a problem for a one-legged hopper, 
+  can be seen [here](towr/test/hopper_example.cc) and is great starting point.
+ * We recommend using the ROS infrastructure provided to dynamically visualize, plot and change the problem formulation. To define your own problem using this infrastructure, use this [example](towr_ros/src/towr_ros_app.cc) as a guide. 
+ 
+#### Add your own variables, costs and constraints
+ * This library provides a set of variables, costs and constraints to formulate the trajectory optimization problem. An [example formulation](towr/include/towr/nlp_formulation.h) of how to combine these is given, however, this formulation can probably be improved. To add your own e.g. constraint-set, define a class with it's values and derivatives, and then add it to the formulation ```nlp.AddConstraintSet(your_custom_constraints);``` as shown [here](towr/test/hopper_example.cc).
 
 #### Add your own robot
  * Want to add your own robot to towr? Start [here](http://docs.ros.org/api/towr/html/group__Robots.html).
- * To afterwards also visualize your URDF, see [xpp].
+ * To visualize that robot in rviz, see [xpp].
 
 
 ## Contribute
 We love pull request, whether its new constraint formulations, additional robot models, bug fixes, unit tests or updating the documentation. Please have a look at [CONTRIBUTING.md](CONTRIBUTING.md) for more information.  
 See here the list of [contributors](https://github.com/ethz-adrl/towr/graphs/contributors) who participated in this project.
-
-##  Bugs and Feature Requests
-To report bugs, request features or ask questions, please have a look at [CONTRIBUTING.md](CONTRIBUTING.md). 
 
 
 ## Publications
@@ -188,3 +191,4 @@ The work was carried out at the following institutions:
 [catkin]: http://wiki.ros.org/catkin
 [catkin tools]: http://catkin-tools.readthedocs.org/
 [Eigen]: http://eigen.tuxfamily.org
+[this example]: https://github.com/ethz-adrl/ifopt/blob/master/ifopt_core/test/ifopt/test_vars_constr_cost.h

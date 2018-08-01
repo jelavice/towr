@@ -93,7 +93,7 @@ void
 Parameters::SetDynamicConstraint ()
 {
   constraints_.push_back(Dynamic);
-  constraints_.push_back(BaseAcc); // so accelerations don't jump between splines
+  constraints_.push_back(BaseAcc); // so accelerations don't jump between polynomials
 }
 
 void
@@ -105,7 +105,6 @@ Parameters::SetKinematicConstraint ()
 void
 Parameters::SetForceConstraint()
 {
-
   constraints_.push_back(Force);
 }
 
@@ -114,6 +113,7 @@ Parameters::SetWheelConstraint()
 {
   constraints_.push_back(WheelHeading);
 }
+
 
 void
 Parameters::SetSwingConstraint()
