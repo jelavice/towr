@@ -61,19 +61,19 @@ temp = q(:,1);
 q(:,1) = q(:,4);
 q(:,4) = temp;
 
-rpy = quat2eul(q,'XYZ');
+ypr = quat2eul(q,'ZYX');
 clear temp;
 figure
 subplot(3,1,1)
-plot(times, rpy(:,1), 'LineWidth', 2);
+plot(times, ypr(:,3), 'LineWidth', 2);
 title('roll')
 grid on
 subplot(3,1,2)
-plot(times, rpy(:,2), 'LineWidth', 2);
+plot(times, ypr(:,2), 'LineWidth', 2);
 title('pitch')
 grid on
 subplot(3,1,3)
-plot(times, rpy(:,3), 'LineWidth', 2);
+plot(times, ypr(:,1), 'LineWidth', 2);
 title('yaw')
 grid on
 
