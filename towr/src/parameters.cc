@@ -52,8 +52,8 @@ Parameters::Parameters ()
   dt_constraint_dynamic_ = 0.1;
 
   // all the shit for the anymal
-  force_limit_in_normal_direction_ = 1000.0; //for the anymal
-  //force_limit_in_normal_direction_ = 30000.0; //for the excavator
+  //force_limit_in_normal_direction_ = 1000.0; //for the anymal
+  force_limit_in_normal_direction_ = 30000.0; //for the excavator
 
   // these are the basic constraints that always have to be set
   SetConstraints();
