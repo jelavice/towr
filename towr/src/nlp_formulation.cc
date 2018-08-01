@@ -292,7 +292,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::Constr
     case Parameters::BaseAcc:
       return MakeBaseAccConstraint(s);
     case Parameters::WheelHeading:
-      return MakeWheelConstraint();
+      return MakeWheelConstraint(s);
     default:
       throw std::runtime_error("constraint not defined!");
   }
@@ -368,12 +368,12 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeForceConstraint() const
   return constraints;
 }
 
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint() const
+NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const SplineHolder& s) const
 {
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared < WheelDirectionConstraint > (ee, &spline_holder_);
+    auto c = std::make_shared < WheelDirectionConstraint > (ee, &s);
     constraints.push_back(c);
   }
 

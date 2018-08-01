@@ -43,13 +43,17 @@ Parameters::Parameters ()
 {
   // optimization variables
   duration_base_polynomial_ = 0.1; //affect number of variables
+
+
   ee_polynomials_per_swing_phase_ = 2;
   force_polynomials_per_stance_phase_ = 3;
+
   dt_constraint_range_of_motion_ = 0.08; //anymal
+  dt_constraint_dynamic_ = 0.1;
 
   // all the shit for the anymal
-  //force_limit_in_normal_direction_ = 1000.0; //for the anymal
-  force_limit_in_normal_direction_ = 30000.0; //for the excavator
+  force_limit_in_normal_direction_ = 1000.0; //for the anymal
+  //force_limit_in_normal_direction_ = 30000.0; //for the excavator
 
   // these are the basic constraints that always have to be set
   SetConstraints();

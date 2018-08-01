@@ -104,7 +104,6 @@ public:
   HeightMap::Ptr terrain_;
   Parameters params_;
 
-  SplineHolder spline_holder_;
 
 private:
   // variables
@@ -128,7 +127,7 @@ private:
   ContraintPtrVec MakeBaseRangeOfMotionConstraint(const SplineHolder& s) const;
   ContraintPtrVec MakeBaseAccConstraint(const SplineHolder& s) const;
 
-  ContraintPtrVec MakeWheelConstraint() const;
+  ContraintPtrVec MakeWheelConstraint(const SplineHolder& s) const;
 
   // costs
   CostPtrVec GetCost(const Parameters::CostName& id, double weight) const;

@@ -58,12 +58,6 @@ TowrRosInterface::TowrRosInterface ()
                                     (xpp_msgs::robot_parameters, 1);
 
   solver_ = std::make_shared<ifopt::IpoptSolver>(); // could also use SNOPT here
-  solver_->SetOption("linear_solver", "mumps");
-  solver_->SetOption("jacobian_approximation", "exact");
-//  solver_->SetOption("derivative_test", "first-order");
-//  solver_->SetOption("max_iter", 0);
-  solver_->SetOption("max_cpu_time", 40.0);
-  solver_->SetOption("print_level", 5);
 
   visualization_dt_ = 0.01;
 }
@@ -114,7 +108,6 @@ TowrRosInterface::UserCommandCallback(const TowrCommandMsg& msg)
       nlp_.AddConstraintSet(c);
     for (auto c : formulation_.GetCosts())
       nlp_.AddCostSet(c);
-
     solver_->Solve(nlp_);
     SaveOptimizationAsRosbag(bag_file, robot_params_msg, msg, false);
   }

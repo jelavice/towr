@@ -93,7 +93,7 @@ public:
   void SetIpoptParameters(const TowrCommandMsg& msg) override
   {
     // the HA-L solvers are alot faster, so consider installing and using
-    solver_->SetOption("linear_solver", "mumps"); // ma27, ma57
+    solver_->SetOption("linear_solver", "ma57"); // ma27, ma57
 
     // Analytically defining the derivatives in IFOPT as we do it, makes the
     // problem a lot faster. However, if this becomes too difficult, we can also
@@ -107,6 +107,7 @@ public:
     // correct. Some derivatives that are correct are still flagged, showing a
     // deviation of 10e-4, which is fine. What to watch out for is deviations > 10e-2.
     // solver_->SetOption("derivative_test", "first-order");
+
 
     solver_->SetOption("max_cpu_time", 40.0);
     solver_->SetOption("print_level", 5);
