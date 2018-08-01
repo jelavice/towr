@@ -17,8 +17,6 @@
 #include <xpp_states/robot_state_cartesian.h>
 #include <xpp_msgs/RobotStateCartesian.h>
 
-#include <towr_ros/towr_ros.h>
-
 #include <ifopt/ipopt_solver.h>
 
 #include <std_msgs/Int32.h>
@@ -30,6 +28,7 @@
 #include <towr/initialization/gait_generator.h>
 #include <towr/terrain/height_map.h>
 #include <towr/variables/euler_converter.h>
+#include <towr/nlp_formulation.h>
 
 #include <towr_ros/topic_names.h>
 #include <towr_ros/towr_xpp_ee_map.h>
@@ -38,7 +37,6 @@ using namespace xpp;
 using namespace towr;
 
 using XppVec = std::vector<xpp::RobotStateCartesian>;
-using TowrCommandMsg = towr_ros::TowrCommand;
 using Vector3d = Eigen::Vector3d;
 
 const double visualization_dt = 0.1;
@@ -173,16 +171,18 @@ void printTrajectory(const SplineHolder &x)
 int main()
 {
 
+  NlpFormulation formulation;
+
   // terrain
-  auto terrain = std::make_shared<FlatGround>(0.0);
+  formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
   // Kinematic limits and dynamic parameters of the hopper
-  RobotModel model(RobotModel::m545);
+  formulation.model_ = RobotModel(RobotModel::m545);
   Parameters::robot_has_wheels_ = true;
 
   // set the initial position of the hopper
   BaseState initial_base;
-  initial_base.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
+  formulation.initial_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
   const double x_nominal_b_front = 2.7;
   const double y_nominal_b_front = 1.6;
@@ -192,7 +192,8 @@ int main()
 
   const double z_nominal_b = 0.0;
 
-  towr::TOWR::FeetPos nominal_stance(4);
+  auto &nominal_stance = formulation.initial_ee_W_;
+  nominal_stance.resize(4);
 
   nominal_stance.at(towr::QuadrupedIDs::LF) << x_nominal_b_front, y_nominal_b_front, z_nominal_b;
   nominal_stance.at(towr::QuadrupedIDs::RF) << x_nominal_b_front, -y_nominal_b_front, z_nominal_b;
@@ -200,18 +201,14 @@ int main()
   nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
   // define the desired goal state of the hopper
-  BaseState goal;
-  goal.lin.at(towr::kPos) << 0.0, 1.0, 0.95;
+  formulation.final_base_.lin.at(towr::kPos) << 2.0, 2.0, 0.95;
 
-  // Parameters that define the motion. See c'tor for default values or
-  // other values that can be modified.
-  Parameters params;
-  // here we define the initial phase durations, that can however be changed
-  // by the optimizer. The number of swing and stance phases however is fixed.
-  // alternating stance and swing:     ____-----_____-----_____-----_____
 
-  const double duration = 6.0;
-  params.SetNumberEEPolynomials(30);
+  Parameters& params = formulation.params_;
+
+
+  const double duration = 5.0;
+  params.SetNumberEEPolynomials(50);
   params.SetDynamicConstraintDt(0.1);
   params.SetRangeOfMotionConstraintDt(0.1);
 
@@ -227,9 +224,16 @@ int main()
     params.SetSwingConstraint();
 
   // Pass this information to the actual solver
-  TOWR towr;
-  towr.SetInitialState(initial_base, nominal_stance);
-  towr.SetParameters(goal, params, model, terrain);
+  ifopt::Problem nlp;
+    SplineHolder solution;
+    for (auto c : formulation.GetVariableSets(solution))
+      nlp.AddVariableSet(c);
+
+    for (auto c : formulation.GetConstraints(solution))
+      nlp.AddConstraintSet(c);
+
+    for (auto c : formulation.GetCosts())
+      nlp.AddCostSet(c);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
@@ -243,21 +247,18 @@ int main()
 //  solver->SetOption("derivative_test_perturbation", 1e-5);
 //  solver->SetOption("derivative_test_tol", 1e-3);
 
-  towr.SolveNLP(solver);
+  solver->Solve(nlp);
 
-  //return 0;
 
-  auto x = towr.GetSolution();
-
-  printTrajectory(x);
+  //printTrajectory(solution);
 
   // Defaults to /home/user/.ros/
   std::string bag_file = "towr_trajectory.bag";
   rosbag::Bag bag;
   bag.open(bag_file, rosbag::bagmode::Write);
   ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
-  auto final_trajectory = GetTrajectory(x);
-  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired, terrain.get());
+  auto final_trajectory = GetTrajectory(solution);
+  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired, formulation.terrain_.get());
 
   bag.close();
 

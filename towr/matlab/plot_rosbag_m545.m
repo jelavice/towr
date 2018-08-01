@@ -24,7 +24,7 @@ fprintf('Got %i messages, first one at time %f\n', ...
 
 bag.resetView(topic1);
 count = 0;
-while bag.hasNext();
+while bag.hasNext()
     [msg, meta] = bag.read();
     count = count + 1;
 end

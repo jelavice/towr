@@ -58,7 +58,6 @@ int main()
   formulation.final_base_.lin.at(towr::kPos) << 1.0, 0.0, 0.5;
 
 
-
   // Parameters that define the motion. See c'tor for default values or
   // other values that can be modified.
   // First we define the initial phase durations, that can however be changed
@@ -74,18 +73,14 @@ int main()
   // constraints and costs.
   ifopt::Problem nlp;
   SplineHolder solution;
-  std::cout << "Objects constructed" << std::endl;
   for (auto c : formulation.GetVariableSets(solution))
     nlp.AddVariableSet(c);
 
-  std::cout << "First for loop over" << std::endl;
   for (auto c : formulation.GetConstraints(solution))
     nlp.AddConstraintSet(c);
 
-  std::cout << "Second for loop over" << std::endl;
   for (auto c : formulation.GetCosts())
     nlp.AddCostSet(c);
-  std::cout << "Added all the craps to nlp" << std::endl;
   // You can add your own elements to the nlp as well, simply by calling:
   // nlp.AddVariablesSet(your_custom_variables);
   // nlp.AddConstraintSet(your_custom_constraints);
