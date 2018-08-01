@@ -89,27 +89,6 @@ target_link_libraries(${PROJECT_NAME}-example
 )
 add_test(${PROJECT_NAME}-example ${PROJECT_NAME}-example)
 
-add_executable(${PROJECT_NAME}-m545-example 
-  test/m545_example.cc
-)
-target_link_libraries(${PROJECT_NAME}-m545-example  
-  PRIVATE
-    ${PROJECT_NAME} 
-    ifopt::ifopt_ipopt
-)
-add_test(${PROJECT_NAME}-example ${PROJECT_NAME}-m545-example)
-
-
-add_executable(${PROJECT_NAME}-anymal-example 
-  test/anymal_example.cc
-)
-target_link_libraries(${PROJECT_NAME}-anymal-example  
-  PRIVATE
-    ${PROJECT_NAME} 
-    ifopt::ifopt_ipopt
-)
-add_test(${PROJECT_NAME}-example ${PROJECT_NAME}-anymal-example)
-
 
 
 # unit tests of costs/constraints
@@ -135,7 +114,7 @@ endif()
 include(GNUInstallDirs) # for correct libraries locations across platforms
 set(config_package_location "share/${PROJECT_NAME}/cmake") # for .cmake find-scripts installs
 install(
-  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-example ${PROJECT_NAME}-m545-example ${PROJECT_NAME}-anymal-example
+  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-example
   EXPORT ${PROJECT_NAME}-targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

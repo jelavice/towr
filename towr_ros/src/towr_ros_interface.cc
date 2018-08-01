@@ -167,8 +167,8 @@ TowrRosInterface::GetIntermediateSolutions ()
   return trajectories;
 }
 
-TowrRos::XppVec
-TowrRos::GetTrajectory () const
+TowrRosInterface::XppVec
+TowrRosInterface::GetTrajectory () const
 {
   XppVec trajectory;
   double t = 0.0;

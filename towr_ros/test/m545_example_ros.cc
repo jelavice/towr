@@ -17,7 +17,6 @@
 #include <xpp_states/robot_state_cartesian.h>
 #include <xpp_msgs/RobotStateCartesian.h>
 
-#include <towr/towr.h>
 #include <towr_ros/towr_ros.h>
 
 #include <ifopt/ipopt_solver.h>
