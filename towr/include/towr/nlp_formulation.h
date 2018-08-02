@@ -113,7 +113,7 @@ private:
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeWheelVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesWithWheels() const;
-
+  //todo add here joint variables
 
   // constraints
   ContraintPtrVec GetConstraint(Parameters::ConstraintName name,
@@ -128,6 +128,7 @@ private:
   ContraintPtrVec MakeBaseAccConstraint(const SplineHolder& s) const;
 
   ContraintPtrVec MakeWheelConstraint(const SplineHolder& s) const;
+  //todo add the nasty kinematic constraint
 
   // costs
   CostPtrVec GetCost(const Parameters::CostName& id, double weight) const;

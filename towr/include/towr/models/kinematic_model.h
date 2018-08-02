@@ -50,6 +50,7 @@ public:
   using Ptr      = std::shared_ptr<KinematicModel>;
   using EEPos    = std::vector<Eigen::Vector3d>;
   using Vector3d = Eigen::Vector3d;
+  using VectorXd = Eigen::VectorXd;
 
   /**
    * @brief Constructs a kinematic model of a robot with zero range of motion.
@@ -88,6 +89,18 @@ public:
   {
     return nominal_stance_.size();
   }
+
+
+  //todo add some more craps here
+  virtual EEPos GetStanceInBase(VectorXd joint_angles) const {
+
+    EEPos ee_pos;
+
+    return ee_pos;
+
+  }
+
+
 
 protected:
   EEPos nominal_stance_;
