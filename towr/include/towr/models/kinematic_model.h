@@ -91,17 +91,6 @@ public:
   }
 
 
-  //todo add some more craps here
-  virtual EEPos GetStanceInBase(VectorXd joint_angles) const {
-
-    EEPos ee_pos;
-
-    return ee_pos;
-
-  }
-
-
-
 protected:
   EEPos nominal_stance_;
   Vector3d max_dev_from_nominal_;

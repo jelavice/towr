@@ -67,11 +67,12 @@ struct RobotModel {
    * See folder: \ref include/towr/models/examples for more information.
    * @ingroup Robots
    */
-  enum Robot { Monoped, Biped, Hyq, Anymal, m545, ROBOT_COUNT };
+  enum Robot { Monoped, Biped, Hyq, Anymal, m545, m545full, ROBOT_COUNT };
 
 
   RobotModel() = default;
   RobotModel(Robot robot);
+  RobotModel(Robot robot, const std::string &urdfDescription, double dt);
 
   KinematicModel::Ptr kinematic_model_;
   DynamicModel::Ptr   dynamic_model_;
@@ -85,7 +86,8 @@ const static std::map<RobotModel::Robot, std::string> robot_names =
   {RobotModel::Biped,   "Biped"},
   {RobotModel::Hyq,     "Hyq"},
   {RobotModel::Anymal,  "Anymal"},
-  {RobotModel::m545, "m545"}
+  {RobotModel::m545, "m545"},
+  {RobotModel::m545full, "m545full"}
 };
 
 } /* namespace towr */

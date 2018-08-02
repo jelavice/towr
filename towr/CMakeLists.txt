@@ -32,6 +32,7 @@ add_library(${PROJECT_NAME} SHARED
   src/robot_model.cc
   src/dynamic_model.cc
   src/single_rigid_body_dynamics.cc
+  src/m545_model.cc
   # constraints
   src/time_discretization_constraint.cc
   src/base_motion_constraint.cc

@@ -12,6 +12,9 @@
 #include <towr/models/single_rigid_body_dynamics.h>
 #include <towr/models/endeffector_mappings.h>
 
+#include "excavator_model/ExcavatorModel.hpp"
+#include "excavator_model/Limits.hpp"
+
 namespace towr {
 
 /**
@@ -20,17 +23,23 @@ namespace towr {
  */
 class M545KinematicModelFull : public KinematicModel {
 public:
-  M545KinematicModelFull () : KinematicModel(4)
-  {
 
-    //todo implement so much crap here
+  using MatrixXd = Eigen::MatrixXd;
 
-  }
+  M545KinematicModelFull (const std::string &urdfDescription, double dt);
+  EEPos GetEEPositions(VectorXd jointAngles);
+  MatrixXd GetEEJacobian(VectorXd jointAngles);
+
+
+private:
+  excavator_model::Limits joint_limits_;
+  excavator_model::ExcavatorModel model_;
+
 };
 
-class M545DynamicModel : public SingleRigidBodyDynamics {
+class M545DynamicModelFull : public SingleRigidBodyDynamics {
 public:
-  M545DynamicModel() : SingleRigidBodyDynamics(3700.0,
+  M545DynamicModelFull() : SingleRigidBodyDynamics(3700.0,
                       2485.29, 1640.58, 1600.99, 0.0, 0.0, 0.0,
                       4) {}
 };

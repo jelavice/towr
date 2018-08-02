@@ -34,6 +34,7 @@
 #include <towr/models/examples/hyq_model.h>
 #include <towr/models/examples/anymal_model.h>
 #include <towr/models/examples/m545_model_simple.h>
+#include <towr/models/examples/m545_model.h>
 
 namespace towr {
 
@@ -65,6 +66,25 @@ RobotModel::RobotModel(Robot robot)
       assert(false);  // Error: Robot model not implemented.
       break;
   }
+}
+
+
+RobotModel::RobotModel(Robot robot, const std::string &urdfDescription, double dt) : RobotModel(robot){
+
+  robot_name_ = robot_names.at(robot);
+
+  if (robot == m545full){
+
+    dynamic_model_.reset();
+    kinematic_model_.reset();
+
+    dynamic_model_ = std::make_shared<M545DynamicModelFull>();
+    kinematic_model_ = std::make_shared<M545KinematicModelFull>(urdfDescription, dt);
+
+  } else {
+    /* do nothing*/
+  }
+
 }
 
 }  // namespace towr

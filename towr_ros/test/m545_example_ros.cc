@@ -168,8 +168,15 @@ void printTrajectory(const SplineHolder &x)
   }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+
+  ros::init(argc, argv, "m545_planning_node");
+  ros::NodeHandle nh;
+
+  //get the excavator model
+  std::string urdfDescription;
+  nh.getParam("romo_mm_description", urdfDescription);
 
   NlpFormulation formulation;
 
@@ -203,9 +210,7 @@ int main()
   // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr::kPos) << 2.0, 2.0, 0.95;
 
-
   Parameters& params = formulation.params_;
-
 
   const double duration = 5.0;
   params.SetNumberEEPolynomials(50);
@@ -225,15 +230,15 @@ int main()
 
   // Pass this information to the actual solver
   ifopt::Problem nlp;
-    SplineHolder solution;
-    for (auto c : formulation.GetVariableSets(solution))
-      nlp.AddVariableSet(c);
+  SplineHolder solution;
+  for (auto c : formulation.GetVariableSets(solution))
+    nlp.AddVariableSet(c);
 
-    for (auto c : formulation.GetConstraints(solution))
-      nlp.AddConstraintSet(c);
+  for (auto c : formulation.GetConstraints(solution))
+    nlp.AddConstraintSet(c);
 
-    for (auto c : formulation.GetCosts())
-      nlp.AddCostSet(c);
+  for (auto c : formulation.GetCosts())
+    nlp.AddCostSet(c);
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
@@ -249,7 +254,6 @@ int main()
 
   solver->Solve(nlp);
 
-
   //printTrajectory(solution);
 
   // Defaults to /home/user/.ros/
@@ -258,7 +262,8 @@ int main()
   bag.open(bag_file, rosbag::bagmode::Write);
   ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
   auto final_trajectory = GetTrajectory(solution);
-  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired, formulation.terrain_.get());
+  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired,
+                         formulation.terrain_.get());
 
   bag.close();
 
