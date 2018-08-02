@@ -5,6 +5,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 find_package(ifopt 2.0.1 REQUIRED)
 
 
+find_package(excavator_model REQUIRED)
+find_package(loco_m545 REQUIRED)
+
 ###########
 ## Build ##
 ###########
@@ -67,7 +70,13 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC 
     ifopt::ifopt_core
+    ${excavator_model_LIBRARIES}
+    ${loco_m545_LIBRARIES}
 )
+
+include_directories(${excavator_model_INCLUDE_DIRS})
+include_directories(${loco_m545_INCLUDE_DIRS})
+
 target_include_directories(${PROJECT_NAME} 
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
