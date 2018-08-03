@@ -25,11 +25,8 @@ class M545KinematicModelFull : public KinematicModel
 {
  public:
 
-  using MatrixXd = Eigen::MatrixXd;
-  using JointLimitMap = std::map<std::string, std::map<std::string, double>>;
-
   //joint that are of interest for the planning
-  enum joints
+  enum Joints
   {
     J_LF_HAA,
     J_LF_HFE,
@@ -51,22 +48,39 @@ class M545KinematicModelFull : public KinematicModel
     NUM_JOINTS
   };
 
+  enum LimbStartIndex
+  {
+    LF = J_LF_HAA,
+    RF = J_RF_HAA,
+    LH = J_LH_HFE,
+    RH = J_RH_HFE,
+    BOOM = J_TURN
+  };
+
+  using MatrixXd = Eigen::MatrixXd;
+  using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
+  using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
+
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
-  EEPos GetEEPositions(VectorXd jointAngles);
-  MatrixXd GetEEJacobian(VectorXd jointAngles);
+  const EEPos &GetEEPositions(const VectorXd &jointAngles);
+
+  const JointVector &GetLowerLimits();
+  const JointVector &GetUpperLimits();
 
  private:
 
   void InitializeJointLimits();
-  void CalculateJointLimitsforSpecificLeg(const excavator_model::Limits &limtis,
-                                          loco_m545::RD::LimbEnum limb, unsigned int dof);
-
+  void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
+                                           loco_m545::RD::LimbEnum limb, unsigned int dof);
+  void GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum limb, loco_m545::RD::BodyEnum ee,
+                                    const Eigen::VectorXd &jointAngles, unsigned int dof);
   void PrintJointLimits();
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
-  Eigen::Matrix<double, joints::NUM_JOINTS, 1> upperJointLimits_;
-  Eigen::Matrix<double, joints::NUM_JOINTS, 1> lowerJointLimits_;
+  JointVector upper_joint_limits_;
+  JointVector lower_joint_limits_;
+  EEPos ee_pos_;
 
 };
 
