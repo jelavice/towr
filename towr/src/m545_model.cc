@@ -9,8 +9,10 @@
 
 namespace towr {
 
+constexpr unsigned int numEE = 5;
+
 M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescription, double dt)
-    : KinematicModel(5),
+    : KinematicModel(numEE),
       model_(dt)
 {
 
@@ -21,8 +23,13 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   InitializeJointLimits();
   //PrintJointLimits();
 
-  ee_pos_.resize(5);
-  std::cout << model_.getState() << std::endl;
+  ee_pos_.resize(numEE);
+  ee_jac_.resize(numEE);
+
+//  std::cout << model_.getState() << std::endl;
+//  Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
+//  jointAngles.setZero();
+//  GetEEPositions(jointAngles);
 
 }
 
@@ -32,19 +39,19 @@ void M545KinematicModelFull::InitializeJointLimits()
   limits.init();
 
   // get the limits LF
-  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::LF, 3);
+  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::LF, legDof);
 
   // get the limits RF
-  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::RF, 3);
+  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::RF, legDof);
 
   // get the limits LH
-  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::LH, 3);
+  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::LH, legDof);
 
   // get the limits RH
-  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::RH, 3);
+  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::RH, legDof);
 
   // get the limits BOOM
-  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::BOOM, NUM_JOINTS - 12);  //a bit hacky
+  CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::BOOM, boomDof);  //a bit hacky
 
 }
 
@@ -97,29 +104,22 @@ const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetUpperLimit
 const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     const VectorXd &jointAngles)
 {
-  //get EE positions for LF
-  {
-    unsigned int dof = 3;
-    GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LF, loco_m545::RD::BodyEnum::LF_WHEEL,
-                                 jointAngles.segment(LimbStartIndex::LF, dof), dof);
-    //RF
-    GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RF, loco_m545::RD::BodyEnum::RF_WHEEL,
-                                 jointAngles.segment(LimbStartIndex::RF, dof), dof);
-    //LH
-    GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LH, loco_m545::RD::BodyEnum::LH_WHEEL,
-                                 jointAngles.segment(LimbStartIndex::LH, dof), dof);
-    //RH
-    GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RH, loco_m545::RD::BodyEnum::RH_WHEEL,
-                                 jointAngles.segment(LimbStartIndex::RH, dof), dof);
-  }
+//get EE positions for LF
+  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LF, loco_m545::RD::BodyEnum::LF_WHEEL,
+                               jointAngles.segment(LimbStartIndex::LF, legDof), legDof);
+  //RF
+  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RF, loco_m545::RD::BodyEnum::RF_WHEEL,
+                               jointAngles.segment(LimbStartIndex::RF, legDof), legDof);
+  //LH
+  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LH, loco_m545::RD::BodyEnum::LH_WHEEL,
+                               jointAngles.segment(LimbStartIndex::LH, legDof), legDof);
+  //RH
+  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RH, loco_m545::RD::BodyEnum::RH_WHEEL,
+                               jointAngles.segment(LimbStartIndex::RH, legDof), legDof);
 
-  {
-    //BOOM
-    unsigned int dof = 5;
-    GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::BOOM,
-                                 loco_m545::RD::BodyEnum::ENDEFFECTOR,
-                                 jointAngles.segment(LimbStartIndex::BOOM, dof), dof);
-  }
+  //BOOM
+  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::BOOM, loco_m545::RD::BodyEnum::ENDEFFECTOR,
+                               jointAngles.segment(LimbStartIndex::BOOM, boomDof), boomDof);
 
   return ee_pos_;
 
@@ -136,8 +136,10 @@ void M545KinematicModelFull::GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnu
   unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(limb));
 
   jointPositions = state.getJointPositions().toImplementation();
-  jointPositions.block(idStart, 0, dof, 1) = jointAngles;
-  //std::cout << "Joint positions: " << jointPositions.block(idStart,0,dof,1).transpose() << std::endl;
+//jointPositions.block(idStart, 0, dof, 1) = jointAngles;
+  jointPositions.segment(idStart, dof) = jointAngles;
+
+//std::cout << "Joint positions: " << jointPositions.block(idStart,0,dof,1).transpose() << std::endl;
   state.getJointPositions().toImplementation() = jointPositions;
   model_.setState(state, true, false, false);
   Eigen::Vector3d positionEE = model_.getPositionBodyToBody(
@@ -148,6 +150,12 @@ void M545KinematicModelFull::GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnu
 }
 
 //todo method for jacobian calculation
+
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetEEJacobians(
+    const VectorXd &jointAngles)
+{
+  return ee_jac_;
+}
 
 }
 /*namespace*/

@@ -57,12 +57,18 @@ class M545KinematicModelFull : public KinematicModel
     BOOM = J_TURN
   };
 
+  static constexpr unsigned int legDof = 3;
+  static constexpr unsigned int boomDof = NUM_JOINTS - 4 * legDof;
+
   using MatrixXd = Eigen::MatrixXd;
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
   using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
+  using EEJac = std::vector<MatrixXd>;
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
   const EEPos &GetEEPositions(const VectorXd &jointAngles);
+
+  const EEJac &GetEEJacobians(const VectorXd &jointAngles);
 
   const JointVector &GetLowerLimits();
   const JointVector &GetUpperLimits();
@@ -81,6 +87,7 @@ class M545KinematicModelFull : public KinematicModel
   JointVector upper_joint_limits_;
   JointVector lower_joint_limits_;
   EEPos ee_pos_;
+  EEJac ee_jac_;
 
 };
 
