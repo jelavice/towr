@@ -171,7 +171,7 @@ void printTrajectory(const SplineHolder &x)
 int main(int argc, char** argv)
 {
 
-  ros::init(argc, argv, "m545_planning_node");
+  ros::init(argc, argv, "m545_example_node");
   ros::NodeHandle nh;
 
   //get the excavator model
@@ -184,7 +184,8 @@ int main(int argc, char** argv)
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
   // Kinematic limits and dynamic parameters of the hopper
-  formulation.model_ = RobotModel(RobotModel::m545);
+  constexpr double dt = 0.01;
+  formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
   Parameters::robot_has_wheels_ = true;
 
   // set the initial position of the hopper
