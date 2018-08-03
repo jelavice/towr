@@ -15,7 +15,6 @@
 #include "excavator_model/Limits.hpp"
 #include "loco_m545/common/typedefs.hpp"
 
-
 namespace towr {
 
 /**
@@ -27,6 +26,30 @@ class M545KinematicModelFull : public KinematicModel
  public:
 
   using MatrixXd = Eigen::MatrixXd;
+  using JointLimitMap = std::map<std::string, std::map<std::string, double>>;
+
+  //joint that are of interest for the planning
+  enum joints
+  {
+    J_LF_HAA,
+    J_LF_HFE,
+    J_LF_STEER,
+    J_RF_HAA,
+    J_RF_HFE,
+    J_RF_STEER,
+    J_LH_HFE,
+    J_LH_HAA,
+    J_LH_STEER,
+    J_RH_HFE,
+    J_RH_HAA,
+    J_RH_STEER,
+    J_TURN,
+    J_BOOM,
+    J_DIPPER,
+    J_TELE,
+    J_EE_PITCH,
+    NUM_JOINTS
+  };
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
   EEPos GetEEPositions(VectorXd jointAngles);
@@ -36,14 +59,14 @@ class M545KinematicModelFull : public KinematicModel
 
   void InitializeJointLimits();
   void CalculateJointLimitsforSpecificLeg(const excavator_model::Limits &limtis,
-                                                            loco_m545::RD::LimbEnum limb,
-                                                            unsigned int dof);
-
+                                          loco_m545::RD::LimbEnum limb, unsigned int dof);
 
   void PrintJointLimits();
 
   excavator_model::ExcavatorModel model_;
-  std::map<std::string, std::map<std::string, double>> joint_limits_;
+  JointLimitMap joint_limits_;
+  Eigen::Matrix<double, joints::NUM_JOINTS, 1> upperJointLimits_;
+  Eigen::Matrix<double, joints::NUM_JOINTS, 1> lowerJointLimits_;
 
 };
 

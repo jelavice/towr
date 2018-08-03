@@ -24,7 +24,6 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   InitializeJointLimits();
   PrintJointLimits();
 
-
 }
 
 void M545KinematicModelFull::InitializeJointLimits()
@@ -32,7 +31,6 @@ void M545KinematicModelFull::InitializeJointLimits()
   excavator_model::Limits limits;
   limits.init();
 
-  using namespace loco_m545;
 
   // get the limits LF
   CalculateJointLimitsforSpecificLeg(limits, loco_m545::RD::LimbEnum::LF, 3);
@@ -47,7 +45,8 @@ void M545KinematicModelFull::InitializeJointLimits()
   CalculateJointLimitsforSpecificLeg(limits, loco_m545::RD::LimbEnum::RH, 3);
 
   // get the limits BOOM
-  CalculateJointLimitsforSpecificLeg(limits, loco_m545::RD::LimbEnum::BOOM, 5);
+  CalculateJointLimitsforSpecificLeg(limits, loco_m545::RD::LimbEnum::BOOM, NUM_JOINTS - 12); //a bit hacky
+
 
 }
 
@@ -55,6 +54,8 @@ void M545KinematicModelFull::CalculateJointLimitsforSpecificLeg(const excavator_
                                                           loco_m545::RD::LimbEnum limb,
                                                           unsigned int dof)
 {
+
+  static unsigned int id = 0;
 
   unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(limb));
   unsigned int idEnd = idStart + dof;
@@ -67,6 +68,9 @@ void M545KinematicModelFull::CalculateJointLimitsforSpecificLeg(const excavator_
     std::string currJoint = loco_m545::RD::mapKeyEnumToKeyName(jointEnum);
     joint_limits_["lowerLimit"][currJoint] = std::min<double>(lowerLimit, upperLimit);
     joint_limits_["upperLimit"][currJoint] = std::max<double>(lowerLimit, upperLimit);
+    upperJointLimits_(id) = joint_limits_["upperLimit"][currJoint];
+    lowerJointLimits_(id) = joint_limits_["lowerLimit"][currJoint];
+    ++id;
   }
 }
 
@@ -76,7 +80,15 @@ void M545KinematicModelFull::PrintJointLimits(){
     for (auto jt = it->second.begin(); jt != it->second.cend(); ++jt)
         std::cout << it->first << " for joint " << jt->first << ": " << jt->second << std::endl;
 
+  std::cout << "Lower limits joints vector: " << std::endl;
+  std::cout << lowerJointLimits_ << std::endl << std::endl << std::endl;
+  std::cout << "Upper limits joints vector: " << std::endl;
+  std::cout << upperJointLimits_ << std::endl;
+
 }
+
+
+
 
 //todo method for getting the joint limits
 
