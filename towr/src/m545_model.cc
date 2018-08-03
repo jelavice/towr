@@ -104,57 +104,156 @@ const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetUpperLimit
 const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     const VectorXd &jointAngles)
 {
-//get EE positions for LF
-  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LF, loco_m545::RD::BodyEnum::LF_WHEEL,
-                               jointAngles.segment(LimbStartIndex::LF, legDof), legDof);
-  //RF
-  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RF, loco_m545::RD::BodyEnum::RF_WHEEL,
-                               jointAngles.segment(LimbStartIndex::RF, legDof), legDof);
-  //LH
-  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::LH, loco_m545::RD::BodyEnum::LH_WHEEL,
-                               jointAngles.segment(LimbStartIndex::LH, legDof), legDof);
-  //RH
-  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::RH, loco_m545::RD::BodyEnum::RH_WHEEL,
-                               jointAngles.segment(LimbStartIndex::RH, legDof), legDof);
 
-  //BOOM
-  GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum::BOOM, loco_m545::RD::BodyEnum::ENDEFFECTOR,
-                               jointAngles.segment(LimbStartIndex::BOOM, boomDof), boomDof);
+  UpdateModel(jointAngles);
+
+  {
+    //LF
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::LF_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //RF
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::RF_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //LH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::LH_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //RH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::RH_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //BOOM
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::ENDEFFECTOR,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
 
   return ee_pos_;
 
 }
 
-void M545KinematicModelFull::GetEEPositionForSpecificLimb(loco_m545::RD::LimbEnum limb,
-                                                          loco_m545::RD::BodyEnum ee,
-                                                          const Eigen::VectorXd &jointAngles,
-                                                          unsigned int dof)
+//todo method for jacobian calculation
+
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobians(
+    const VectorXd &jointAngles)
+{
+
+  UpdateModel(jointAngles);
+
+  //todo extract only the entries I need!!!!
+  MatrixXd tempJacobian;
+
+  {
+    //LF
+
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
+                                                    loco_m545::RD::BranchEnum::LF,
+                                                    loco_m545::RD::BodyNodeEnum::WHEEL,
+                                                    loco_m545::RD::CoordinateFrameEnum::BASE);
+
+  }
+
+  {
+    //RF
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
+                                                    loco_m545::RD::BranchEnum::RF,
+                                                    loco_m545::RD::BodyNodeEnum::WHEEL,
+                                                    loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //LH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
+                                                    loco_m545::RD::BranchEnum::LH,
+                                                    loco_m545::RD::BodyNodeEnum::WHEEL,
+                                                    loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+    //RH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
+                                                    loco_m545::RD::BranchEnum::RH,
+                                                    loco_m545::RD::BodyNodeEnum::WHEEL,
+                                                    loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+  {
+      //BOOM
+      unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
+      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
+                                                      loco_m545::RD::BranchEnum::BOOM,
+                                                      loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
+                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
+    }
+
+  return ee_jac_;
+}
+
+
+
+void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles)
+{
+  //LF
+  UpdateSpecificLimb(loco_m545::RD::LimbEnum::LF, jointAngles.segment(LimbStartIndex::LF, legDof),
+                     legDof);
+  //RF
+  UpdateSpecificLimb(loco_m545::RD::LimbEnum::RF, jointAngles.segment(LimbStartIndex::RF, legDof),
+                     legDof);
+  //LH
+  UpdateSpecificLimb(loco_m545::RD::LimbEnum::LH, jointAngles.segment(LimbStartIndex::LH, legDof),
+                     legDof);
+  //RH
+  UpdateSpecificLimb(loco_m545::RD::LimbEnum::RH, jointAngles.segment(LimbStartIndex::RH, legDof),
+                     legDof);
+  //BOOM
+  UpdateSpecificLimb(loco_m545::RD::LimbEnum::BOOM,
+                     jointAngles.segment(LimbStartIndex::BOOM, boomDof), boomDof);
+}
+
+void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,
+                                                const VectorXd &jointAngles, unsigned int dof)
 {
   excavator_model::JointVectorD jointPositions;
   excavator_model::ExcavatorState state = model_.getState();
 
   unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(limb));
-
   jointPositions = state.getJointPositions().toImplementation();
 //jointPositions.block(idStart, 0, dof, 1) = jointAngles;
   jointPositions.segment(idStart, dof) = jointAngles;
-
-//std::cout << "Joint positions: " << jointPositions.block(idStart,0,dof,1).transpose() << std::endl;
   state.getJointPositions().toImplementation() = jointPositions;
   model_.setState(state, true, false, false);
-  Eigen::Vector3d positionEE = model_.getPositionBodyToBody(
-      loco_m545::RD::BodyEnum::BASE, ee, loco_m545::RD::CoordinateFrameEnum::BASE);
-
-  ee_pos_.at(static_cast<unsigned int>(limb)) = positionEE;
-
 }
 
-//todo method for jacobian calculation
+void M545KinematicModelFull::ExtractOptimizedJoints(const MatrixXd &bigJacobian){
 
-const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetEEJacobians(
-    const VectorXd &jointAngles)
-{
-  return ee_jac_;
+//  {
+//    unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(loco_m545::RD::LimbEnum::LF));
+//    //copy LF
+//  }
+
 }
 
 }
