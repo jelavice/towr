@@ -23,13 +23,20 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   InitializeJointLimits();
   //PrintJointLimits();
 
+  //resize arrays
   ee_pos_.resize(numEE);
-  ee_jac_.resize(numEE);
+  ee_trans_jac_.resize(numEE);
 
-//  std::cout << model_.getState() << std::endl;
-//  Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
-//  jointAngles.setZero();
-//  GetEEPositions(jointAngles);
+  //create sparse matrices
+  for (auto &mat : ee_trans_jac_)
+    mat.resize(3, NUM_JOINTS);
+
+  //std::cout << model_.getState() << std::endl;
+
+  Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
+  jointAngles.setZero();
+  GetEEPositions(jointAngles);
+  GetTranslationalJacobians(jointAngles);
 
 }
 
@@ -113,6 +120,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
                                                      loco_m545::RD::BodyEnum::LF_WHEEL,
                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
+
+    //std::cout << "Position LF: " << ee_pos_.at(ee_id).transpose() << std::endl;
   }
 
   {
@@ -121,6 +130,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
                                                      loco_m545::RD::BodyEnum::RF_WHEEL,
                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position RF: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
   }
 
   {
@@ -129,6 +140,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
                                                      loco_m545::RD::BodyEnum::LH_WHEEL,
                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position LH: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
   }
 
   {
@@ -137,6 +150,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
                                                      loco_m545::RD::BodyEnum::RH_WHEEL,
                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position RH: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
   }
 
   {
@@ -160,59 +175,77 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
   UpdateModel(jointAngles);
 
   //todo extract only the entries I need!!!!
-  MatrixXd tempJacobian;
+  MatrixXd tempJacobian(3, model_.getDofCount());
 
   {
     //LF
-
+    tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
-                                                    loco_m545::RD::BranchEnum::LF,
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::LF,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
+//    std::cout << "Dof count: " << model_.getDofCount() << std::endl;
+//    std::cout << "Jacobian LF \n" << tempJacobian.transpose() << std::endl << std::endl;
+    ExtractOptimizedJoints(tempJacobian, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF, legDof);
 
   }
 
   {
     //RF
+    tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
-                                                    loco_m545::RD::BranchEnum::RF,
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RF,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
+    //std::cout << "Jacobian RF " << tempJacobian << std::endl;
+    ExtractOptimizedJoints(tempJacobian, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF, legDof);
+
   }
 
   {
     //LH
+    tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
-                                                    loco_m545::RD::BranchEnum::LH,
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::LH,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
+    //std::cout << "Jacobian LH " << tempJacobian << std::endl;
+    ExtractOptimizedJoints(tempJacobian, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH, legDof);
+
   }
 
   {
     //RH
+    tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
-                                                    loco_m545::RD::BranchEnum::RH,
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RH,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
+    //std::cout << "Jacobian RH " << tempJacobian << std::endl;
+    ExtractOptimizedJoints(tempJacobian, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH, legDof);
+
   }
 
   {
-      //BOOM
-      unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian,
-                                                      loco_m545::RD::BranchEnum::BOOM,
-                                                      loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
-                                                      loco_m545::RD::CoordinateFrameEnum::BASE);
-    }
+    //BOOM
+    tempJacobian.setZero();
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
+    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::BOOM,
+                                                    loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
+                                                    loco_m545::RD::CoordinateFrameEnum::BASE);
 
-  return ee_jac_;
+    //std::cout << "Jacobian BOOM " << tempJacobian << std::endl;
+    ExtractOptimizedJoints(tempJacobian, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
+                           boomDof);
+
+  }
+
+  return ee_trans_jac_;
 }
-
-
 
 void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles)
 {
@@ -247,13 +280,31 @@ void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,
   model_.setState(state, true, false, false);
 }
 
-void M545KinematicModelFull::ExtractOptimizedJoints(const MatrixXd &bigJacobian){
+//todo implement
+void M545KinematicModelFull::ExtractOptimizedJoints(const MatrixXd &bigJacobian,
+                                                    loco_m545::RD::LimbEnum limb,
+                                                    LimbStartIndex limbStartIndex, unsigned int dof)
+{
 
-//  {
-//    unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(loco_m545::RD::LimbEnum::LF));
-//    //copy LF
-//  }
+  constexpr unsigned int dim3 = 3;
 
+  unsigned int ee_id = static_cast<unsigned int>(limb);
+  unsigned int idStart = static_cast<unsigned int>(limbStartIndex);
+  unsigned int idStart_loco = loco_m545::RD::mapKeyEnumToKeyId(
+      loco_m545::RD::getLimbStartJoint(limb));
+
+//  std::cout << "limb id: " << ee_id << std::endl;
+//  std::cout << "id start: " << idStart << std::endl;
+//  std::cout << "id start loco: " << idStart_loco << std::endl;
+//  std::cout << "Jacobian size: " << bigJacobian.rows() << " x " << bigJacobian.cols() << std::endl;
+//  std::cout << "sparse matrix size " << ee_trans_jac_.at(ee_id).rows() << " x " << ee_trans_jac_.at(ee_id).cols() << std::endl;
+  for (unsigned int j = 0; j < dim3; ++j)
+    for (unsigned int i = 0; i < dof; ++i) {
+      //std::cout <<  "coeffs: " << idStart + i << ", " << idStart_loco + i;
+      ee_trans_jac_.at(ee_id).coeffRef(j, idStart + i) = bigJacobian(j, idStart_loco + i);
+      //std:: cout << " done" << std::endl;
+    }
+  //std::cout << std::endl << std::endl;
 }
 
 }

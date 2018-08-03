@@ -63,17 +63,15 @@ class M545KinematicModelFull : public KinematicModel
   using MatrixXd = Eigen::MatrixXd;
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
   using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
-  using EEJac = std::vector<Eigen::SparseMatrix<double, Eigen::RowMajor> >;
+  using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
+  using EEJac = std::vector<SparseMatrix>;
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
-  void UpdateModel(const VectorXd &jointAngles);
 
   const EEPos &GetEEPositions(const VectorXd &jointAngles);
 
   const EEJac &GetTranslationalJacobians(const VectorXd &jointAngles);
-  const EEJac &GetTranslationalJacobiansSparse(const VectorXd &jointAngles);
-
   const JointVector &GetLowerLimits();
   const JointVector &GetUpperLimits();
 
@@ -82,21 +80,22 @@ class M545KinematicModelFull : public KinematicModel
   void InitializeJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
                                            loco_m545::RD::LimbEnum limb, unsigned int dof);
+  void UpdateModel(const VectorXd &jointAngles);
 
   void PrintJointLimits();
-
-  //todo add one functin to update the model!!!
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof);
 
-  void ExtractOptimizedJoints(const MatrixXd &bigJacobian);
+  void ExtractOptimizedJoints(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
+                              LimbStartIndex limbStartIndex,
+                              unsigned int dof);
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
   JointVector upper_joint_limits_;
   JointVector lower_joint_limits_;
   EEPos ee_pos_;
-  EEJac ee_jac_;
+  EEJac ee_trans_jac_;
 
 };
 
