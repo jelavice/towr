@@ -205,6 +205,22 @@ std::vector<PhaseDurations::Ptr> NlpFormulation::MakeContactScheduleVariables() 
   return vars;
 }
 
+std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const {
+
+  std::vector<NodesVariables::Ptr> vars;
+
+//    for (int ee = 0; ee < params_.GetEECount(); ee++) {
+//      auto var = std::make_shared<PhaseDurations>(ee, params_.ee_phase_durations_.at(ee),
+//                                                  params_.ee_in_contact_at_start_.at(ee),
+//                                                  params_.GetPhaseDurationBounds().front(),
+//                                                  params_.GetPhaseDurationBounds().back());
+//      vars.push_back(var);
+//    }
+
+    return vars;
+}
+
+
 std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeWheelVariables() const
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;

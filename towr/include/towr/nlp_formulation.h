@@ -113,6 +113,7 @@ private:
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeWheelVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesWithWheels() const;
+  std::vector<NodesVariables::Ptr> MakeJointVariables() const;
   //todo add here joint variables
 
   // constraints
