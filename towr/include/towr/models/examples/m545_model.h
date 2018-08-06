@@ -69,12 +69,13 @@ class M545KinematicModelFull : public KinematicModel
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
   // these are in the base frame
-  const EEPos &GetEEPositions(const VectorXd &jointAngles);
+  const EEPos &GetEEPositions();
 
   // this is in the world frame
-  const EEPos &GetEEOrientation(const VectorXd &jointAngles);
+  const EEPos &GetEEOrientation();
 
-  const EEJac &GetTranslationalJacobians(const VectorXd &jointAngles);
+  //base frame
+  const EEJac &GetTranslationalJacobians();
   const JointVector &GetLowerLimits();
   const JointVector &GetUpperLimits();
 
@@ -102,6 +103,7 @@ class M545KinematicModelFull : public KinematicModel
   JointVector upper_joint_limits_;
   JointVector lower_joint_limits_;
   EEPos ee_pos_;
+  EEPos ee_rot_;
   EEJac ee_trans_jac_;
 
 };

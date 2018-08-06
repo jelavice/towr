@@ -6,6 +6,7 @@
  */
 
 #include <towr/models/examples/m545_model.h>
+#include <kindr/Core>
 
 namespace towr {
 
@@ -26,6 +27,7 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   //resize arrays
   ee_pos_.resize(numEE);
   ee_trans_jac_.resize(numEE);
+  ee_rot_.resize(numEE);
 
   //create sparse matrices
   for (auto &mat : ee_trans_jac_)
@@ -34,9 +36,13 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   //std::cout << model_.getState() << std::endl;
 
   Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
+  Eigen::VectorXd euler(3);
   jointAngles.setZero();
-  GetEEPositions(jointAngles);
-  GetTranslationalJacobians(jointAngles);
+  euler.setZero();
+  UpdateModel(jointAngles, euler);
+  GetEEPositions();
+  GetTranslationalJacobians();
+  GetEEOrientation();
 
 }
 
@@ -108,67 +114,64 @@ const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetUpperLimit
   return upper_joint_limits_;
 }
 
-const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation(
-    const VectorXd &jointAngles)
-{
+Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat){
 
-  //okay update the model here with the base orientation
+  // rotation convention for this is yaw pitch roll in that order
+
+  kindr::RotationMatrixD rotMat(mat(0,0), mat(0,1), mat(0,2),
+                                mat(1,0), mat(1,1), mat(1,2),
+                                mat(2,0), mat(2,1), mat(2,2));
+
+  kindr::EulerAnglesYprD euler(rotMat);
+
+  euler.setUnique();
+
+  return Eigen::Vector3d(euler.x(), euler.y(), euler.z());
+
+}
+
+const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation()
+{
 
   {
     //LF
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::LF_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
-
-    //std::cout << "Position LF: " << ee_pos_.at(ee_id).transpose() << std::endl;
+    ee_rot_.at(ee_id) = rotMat2ypr(model_.getOrientationWorldToBody(loco_m545::RD::BodyEnum::LF_WHEEL));
   }
 
   {
     //RF
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::RF_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
-    //std::cout << "Position RF: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
+    ee_rot_.at(ee_id) = rotMat2ypr(model_.getOrientationWorldToBody(loco_m545::RD::BodyEnum::RF_WHEEL));
   }
 
   {
     //LH
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::LH_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
-    //std::cout << "Position LH: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
+    ee_rot_.at(ee_id) = rotMat2ypr(model_.getOrientationWorldToBody(loco_m545::RD::BodyEnum::LH_WHEEL));
   }
 
   {
     //RH
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::RH_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
-    //std::cout << "Position RH: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
+    ee_rot_.at(ee_id) = rotMat2ypr(model_.getOrientationWorldToBody(loco_m545::RD::BodyEnum::RH_WHEEL));
   }
 
   {
-    //BOOM
+    //LH
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::ENDEFFECTOR,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_rot_.at(ee_id) = rotMat2ypr(model_.getOrientationWorldToBody(loco_m545::RD::BodyEnum::BOOM));
   }
+
+  return ee_rot_;
 
 }
 
-const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
-    const VectorXd &jointAngles)
+const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
 {
 
-  UpdateModel(jointAngles);
+  //delegate this to the caller
+  //UpdateModel(jointAngles);
 
   {
     //LF
@@ -222,11 +225,11 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
 
 }
 
-const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobians(
-    const VectorXd &jointAngles)
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobians()
 {
 
-  UpdateModel(jointAngles);
+  //delegate to the caller
+  //UpdateModel(jointAngles);
 
   MatrixXd tempJacobian(3, model_.getDofCount());
 
