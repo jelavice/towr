@@ -41,6 +41,7 @@
 #include <towr/constraints/total_duration_constraint.h>
 #include <towr/constraints/spline_acc_constraint.h>
 #include <towr/constraints/wheel_direction_constraint.h>
+#include <towr/constraints/range_of_motion_constraint_joints.h>
 
 #include <towr/costs/node_cost.h>
 #include <towr/variables/nodes_variables_all.h>
@@ -396,6 +397,22 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
   return constraints;
 }
 
+NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoints(const SplineHolder& s) const
+{
+  ContraintPtrVec constraints;
+
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto c = std::make_shared < RangeOfMotionConstraintJoints > (model_.kinematic_model_,
+                                                                 params_.GetTotalTime(),
+                                                                 params_.dt_constraint_range_of_motion_, ee,
+                                                                 s);
+    constraints.push_back(c);
+  }
+
+  return constraints;
+}
+
+//todo fix the segfault that I get when I use wheels and swing constraint
 NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const
 {
   ContraintPtrVec constraints;

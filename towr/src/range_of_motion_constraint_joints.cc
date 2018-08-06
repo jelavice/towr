@@ -5,11 +5,11 @@
  *      Author: jelavice
  */
 
-#include <towr/constraints/range_of_motion_constraint_complicated.h>
+#include <towr/constraints/range_of_motion_constraint_joints.h>
 
 namespace towr {
 
-RangeOfMotionConstraintComplicated::RangeOfMotionConstraintComplicated(
+RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(
     const KinematicModel::Ptr& robot_model, double T, double dt, const EE& ee,
     const SplineHolder& spline_holder)
     : RangeOfMotionConstraint(robot_model, T, dt, ee, spline_holder)
@@ -25,20 +25,20 @@ RangeOfMotionConstraintComplicated::RangeOfMotionConstraintComplicated(
 //  SetRows(GetNumberOfNodes() * k3D);
 }
 
-void RangeOfMotionConstraintComplicated::UpdateConstraintAtInstance(double t, int k,
+void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k,
                                                                     VectorXd& g) const
 {
 
 }
-void RangeOfMotionConstraintComplicated::UpdateBoundsAtInstance(double t, int k, VecBound&) const
+void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound&) const
 {
 }
-void RangeOfMotionConstraintComplicated::UpdateJacobianAtInstance(double t, int k, std::string,
+void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, std::string,
                                                                   Jacobian&) const
 {
 }
 
-int RangeOfMotionConstraintComplicated::GetRow(int node, int dimension) const
+int RangeOfMotionConstraintJoints::GetRow(int node, int dimension) const
 {
 }
 

@@ -131,6 +131,9 @@ private:
   ContraintPtrVec MakeWheelConstraint(const SplineHolder& s) const;
   //todo add the nasty kinematic constraint
 
+  ContraintPtrVec MakeRangeOfMotionConstraintJoints(const SplineHolder& s) const;
+
+
   // costs
   CostPtrVec GetCost(const Parameters::CostName& id, double weight) const;
   CostPtrVec MakeForcesCost(double weight) const;

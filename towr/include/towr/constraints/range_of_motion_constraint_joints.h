@@ -11,15 +11,16 @@
 
 namespace towr {
 
-class RangeOfMotionConstraintComplicated : public RangeOfMotionConstraint
+class RangeOfMotionConstraintJoints : public RangeOfMotionConstraint
 {
+ public:
+  using EE = uint;
+  using Vector3d = Eigen::Vector3d;
 
-  RangeOfMotionConstraintComplicated(const KinematicModel::Ptr& robot_model,
-      double T, double dt,
-      const EE& ee,
-      const SplineHolder& spline_holder);
+  RangeOfMotionConstraintJoints(const KinematicModel::Ptr& robot_model, double T, double dt,
+                                const EE& ee, const SplineHolder& spline_holder);
 
-  ~RangeOfMotionConstraintComplicated() = default;
+  ~RangeOfMotionConstraintJoints() = default;
 
  private:
   NodeSpline::Ptr base_linear_;     ///< the linear position of the base.
