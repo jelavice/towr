@@ -75,14 +75,21 @@ class M545KinematicModelFull : public KinematicModel
   const EEPos &GetEEOrientation();
 
   //base frame
-  const EEJac &GetTranslationalJacobians();
+  const EEJac &GetTranslationalJacobiansWRTjoints();
+
+  // dis in the world frame
+  const EEJac &GetOrientationJacobiansWRTjoints();
+
+  // dis in the world frame (dis identity matrix)
+  const EEJac &GetOrientationJacobiansWRTbaseAngles();
+
   const JointVector &GetLowerLimits();
   const JointVector &GetUpperLimits();
 
  private:
 
   //update base stuff and joints
-  void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr );
+  void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr);
 
   void InitializeJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
@@ -94,9 +101,9 @@ class M545KinematicModelFull : public KinematicModel
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof);
 
-  void ExtractOptimizedJoints(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
-                              LimbStartIndex limbStartIndex,
-                              unsigned int dof);
+  void ExtractJointJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
+                                   LimbStartIndex limbStartIndex, unsigned int dof,
+                                   EEJac &jacArray);
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
@@ -104,7 +111,9 @@ class M545KinematicModelFull : public KinematicModel
   JointVector lower_joint_limits_;
   EEPos ee_pos_;
   EEPos ee_rot_;
-  EEJac ee_trans_jac_;
+  EEJac ee_trans_jac_joints_;
+  EEJac ee_rot_jac_joints_;
+  EEJac ee_rot_jac_base_angles_;
 
 };
 
