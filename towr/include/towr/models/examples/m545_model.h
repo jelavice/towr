@@ -68,8 +68,11 @@ class M545KinematicModelFull : public KinematicModel
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
-
+  // these are in the base frame
   const EEPos &GetEEPositions(const VectorXd &jointAngles);
+
+  // this is in the world frame
+  const EEPos &GetEEOrientation(const VectorXd &jointAngles);
 
   const EEJac &GetTranslationalJacobians(const VectorXd &jointAngles);
   const JointVector &GetLowerLimits();
@@ -77,9 +80,13 @@ class M545KinematicModelFull : public KinematicModel
 
  private:
 
+  //update base stuff and joints
+  void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr );
+
   void InitializeJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
                                            loco_m545::RD::LimbEnum limb, unsigned int dof);
+  //update joints
   void UpdateModel(const VectorXd &jointAngles);
 
   void PrintJointLimits();

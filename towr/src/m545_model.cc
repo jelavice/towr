@@ -108,6 +108,62 @@ const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetUpperLimit
   return upper_joint_limits_;
 }
 
+const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation(
+    const VectorXd &jointAngles)
+{
+
+  //okay update the model here with the base orientation
+
+  {
+    //LF
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::LF_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
+    //std::cout << "Position LF: " << ee_pos_.at(ee_id).transpose() << std::endl;
+  }
+
+  {
+    //RF
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::RF_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position RF: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
+  }
+
+  {
+    //LH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::LH_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position LH: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
+  }
+
+  {
+    //RH
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::RH_WHEEL,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    //std::cout << "Position RH: " << ee_pos_.at(ee_id).transpose() << std::endl;
+
+  }
+
+  {
+    //BOOM
+    unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
+    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                     loco_m545::RD::BodyEnum::ENDEFFECTOR,
+                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+  }
+
+}
+
 const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
     const VectorXd &jointAngles)
 {
@@ -166,15 +222,12 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions(
 
 }
 
-//todo method for jacobian calculation
-
 const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobians(
     const VectorXd &jointAngles)
 {
 
   UpdateModel(jointAngles);
 
-  //todo extract only the entries I need!!!!
   MatrixXd tempJacobian(3, model_.getDofCount());
 
   {
@@ -247,6 +300,21 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
   return ee_trans_jac_;
 }
 
+//update base stuff and joints
+void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr)
+{
+  //update the base orientation
+  excavator_model::ExcavatorState state = model_.getState();
+
+  kindr::EulerAnglesYprD euler(ypr.z(), ypr.y(), ypr.x());
+
+  state.setOrientationBaseToWorld(kindr::RotationQuaternionD(euler));
+  model_.setState(state, true, false, false);
+
+  //update the joints
+  UpdateModel(jointAngles);
+}
+
 void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles)
 {
   //LF
@@ -280,7 +348,6 @@ void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,
   model_.setState(state, true, false, false);
 }
 
-//todo implement
 void M545KinematicModelFull::ExtractOptimizedJoints(const MatrixXd &bigJacobian,
                                                     loco_m545::RD::LimbEnum limb,
                                                     LimbStartIndex limbStartIndex, unsigned int dof)
