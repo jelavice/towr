@@ -104,7 +104,7 @@ SplineHolder::SplineHolder(NodesVariables::Ptr base_lin_nodes, NodesVariables::P
   // seems that this is just the contact schedule
   for (int i = 0; i < joint_motion_nodes.size(); ++i)
     joint_motion_.push_back(
-        std::make_shared<NodeSpline>(joint_motion_nodes.at(i).get(), base_poly_durations));
+        std::make_shared<NodeSpline>(joint_motion_nodes.at(i).get(), base_poly_durations)); //base poly durations are the same as the one for the EE
 
 }
 

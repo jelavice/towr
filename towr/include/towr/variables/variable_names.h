@@ -46,7 +46,8 @@ static const std::string ee_motion_nodes = "ee-motion_";
 static const std::string ee_force_nodes = "ee-force_";
 static const std::string contact_schedule = "ee-schedule";
 static const std::string wheel_angle_nodes = "wheel-angle_";
-static const std::string wheel_force_nodes = "wheel-force_";
+static const std::string joint_nodes = "joints_";
+
 
 static std::string EEMotionNodes(uint ee)
 {
@@ -68,10 +69,11 @@ static std::string WheelAngleNodes(uint ee)
   return wheel_angle_nodes + std::to_string(ee);
 }
 
-static std::string WheelForceNodes(uint ee)
+static std::string JointNodes(uint ee)
 {
-  return wheel_force_nodes + std::to_string(ee);
+  return joint_nodes + std::to_string(ee);
 }
+
 
 }  // namespace id
 }  // namespace towr

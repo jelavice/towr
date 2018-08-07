@@ -95,8 +95,6 @@ SplineHolder (NodesVariables::Ptr base_lin,
   std::vector<NodeSpline::Ptr> ee_force_;
   std::vector<NodeSpline::Ptr> ee_wheel_angles_;
   std::vector<PhaseDurations::Ptr> phase_durations_;
-
-  //todo add the joints here
   std::vector<NodeSpline::Ptr> joint_motion_;
 };
 

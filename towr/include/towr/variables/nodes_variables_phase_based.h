@@ -70,7 +70,8 @@ class NodesVariablesPhaseBased : public NodesVariables
     Force,
     Motion,
     WheelAngle,
-    MotionWithWheels
+    MotionWithWheels,
+    Joints
   };
 
   /**
@@ -177,7 +178,6 @@ class NodesVariablesPhaseBased : public NodesVariables
 
   double GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations);
 
-
  protected:
   /**
    * @brief Assign optimization variables to the correct node values.
@@ -193,7 +193,6 @@ class NodesVariablesPhaseBased : public NodesVariables
   }
 
   void SetNumberOfVariables(int n_variables);
-
 
  private:
   /** @brief semantic information associated with each polynomial */
@@ -254,6 +253,8 @@ class NodesVariablesEEMotionWithWheels : public NodesVariablesPhaseBased
   virtual ~NodesVariablesEEMotionWithWheels() = default;
   OptIndexMap GetPhaseBasedEEParameterization();
 };
+
+
 
 } /* namespace towr */
 

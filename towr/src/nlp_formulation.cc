@@ -70,10 +70,38 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
   vars.insert(vars.end(), base_motion.begin(), base_motion.end());
 
   std::vector<NodesVariablesPhaseBased::Ptr> ee_motion;
-  if (Parameters::robot_has_wheels_) {
+  std::vector<NodesVariables::Ptr> joints;
+
+  if (Parameters::use_joint_formulation_ && Parameters::use_joint_formulation_) {
+
+    //create motion variables
+    // with wheels just means that position is unconstrained during the stance phase
     ee_motion = MakeEndeffectorVariablesWithWheels();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+    //create joins variables
+    joints = MakeJointVariables();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+  } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
+
+    //dis is what I am doing at the moment
+    ee_motion = MakeEndeffectorVariablesWithWheels();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+  } else if ((Parameters::robot_has_wheels_ == false) && Parameters::use_joint_formulation_) {
+
+    // not entirely sure what to do here
+    // create normal EE variables and the n also add joints
+    ee_motion = MakeEndeffectorVariables();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+    joints = MakeJointVariables();
+    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
   } else {
+
+    //no wheels no joints all normal and easy
     ee_motion = MakeEndeffectorVariables();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
   }
@@ -93,16 +121,29 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
     vars.insert(vars.end(), contact_schedule.begin(), contact_schedule.end());
   }
 
-  if (Parameters::robot_has_wheels_ == false)
+  if (Parameters::robot_has_wheels_ && Parameters::use_joint_formulation_) {
+    // call with joint variables
     spline_holder = SplineHolder(base_motion.at(0),  // linear
                                  base_motion.at(1),  // angular
-                                 params_.GetBasePolyDurations(), ee_motion, ee_force,
+                                 params_.GetBasePolyDurations(), ee_motion, ee_force, joints,
                                  contact_schedule, params_.IsOptimizeTimings());
-  else
+  } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
+    //do what I am doing now
     spline_holder = SplineHolder(base_motion.at(0),  // linear
                                  base_motion.at(1),  // angular
                                  params_.GetBasePolyDurations(), ee_motion, ee_force, ee_wheels,
                                  contact_schedule, params_.IsOptimizeTimings());
+  } else if ((Parameters::robot_has_wheels_ == false) && Parameters::use_joint_formulation_) {
+    //no idea what to do here
+    //I guess call again with joints
+  } else {
+    //do the normal thing
+    spline_holder = SplineHolder(base_motion.at(0),  // linear
+                                 base_motion.at(1),  // angular
+                                 params_.GetBasePolyDurations(), ee_motion, ee_force,
+                                 contact_schedule, params_.IsOptimizeTimings());
+  }
+
   return vars;
 }
 
@@ -206,21 +247,53 @@ std::vector<PhaseDurations::Ptr> NlpFormulation::MakeContactScheduleVariables() 
   return vars;
 }
 
-std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const {
+//todo implement
+std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
+{
 
   std::vector<NodesVariables::Ptr> vars;
 
-//    for (int ee = 0; ee < params_.GetEECount(); ee++) {
-//      auto var = std::make_shared<PhaseDurations>(ee, params_.ee_phase_durations_.at(ee),
-//                                                  params_.ee_in_contact_at_start_.at(ee),
-//                                                  params_.GetPhaseDurationBounds().front(),
-//                                                  params_.GetPhaseDurationBounds().back());
-//      vars.push_back(var);
-//    }
+  int n_nodes = params_.GetBasePolyDurations().size() + 1;
 
-    return vars;
+  //need to iterate and make for every goddamn limb its joint variables
+  //todo get this from the model
+  const double legDof = 3;
+  const double boomDof = 5;
+  for (int ee = 0; ee < model_.kinematic_model_->GetNumberOfEndeffectors(); ++ee) {
+
+    auto joint_spline = std::make_shared<NodesVariablesAll>(n_nodes, legDof, id::JointNodes(ee), ee);
+
+  }
+
+  // I gues this is the same for the joints
+  int n_nodes = params_.GetBasePolyDurations().size() + 1;
+
+  auto spline_lin = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_lin_nodes);
+
+  double x = final_base_.lin.p().x();
+  double y = final_base_.lin.p().y();
+  double z = terrain_->GetHeight(x, y)
+      - model_.kinematic_model_->GetNominalStanceInBase().front().z();
+  Vector3d final_pos(x, y, z);
+
+  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, params_.GetTotalTime());
+  spline_lin->AddStartBound(kPos, { X, Y, Z }, initial_base_.lin.p());
+  spline_lin->AddStartBound(kVel, { X, Y, Z }, initial_base_.lin.v());
+  spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
+  spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
+  vars.push_back(spline_lin);
+
+  auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
+  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(),
+                                       params_.GetTotalTime());
+  spline_ang->AddStartBound(kPos, { X, Y, Z }, initial_base_.ang.p());
+  spline_ang->AddStartBound(kVel, { X, Y, Z }, initial_base_.ang.v());
+  spline_ang->AddFinalBound(kPos, params_.bounds_final_ang_pos, final_base_.ang.p());
+  spline_ang->AddFinalBound(kVel, params_.bounds_final_ang_vel, final_base_.ang.v());
+  vars.push_back(spline_ang);
+
+  return vars;
 }
-
 
 std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeWheelVariables() const
 {
@@ -251,7 +324,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  // Endeffector Motions
+// Endeffector Motions
   double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
@@ -390,22 +463,23 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared < WheelDirectionConstraint > (ee, &s);
+    auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
     constraints.push_back(c);
   }
 
   return constraints;
 }
 
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoints(const SplineHolder& s) const
+NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoints(
+    const SplineHolder& s) const
 {
   ContraintPtrVec constraints;
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared < RangeOfMotionConstraintJoints > (model_.kinematic_model_,
-                                                                 params_.GetTotalTime(),
-                                                                 params_.dt_constraint_range_of_motion_, ee,
-                                                                 s);
+    auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_.kinematic_model_,
+                                                             params_.GetTotalTime(),
+                                                             params_.dt_constraint_range_of_motion_,
+                                                             ee, s);
     constraints.push_back(c);
   }
 

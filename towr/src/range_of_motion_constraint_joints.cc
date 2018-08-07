@@ -26,7 +26,7 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(const KinematicMode
 
   joints_motion_ = spline_holder.joint_motion_.at(ee_);
 
-  //todo see how many rows do we need
+  //todo see how many rows do we need, maybe I need to add the velocity
   SetRows(GetNumberOfNodes() * k3D);
 }
 
