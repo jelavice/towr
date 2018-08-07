@@ -145,7 +145,7 @@ struct Parameters {
                         BaseRom,        ///< sets BaseMotionConstraint
                         BaseAcc,         ///< sets SplineAccConstraint
                         WheelHeading,
-                        Joints
+                        EndeffectorRomJoints
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization

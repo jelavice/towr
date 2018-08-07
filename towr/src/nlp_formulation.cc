@@ -259,23 +259,22 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
   int n_nodes = params_.GetBasePolyDurations().size() + 1;
 
   //need to iterate and make for every goddamn limb its joint variables
-  //todo get this from the model
-  const double legDof = 3;
-  const double boomDof = 5;
   for (int ee = 0; ee < model_.kinematic_model_->GetNumberOfEndeffectors(); ++ee) {
 
-    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, legDof,id::JointNodes(ee), ee);
     int numDof = model_.kinematic_model_->GetNumDof(ee);
+    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,
+                                                                   id::JointNodes(ee), ee);
     Eigen::VectorXd initial_joint_pos(numDof);
     Eigen::VectorXd final_joint_pos(numDof);
     std::vector<int> dimensions;
-    for (int j = 0; j < numDof; ++j){
+    for (int j = 0; j < numDof; ++j) {
       initial_joint_pos(j) = 0.0;
       final_joint_pos(j) = 0.0;
       dimensions.push_back(j);
     }
 
-    joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos, params_.GetTotalTime());
+    joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos,
+                                           params_.GetTotalTime());
     //not sure I even want these bounds, I only care about the positin of the base
 //    joint_spline->AddStartBound(kPos, dimensions, initial_joint_pos);
 //    joint_spline->AddStartBound(kVel, dimensions, initial_joint_pos); //initial joint velocoity is zero
@@ -284,21 +283,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
     vars.push_back(joint_spline);
 
   }
-
-  auto spline_lin = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_lin_nodes);
-
-  double x = final_base_.lin.p().x();
-  double y = final_base_.lin.p().y();
-  double z = terrain_->GetHeight(x, y)
-      - model_.kinematic_model_->GetNominalStanceInBase().front().z();
-  Vector3d final_pos(x, y, z);
-
-  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, params_.GetTotalTime());
-  spline_lin->AddStartBound(kPos, { X, Y, Z }, initial_base_.lin.p());
-  spline_lin->AddStartBound(kVel, { X, Y, Z }, initial_base_.lin.v());
-  spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
-  spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
-  vars.push_back(spline_lin);
 
   return vars;
 }
@@ -391,6 +375,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::Constr
       return MakeBaseAccConstraint(s);
     case Parameters::WheelHeading:
       return MakeWheelConstraint(s);
+    case Parameters::EndeffectorRomJoints:
+      return MakeRangeOfMotionConstraintJoints(s);
     default:
       throw std::runtime_error("constraint not defined!");
   }
@@ -483,6 +469,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
 {
   ContraintPtrVec constraints;
 
+  //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_.kinematic_model_,
                                                              params_.GetTotalTime(),
