@@ -21,7 +21,6 @@ class KinematicModelJoints : public KinematicModel
   KinematicModelJoints(const std::vector<int> &limbdofs, int n_ee)
       : KinematicModel(n_ee)
   {
-    //todo add here all the joints and limb info
     num_dof_limbs_ = limbdofs;
   }
 

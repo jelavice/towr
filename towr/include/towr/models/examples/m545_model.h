@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <towr/models/kinematic_model.h>
+#include <towr/models/kinematic_model_joints.h>
 #include <towr/models/single_rigid_body_dynamics.h>
 #include <towr/models/endeffector_mappings.h>
 
@@ -21,7 +21,7 @@ namespace towr {
  * \addtogroup Robots
  * @{
  */
-class M545KinematicModelFull : public KinematicModel
+class M545KinematicModelFull : public KinematicModelJoints
 {
  public:
 

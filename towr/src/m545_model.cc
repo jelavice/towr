@@ -13,7 +13,7 @@ namespace towr {
 constexpr unsigned int numEE = 5;
 
 M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescription, double dt)
-    : KinematicModel(numEE),
+    : KinematicModelJoints({legDof, legDof, legDof, legDof, boomDof}, numEE ),
       model_(dt)
 {
 
