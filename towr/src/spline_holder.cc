@@ -90,4 +90,22 @@ SplineHolder::SplineHolder(NodesVariables::Ptr base_lin_nodes, NodesVariables::P
   }
 }
 
+SplineHolder::SplineHolder(NodesVariables::Ptr base_lin_nodes, NodesVariables::Ptr base_ang_nodes,
+                           const std::vector<double>& base_poly_durations,
+                           std::vector<NodesVariablesPhaseBased::Ptr> ee_motion_nodes,
+                           std::vector<NodesVariablesPhaseBased::Ptr> ee_force_nodes,
+                           std::vector<NodesVariables::Ptr> joint_motion_nodes,
+                           std::vector<PhaseDurations::Ptr> phase_durations, bool durations_change)
+    : SplineHolder(base_lin_nodes, base_ang_nodes, base_poly_durations, ee_motion_nodes,
+                   ee_force_nodes, phase_durations, durations_change)
+{
+
+  //todo see what are base poly_durations
+  // seems that this is just the contact schedule
+  for (int i = 0; i < joint_motion_nodes.size(); ++i)
+    joint_motion_.push_back(
+        std::make_shared<NodeSpline>(joint_motion_nodes.at(i).get(), base_poly_durations));
+
+}
+
 } /* namespace towr */

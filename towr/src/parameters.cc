@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace towr {
 
 bool Parameters::robot_has_wheels_ = false;
+bool Parameters::use_joint_formulation_ = false;
 
 Parameters::Parameters ()
 {

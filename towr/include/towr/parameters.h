@@ -144,7 +144,8 @@ struct Parameters {
                         Swing,          ///< sets SwingConstraint
                         BaseRom,        ///< sets BaseMotionConstraint
                         BaseAcc,         ///< sets SplineAccConstraint
-                        WheelHeading
+                        WheelHeading,
+                        Joints
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -197,6 +198,7 @@ struct Parameters {
   void PenalizeEndeffectorForces();
 
   static bool robot_has_wheels_;
+  static bool use_joint_formulation_;
 
   void SetNumberEEPolynomials(int n);
 

@@ -79,6 +79,15 @@ SplineHolder (NodesVariables::Ptr base_lin,
                   std::vector<PhaseDurations::Ptr> phase_durations,
                   bool ee_durations_change);
 
+SplineHolder (NodesVariables::Ptr base_lin,
+                  NodesVariables::Ptr base_ang,
+                  const std::vector<double>& base_poly_durations,
+                  std::vector<NodesVariablesPhaseBased::Ptr> ee_motion,
+                  std::vector<NodesVariablesPhaseBased::Ptr> ee_force,
+                  std::vector<NodesVariables::Ptr> joint_motion,
+                  std::vector<PhaseDurations::Ptr> phase_durations,
+                  bool ee_durations_change);
+
   NodeSpline::Ptr base_linear_;
   NodeSpline::Ptr base_angular_;
 
@@ -86,6 +95,9 @@ SplineHolder (NodesVariables::Ptr base_lin,
   std::vector<NodeSpline::Ptr> ee_force_;
   std::vector<NodeSpline::Ptr> ee_wheel_angles_;
   std::vector<PhaseDurations::Ptr> phase_durations_;
+
+  //todo add the joints here
+  std::vector<NodeSpline::Ptr> joint_motion_;
 };
 
 } /* namespace towr */
