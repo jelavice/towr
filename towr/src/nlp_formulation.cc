@@ -45,6 +45,7 @@
 
 #include <towr/costs/node_cost.h>
 #include <towr/variables/nodes_variables_all.h>
+#include <towr/variables/nodes_variables_limb_joints.h>
 
 #include <iostream>
 
@@ -253,6 +254,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
 
   std::vector<NodesVariables::Ptr> vars;
 
+  // I gues this is the same for the joints and the base
+  //todo look into that
   int n_nodes = params_.GetBasePolyDurations().size() + 1;
 
   //need to iterate and make for every goddamn limb its joint variables
@@ -261,12 +264,26 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
   const double boomDof = 5;
   for (int ee = 0; ee < model_.kinematic_model_->GetNumberOfEndeffectors(); ++ee) {
 
-    auto joint_spline = std::make_shared<NodesVariablesAll>(n_nodes, legDof, id::JointNodes(ee), ee);
+    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, legDof,id::JointNodes(ee), ee);
+    int numDof = model_.kinematic_model_->GetNumDof(ee);
+    Eigen::VectorXd initial_joint_pos(numDof);
+    Eigen::VectorXd final_joint_pos(numDof);
+    std::vector<int> dimensions;
+    for (int j = 0; j < numDof; ++j){
+      initial_joint_pos(j) = 0.0;
+      final_joint_pos(j) = 0.0;
+      dimensions.push_back(j);
+    }
+
+    joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos, params_.GetTotalTime());
+    //not sure I even want these bounds, I only care about the positin of the base
+//    joint_spline->AddStartBound(kPos, dimensions, initial_joint_pos);
+//    joint_spline->AddStartBound(kVel, dimensions, initial_joint_pos); //initial joint velocoity is zero
+//    joint_spline->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
+//    joint_spline->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
+    vars.push_back(joint_spline);
 
   }
-
-  // I gues this is the same for the joints
-  int n_nodes = params_.GetBasePolyDurations().size() + 1;
 
   auto spline_lin = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_lin_nodes);
 
@@ -282,15 +299,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
   spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
   spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
   vars.push_back(spline_lin);
-
-  auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
-  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(),
-                                       params_.GetTotalTime());
-  spline_ang->AddStartBound(kPos, { X, Y, Z }, initial_base_.ang.p());
-  spline_ang->AddStartBound(kVel, { X, Y, Z }, initial_base_.ang.v());
-  spline_ang->AddFinalBound(kPos, params_.bounds_final_ang_pos, final_base_.ang.p());
-  spline_ang->AddFinalBound(kVel, params_.bounds_final_ang_vel, final_base_.ang.v());
-  vars.push_back(spline_ang);
 
   return vars;
 }
