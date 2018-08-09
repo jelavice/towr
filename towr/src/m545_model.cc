@@ -21,11 +21,15 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
       model_(dt)
 {
 
+  //allocate memory and shit
+  upper_joint_limits_.resize(NUM_JOINTS);
+  lower_joint_limits_.resize(NUM_JOINTS);
+
   //get the excavator model
   model_.initModelFromUrdf(urdfDescription);
 
   //get the joint limits
-  InitializeJointLimits();
+  CalculateJointLimits();
   //PrintJointLimits();
 
   //resize arrays
@@ -100,7 +104,7 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 
 }
 
-void M545KinematicModelFull::InitializeJointLimits()
+void M545KinematicModelFull::CalculateJointLimits()
 {
   excavator_model::Limits limits;
   limits.init();
@@ -159,11 +163,11 @@ void M545KinematicModelFull::PrintJointLimits()
 
 }
 
-const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetLowerLimits()
+const M545KinematicModelFull::VectorXd &M545KinematicModelFull::GetLowerJointLimits() const
 {
   return lower_joint_limits_;
 }
-const M545KinematicModelFull::JointVector &M545KinematicModelFull::GetUpperLimits()
+const M545KinematicModelFull::VectorXd &M545KinematicModelFull::GetUpperJointLimits() const
 {
   return upper_joint_limits_;
 }

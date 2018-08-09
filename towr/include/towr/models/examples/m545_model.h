@@ -61,8 +61,9 @@ class M545KinematicModelFull : public KinematicModelJoints
   static constexpr unsigned int boomDof = NUM_JOINTS - 4 * legDof;
 
   using MatrixXd = Eigen::MatrixXd;
+  using VectorXd = KinematicModelJoints::VectorXd;
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
-  using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
+  //using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
   using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
   using EEJac = std::vector<SparseMatrix>;
 
@@ -93,8 +94,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   // dis in the world frame (dis identity matrix)
   const EEJac &GetOrientationJacobiansWRTbaseOrientation();
 
-  const JointVector &GetLowerLimits();
-  const JointVector &GetUpperLimits();
+  const VectorXd &GetLowerJointLimits() const override;
+  const VectorXd &GetUpperJointLimits() const override;
 
  private:
   //todo jacobian methods can be implemented more efficiently
@@ -104,7 +105,7 @@ class M545KinematicModelFull : public KinematicModelJoints
   // dis in the world frame
   void CalculateOrientationJacobiansWRTjoints();
 
-  void InitializeJointLimits();
+  void CalculateJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
                                            loco_m545::RD::LimbEnum limb, unsigned int dof);
   //update joints
@@ -124,8 +125,8 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
-  JointVector upper_joint_limits_;
-  JointVector lower_joint_limits_;
+  VectorXd upper_joint_limits_;
+  VectorXd lower_joint_limits_;
   EEPos ee_pos_;
   EEPos ee_rot_;
 
