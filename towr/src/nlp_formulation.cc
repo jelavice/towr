@@ -469,9 +469,16 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
 {
   ContraintPtrVec constraints;
 
+
+  //hack
+  std::shared_ptr<KinematicModelJoints> model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
+
+  if (model_ptr == nullptr)
+    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+
   //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_.kinematic_model_,
+    auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_ptr,
                                                              params_.GetTotalTime(),
                                                              params_.dt_constraint_range_of_motion_,
                                                              ee, s);
