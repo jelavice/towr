@@ -13,7 +13,7 @@ namespace towr {
 constexpr unsigned int numEE = 5;
 
 M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescription, double dt)
-    : KinematicModelJoints({legDof, legDof, legDof, legDof, boomDof}, numEE ),
+    : KinematicModelJoints( { legDof, legDof, legDof, legDof, boomDof }, numEE),
       model_(dt)
 {
 
@@ -198,18 +198,19 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation()
 
 }
 
-const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
+const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld()
 {
 
   //delegate this to the caller
   //UpdateModel(jointAngles);
 
+  //todo fix
+
   {
     //LF
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::LF_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::LF_WHEEL,
+                                                      loco_m545::RD::CoordinateFrameEnum::WORLD);
 
     //std::cout << "Position LF: " << ee_pos_.at(ee_id).transpose() << std::endl;
   }
@@ -217,9 +218,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
   {
     //RF
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::RF_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::RF_WHEEL,
+                                                      loco_m545::RD::CoordinateFrameEnum::WORLD);
     //std::cout << "Position RF: " << ee_pos_.at(ee_id).transpose() << std::endl;
 
   }
@@ -227,9 +227,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
   {
     //LH
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::LH_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::LH_WHEEL,
+                                                      loco_m545::RD::CoordinateFrameEnum::WORLD);
     //std::cout << "Position LH: " << ee_pos_.at(ee_id).transpose() << std::endl;
 
   }
@@ -237,9 +236,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
   {
     //RH
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::RH_WHEEL,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::RH_WHEEL,
+                                                      loco_m545::RD::CoordinateFrameEnum::WORLD);
     //std::cout << "Position RH: " << ee_pos_.at(ee_id).transpose() << std::endl;
 
   }
@@ -247,9 +245,8 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositions()
   {
     //BOOM
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
-    ee_pos_.at(ee_id) = model_.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                     loco_m545::RD::BodyEnum::ENDEFFECTOR,
-                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+    ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::ENDEFFECTOR,
+                                                      loco_m545::RD::CoordinateFrameEnum::WORLD);
   }
 
   return ee_pos_;
@@ -283,9 +280,10 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
     //RF
     tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RF,
+    model_.getJacobianTranslationWorldToBody(tempJacobian, loco_m545::RD::BranchEnum::RF,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
+
 
     //std::cout << "Jacobian RF " << tempJacobian << std::endl;
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF,
@@ -297,7 +295,7 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
     //LH
     tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::LH,
+    model_.getJacobianTranslationWorldToBody(tempJacobian, loco_m545::RD::BranchEnum::LH,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
 
@@ -311,7 +309,7 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
     //RH
     tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RH,
+    model_.getJacobianTranslationWorldToBody(tempJacobian, loco_m545::RD::BranchEnum::RH,
                                                     loco_m545::RD::BodyNodeEnum::WHEEL,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
 
@@ -325,7 +323,7 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJac
     //BOOM
     tempJacobian.setZero();
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
-    model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::BOOM,
+    model_.getJacobianTranslationWorldToBody(tempJacobian, loco_m545::RD::BranchEnum::BOOM,
                                                     loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
                                                     loco_m545::RD::CoordinateFrameEnum::BASE);
 
@@ -418,19 +416,23 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacob
 
 }
 
-const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacobiansWRTbaseAngles()
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacobiansWRTbaseOrientation()
 {
   return ee_rot_jac_base_angles_;
 }
 
 //update base stuff and joints
-void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr)
+void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
+                                         const Vector3d &base_position)
 {
   //update the base orientation
   excavator_model::ExcavatorState state = model_.getState();
+  kindr::Position3D position;
+  position.toImplementation() = base_position;
 
-  kindr::EulerAnglesYprD euler(ypr.z(), ypr.y(), ypr.x());
+  kindr::EulerAnglesYprD euler(ypr_base.z(), ypr_base.y(), ypr_base.x());
 
+  state.setPositionWorldToBaseInWorldFrame(position);
   state.setOrientationBaseToWorld(kindr::RotationQuaternionD(euler));
   model_.setState(state, true, false, false);
 
