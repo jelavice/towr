@@ -11,6 +11,7 @@
 #include <towr/variables/spline_holder.h>
 #include <towr/variables/euler_converter.h>
 
+#include <towr/models/kinematic_model_joints.h>
 #include <towr/models/kinematic_model.h>
 #include "time_discretization_constraint.h"
 
@@ -22,7 +23,7 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
   using EE = uint;
   using Vector3d = Eigen::Vector3d;
 
-  RangeOfMotionConstraintJoints(const KinematicModel::Ptr& robot_model, double T, double dt,
+  RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr robot_model, double T, double dt,
                                 const EE& ee, const SplineHolder& spline_holder);
 
   ~RangeOfMotionConstraintJoints() = default;
@@ -38,6 +39,15 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
   EE ee_;
 
   NodeSpline::Ptr joints_motion_;
+
+  int num_constraints_per_node_;
+
+  KinematicModelJoints::Ptr kinematic_model_;
+
+  Eigen::VectorXd lower_bounds_;
+  Eigen::VectorXd upper_bounds_;
+
+  const int dim3 = 3;
 
   // see TimeDiscretizationConstraint for documentation
   void UpdateConstraintAtInstance(double t, int k, VectorXd& g) const override;

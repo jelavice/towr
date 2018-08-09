@@ -8,9 +8,7 @@
 #include <towr/models/examples/m545_model.h>
 #include <kindr/Core>
 
-
 #define M545MODELDEBUG
-
 
 namespace towr {
 
@@ -73,21 +71,20 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   position.setZero();
   UpdateModel(jointAngles, euler, position);
 
-
   std::cout << "Translational jacobians wrt joints: " << std::endl;
   for (const auto &x : ee_trans_jac_joints_) {
     std::cout << x << std::endl << std::endl;
   }
 
   std::cout << "Translational jacobians wrt position: " << std::endl;
-   for (const auto &x : ee_trans_jac_base_position_) {
-     std::cout << x << std::endl << std::endl;
-   }
+  for (const auto &x : ee_trans_jac_base_position_) {
+    std::cout << x << std::endl << std::endl;
+  }
 
-   std::cout << "Translational jacobians wrt orientation: " << std::endl;
-    for (const auto &x : ee_trans_jac_base_orientation_) {
-      std::cout << x << std::endl << std::endl;
-    }
+  std::cout << "Translational jacobians wrt orientation: " << std::endl;
+  for (const auto &x : ee_trans_jac_base_orientation_) {
+    std::cout << x << std::endl << std::endl;
+  }
 
   std::cout << "rotational jacobians wrt joints: " << std::endl;
   for (const auto &x : ee_rot_jac_joints_) {
@@ -98,7 +95,6 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   for (const auto &x : ee_rot_jac_base_orientation_) {
     std::cout << x << std::endl << std::endl;
   }
-
 
 #endif
 
@@ -163,13 +159,35 @@ void M545KinematicModelFull::PrintJointLimits()
 
 }
 
-const M545KinematicModelFull::VectorXd &M545KinematicModelFull::GetLowerJointLimits() const
+int M545KinematicModelFull::getLimbStartingId(int LimbId)
 {
-  return lower_joint_limits_;
+  switch (LimbId) {
+
+    case (0):
+      return static_cast<int>(LimbStartIndex::LF);
+    case (1):
+      return static_cast<int>(LimbStartIndex::RF);
+    case (2):
+      return static_cast<int>(LimbStartIndex::LH);
+    case (3):
+      return static_cast<int>(LimbStartIndex::RH);
+    case (4):
+      return static_cast<int>(LimbStartIndex::BOOM);
+    default:
+      return -1;
+
+  }
 }
-const M545KinematicModelFull::VectorXd &M545KinematicModelFull::GetUpperJointLimits() const
+
+const M545KinematicModelFull::VectorXd M545KinematicModelFull::GetLowerJointLimits(
+    int limbId)
 {
-  return upper_joint_limits_;
+  return lower_joint_limits_.segment(getLimbStartingId(limbId), num_dof_limbs_.at(limbId));
+}
+const M545KinematicModelFull::VectorXd M545KinematicModelFull::GetUpperJointLimits(
+    int limbId)
+{
+  return upper_joint_limits_.segment(getLimbStartingId(limbId), num_dof_limbs_.at(limbId));
 }
 
 Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat)
@@ -231,7 +249,6 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation()
 
 const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld()
 {
-
 
   {
     //LF

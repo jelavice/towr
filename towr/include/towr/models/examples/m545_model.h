@@ -48,6 +48,7 @@ class M545KinematicModelFull : public KinematicModelJoints
     NUM_JOINTS
   };
 
+  //todo it is shadowning the enum from towr
   enum LimbStartIndex
   {
     LF = J_LF_HAA,
@@ -64,20 +65,21 @@ class M545KinematicModelFull : public KinematicModelJoints
   using VectorXd = KinematicModelJoints::VectorXd;
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
   //using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
-  using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
+  using SparseMatrix = KinematicModelJoints::SparseMatrix;
   using EEJac = std::vector<SparseMatrix>;
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
+  //todo implement caching for this function otherwise I get 4 (expensive) calls
   //update base stuff and joints
   void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
                    const Vector3d &base_position);
 
   // these are in the world frame
-  const EEPos &GetEEPositionsWorld();
+  const EEPos &GetEEPositionsWorld() override;
 
   // this is in the world frame
-  const EEPos &GetEEOrientation();
+  const EEPos &GetEEOrientation() override;
 
   //world frame
   const EEJac &GetTranslationalJacobiansWRTjoints();
@@ -94,10 +96,14 @@ class M545KinematicModelFull : public KinematicModelJoints
   // dis in the world frame (dis identity matrix)
   const EEJac &GetOrientationJacobiansWRTbaseOrientation();
 
-  const VectorXd &GetLowerJointLimits() const override;
-  const VectorXd &GetUpperJointLimits() const override;
+  //todo fix the return by value, const don't make sense either
+  const VectorXd GetLowerJointLimits(int limbId) override;
+  const VectorXd GetUpperJointLimits(int limbId) override;
 
  private:
+
+  int getLimbStartingId(int LimbId);
+
   //todo jacobian methods can be implemented more efficiently
   // if we use the Spatial Jacobian
   void CalculateTranslationalJacobiansWRTjointsAndBaseOrientation();
