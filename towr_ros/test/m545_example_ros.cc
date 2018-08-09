@@ -117,6 +117,8 @@ void printTrajectory(const SplineHolder &x)
     cout << "t=" << t << "\n";
     cout << "Base linear position x,y,z:   \t";
     cout << x.base_linear_->GetPoint(t).p().transpose() << "\t[m]" << endl;
+    cout << "Base linear velocity x,y,z:   \t";
+    cout << x.base_linear_->GetPoint(t).v().transpose() << "\t[m]" << endl;
 
     cout << "Base Euler roll, pitch, yaw:  \t";
     Eigen::Vector3d rad = x.base_angular_->GetPoint(t).p();
@@ -187,11 +189,19 @@ int main(int argc, char** argv)
   constexpr double dt = 0.01;
   formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
   Parameters::robot_has_wheels_ = true;
+  Parameters::use_joint_formulation_ = false;
 
-  // set the initial position of the hopper
-  BaseState initial_base;
+  if (Parameters::use_joint_formulation_ == true)
+    formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
+  else
+    formulation.model_ = RobotModel(RobotModel::m545);
+
+
+    // set the initial position of the hopper
+    BaseState initial_base;
   formulation.initial_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
+  //also in the world frame
   const double x_nominal_b_front = 2.7;
   const double y_nominal_b_front = 1.6;
 
@@ -209,14 +219,15 @@ int main(int argc, char** argv)
   nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos) << 2.0, 2.0, 0.95;
+  formulation.final_base_.lin.at(towr::kPos) << 0.0, 5.0, 0.95;
 
   Parameters& params = formulation.params_;
 
-  const double duration = 5.0;
-  params.SetNumberEEPolynomials(50);
+  const double duration = 20.0;
+  params.SetNumberEEPolynomials(199);
   params.SetDynamicConstraintDt(0.1);
   params.SetRangeOfMotionConstraintDt(0.1);
+  params.SetPolynomialDurationBase(0.1);
 
   //must be called to override the constructor
   params.SetConstraints();

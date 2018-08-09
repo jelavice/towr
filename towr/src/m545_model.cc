@@ -43,6 +43,7 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 
   //std::cout << model_.getState() << std::endl;
 
+#ifdef M545MODELDEBUG
   Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
   Eigen::VectorXd euler(3);
   jointAngles.setZero();
@@ -68,6 +69,7 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   for (const auto &x : ee_rot_jac_base_angles_) {
     std::cout << x << std::endl << std::endl;
   }
+#endif
 
 }
 
