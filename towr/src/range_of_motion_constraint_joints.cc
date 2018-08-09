@@ -50,8 +50,10 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
   dimension += joint_positions.size();
 
   // now update the value of the ee constraint
-
   // first get the position and euler shit
+  Vector3d base_position = base_linear_->GetPoint(t).p();
+  //todo get rid of this conversions qut vs rotMat back and forth
+  Vector3d base_anglular = KinematicModelJoints::rotMat2ypr(base_angular_.GetRotationMatrixBaseToWorld(t));
 
   // second update the model
   kinematic_model_->
@@ -88,7 +90,7 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
 void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, std::string var_set,
                                                              Jacobian& jac) const
 {
-  //todo impelement
+  //todo implement
 }
 
 int RangeOfMotionConstraintJoints::GetRow(int node, int dimension) const

@@ -8,6 +8,8 @@
 
 #include "kinematic_model.h"
 #include <Eigen/SparseCore>
+#include <kindr/Core>
+
 
 namespace towr {
 
@@ -43,7 +45,22 @@ class KinematicModelJoints : public KinematicModel
 
   }
 
-  //todo write here methods for updating all the crap
+  static Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat)
+  {
+
+    // rotation convention for this is yaw pitch roll in that order
+
+    kindr::RotationMatrixD rotMat(mat(0, 0), mat(0, 1), mat(0, 2), mat(1, 0), mat(1, 1), mat(1, 2),
+                                  mat(2, 0), mat(2, 1), mat(2, 2));
+
+    kindr::EulerAnglesYprD euler(rotMat);
+
+    euler.setUnique();
+
+    return Eigen::Vector3d(euler.x(), euler.y(), euler.z());
+
+  }
+
   virtual const VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual const VectorXd GetUpperJointLimits(int limbId) = 0;
 
@@ -51,7 +68,6 @@ class KinematicModelJoints : public KinematicModel
                      const Vector3d &base_position) = 0;
 
 
-  //todo make all this crap take limb id as an argument
     // these are in the world frame
   virtual const EEPos &GetEEPositionsWorld() = 0;
 
