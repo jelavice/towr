@@ -9,6 +9,7 @@ close all
 
 % Using load() lets you auto-complete filepaths.
 filename = '/home/jelavice/Documents/catkin_workspaces/towr_ws/src/towr/towr_trajectory.bag';
+filename = '/home/jelavice/.ros/towr_trajectory.bag';
 bag = ros.Bag.load(filename);
 bag.info()
 
@@ -48,9 +49,14 @@ xyz = xyz';
 times = cellfun(@(x) x.time.time, meta); % Get timestamps
 
 % Make xy plot in the plane 
+subplot(2,1,1)
+plot(times,xyz(:,1), 'linewidth', 2)
+hold on
+plot(times, xyz(:,2), 'linewidth',2);
+legend('vx', 'vy')
+grid on
+subplot(2,1,2)
 plot(xyz(:,1), xyz(:,2), 'LineWidth', 2);
-ylim([-2 2]);
-xlim([-2 2]);
 grid on
 
 %get the quaternion
@@ -78,7 +84,6 @@ title('yaw')
 grid on
 
 %plot the trajectory of all 4 end-effectors
-%get the quaternion
 accessor = @(feet) (feet.ee_motion(1).pos);
 [xyzLF] = (ros.msgs2mat(msgs, accessor))';
 accessor = @(feet) (feet.ee_motion(2).pos);
@@ -96,6 +101,49 @@ plot(xyzRF(:,1), xyzRF(:,2), 'Linewidth', 2)
 plot(xyzLH(:,1), xyzLH(:,2), 'Linewidth', 2)
 plot(xyzRH(:,1), xyzRH(:,2), 'Linewidth', 2)
 grid on
+
+%plot the velocities trajectory of all 4 end-effectors
+accessor = @(feet) (feet.ee_motion(1).vel);
+[velLF] = (ros.msgs2mat(msgs, accessor))';
+accessor = @(feet) (feet.ee_motion(2).vel);
+[velRF] = (ros.msgs2mat(msgs, accessor))';
+accessor = @(feet) (feet.ee_motion(3).vel);
+[velLH] = (ros.msgs2mat(msgs, accessor))';
+accessor = @(feet) (feet.ee_motion(4).vel);
+[velRH] = (ros.msgs2mat(msgs, accessor))';
+figure
+subplot(4,1,1)
+plot(times, velLF(:,1), 'Linewidth',2)
+hold on
+plot(times, velLF(:,2), 'Linewidth',2)
+legend('vx', 'vy');
+grid on
+
+title('LF velocity')
+subplot(4,1,2)
+plot(times, velRF(:,1), 'Linewidth',2)
+hold on
+plot(times, velRF(:,2), 'Linewidth',2)
+legend('vx', 'vy');
+grid on
+
+title('RF velocity')
+subplot(4,1,3)
+plot(times, velLH(:,1), 'Linewidth',2)
+hold on
+plot(times, velLH(:,2), 'Linewidth',2)
+legend('vx', 'vy');
+grid on
+
+title('LH velocity')
+subplot(4,1,4)
+plot(times, velRH(:,1), 'Linewidth',2)
+hold on
+plot(times, velRH(:,2), 'Linewidth',2)
+legend('vx', 'vy');
+title('RH velocity')
+grid on
+
 
 %plot the wheel angles
 accessor = @(feet) (feet.wheel_angles(1));
@@ -124,8 +172,88 @@ plot(times, headingRH, 'Linewidth',2)
 grid on
 title('RH heading')
 
+% 
+% 
+% %plot the velocities trajectory of all 4 end-effectors
+% accessor = @(forces) (forces.ee_forces(:,1));
+% [fLF] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(forces) (forces.ee_forces(:,2));
+% [fRF] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(forces) (forces.ee_forces(:,3));
+% [fLH] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(forces) (forces.ee_forces(:,4));
+% [fRH] = (ros.msgs2mat(msgs, accessor))';
+% 
+% figure
+% subplot(4,1,1)
+% plot(times, fLF(:,1), 'Linewidth',2)
+% hold on
+% plot(times, fLF(:,2), 'Linewidth',2)
+% legend('fx', 'fy');
+% grid on
+% title('LF forces')
+% 
+% 
+% subplot(4,1,2)
+% plot(times, fRF(:,1), 'Linewidth',2)
+% hold on
+% plot(times, fRF(:,2), 'Linewidth',2)
+% legend('fx', 'fy');
+% grid on
+% title('RF forces')
+% 
+% subplot(4,1,3)
+% plot(times, fLH(:,1), 'Linewidth',2)
+% hold on
+% plot(times, fLH(:,2), 'Linewidth',2)
+% legend('fx', 'fy');
+% grid on
+% title('LH forces')
+% 
+% subplot(4,1,4)
+% plot(times, fRH(:,1), 'Linewidth',2)
+% hold on
+% plot(times, fRH(:,2), 'Linewidth',2)
+% legend('fx', 'fy');
+% grid on
+% title('RH forces')
+
+%plot the positions trajectory of all 4 end-effectors
 
 
+figure
+subplot(4,1,1)
+plot(times, xyzLF(:,1), 'Linewidth',2)
+hold on
+plot(times, xyzLF(:,2), 'Linewidth',2)
+legend('x', 'y');
+grid on
+title('LF pos')
+
+
+subplot(4,1,2)
+plot(times, xyzRF(:,1), 'Linewidth',2)
+hold on
+plot(times, xyzRF(:,2), 'Linewidth',2)
+legend('x', 'y');
+grid on
+title('RF pos')
+
+subplot(4,1,3)
+plot(times, xyzLH(:,1), 'Linewidth',2)
+hold on
+plot(times, xyzLH(:,2), 'Linewidth',2)
+legend('x', 'y');
+grid on
+title('LH pos')
+
+subplot(4,1,4)
+plot(times, xyzRH(:,1), 'Linewidth',2)
+hold on
+plot(times, xyzRH(:,2), 'Linewidth',2)
+legend('x', 'y');
+grid on
+title('RH pos')
 
 
 
