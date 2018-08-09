@@ -311,7 +311,6 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
                                              loco_m545::RD::BodyNodeEnum::WHEEL,
                                              loco_m545::RD::CoordinateFrameEnum::WORLD);
 
-    //std::cout << "Jacobian LH " << tempJacobian << std::endl;
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LH,
@@ -327,7 +326,6 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
                                              loco_m545::RD::BodyNodeEnum::WHEEL,
                                              loco_m545::RD::CoordinateFrameEnum::WORLD);
 
-    //std::cout << "Jacobian RH " << tempJacobian << std::endl;
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RH,
@@ -343,7 +341,6 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
                                              loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
                                              loco_m545::RD::CoordinateFrameEnum::WORLD);
 
-    //std::cout << "Jacobian BOOM " << tempJacobian << std::endl;
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
                                 boomDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::BOOM,
@@ -537,14 +534,29 @@ void M545KinematicModelFull::ExtractOrientationJacobianEntries(const MatrixXd &b
     }
 }
 
-const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacobiansWRTbaseOrientation()
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobiansWRTjoints()
 {
-  return ee_rot_jac_base_orientation_;
+  return ee_trans_jac_joints_;
 }
 
 const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslationalJacobianWRTbasePosition()
 {
+  return ee_trans_jac_base_position_;
+}
 
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetTranslatinalJacobianWRTbaseOrientation()
+{
+  return ee_trans_jac_base_orientation_;
+}
+
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacobiansWRTjoints()
+{
+  return ee_rot_jac_joints_;
+}
+
+const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacobiansWRTbaseOrientation()
+{
+  return ee_rot_jac_base_orientation_;
 }
 
 }
