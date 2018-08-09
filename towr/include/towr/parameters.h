@@ -206,6 +206,8 @@ struct Parameters {
 
   void SetRangeOfMotionConstraintDt(double dt);
 
+  void SetPolynomialDurationBase(double dt);
+
   void SetConstraints();
 
 private:

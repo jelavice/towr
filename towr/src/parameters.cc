@@ -83,6 +83,10 @@ void Parameters::SetRangeOfMotionConstraintDt(double dt)
   dt_constraint_range_of_motion_ = dt;
 }
 
+void Parameters::SetPolynomialDurationBase(double dt){
+  duration_base_polynomial_ = dt;
+}
+
 void Parameters::SetConstraints()
 {
   // first clear the shit from the constructor

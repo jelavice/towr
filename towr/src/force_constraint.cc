@@ -48,8 +48,6 @@ ForceConstraint::ForceConstraint (const HeightMap::Ptr& terrain,
 }
 
 
-//todo add here the wheel forces
-
 void
 ForceConstraint::InitVariableDependedQuantities (const VariablesPtr& x)
 {
