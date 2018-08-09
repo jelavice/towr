@@ -97,11 +97,9 @@ class M545KinematicModelFull : public KinematicModelJoints
   const JointVector &GetUpperLimits();
 
  private:
-
-  void CalculateTranslationalJacobiansWRTjoints();
-
-  //world
-  void CalculateTranslatinalJacobianWRTbaseOrientation();
+  //todo jacobian methods can be implemented more efficiently
+  // if we use the Spatial Jacobian
+  void CalculateTranslationalJacobiansWRTjointsAndBaseOrientation();
 
   // dis in the world frame
   void CalculateOrientationJacobiansWRTjoints();

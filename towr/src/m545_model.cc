@@ -8,6 +8,10 @@
 #include <towr/models/examples/m545_model.h>
 #include <kindr/Core>
 
+
+#define M545MODELDEBUG
+
+
 namespace towr {
 
 constexpr unsigned int numEE = 5;
@@ -59,29 +63,39 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 #ifdef M545MODELDEBUG
   Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
   Eigen::VectorXd euler(3);
+  Eigen::VectorXd position(3);
   jointAngles.setZero();
   euler.setZero();
-  UpdateModel(jointAngles, euler);
-  GetEEPositions();
-  GetTranslationalJacobiansWRTjoints();
-  GetEEOrientation();
-  GetOrientationJacobiansWRTjoints();
-  GetOrientationJacobiansWRTbaseAngles();
+  position.setZero();
+  UpdateModel(jointAngles, euler, position);
 
-  std::cout << "Translational jacobians: " << std::endl;
+
+  std::cout << "Translational jacobians wrt joints: " << std::endl;
   for (const auto &x : ee_trans_jac_joints_) {
     std::cout << x << std::endl << std::endl;
   }
 
-  std::cout << "rotational jacobians: " << std::endl;
+  std::cout << "Translational jacobians wrt position: " << std::endl;
+   for (const auto &x : ee_trans_jac_base_position_) {
+     std::cout << x << std::endl << std::endl;
+   }
+
+   std::cout << "Translational jacobians wrt orientation: " << std::endl;
+    for (const auto &x : ee_trans_jac_base_orientation_) {
+      std::cout << x << std::endl << std::endl;
+    }
+
+  std::cout << "rotational jacobians wrt joints: " << std::endl;
   for (const auto &x : ee_rot_jac_joints_) {
     std::cout << x << std::endl << std::endl;
   }
 
-  std::cout << "rotational jacobians base angles: " << std::endl;
-  for (const auto &x : ee_rot_jac_base_angles_) {
+  std::cout << "rotational jacobians wrt base angles: " << std::endl;
+  for (const auto &x : ee_rot_jac_base_orientation_) {
     std::cout << x << std::endl << std::endl;
   }
+
+
 #endif
 
 }
@@ -100,7 +114,7 @@ void M545KinematicModelFull::InitializeJointLimits()
   // get the limits LH
   CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::LH, legDof);
 
-  // get the limits RH
+  // get the limits RHM545MODELDEBUG
   CalculateJointLimitsforSpecificLimb(limits, loco_m545::RD::LimbEnum::RH, legDof);
 
   // get the limits BOOM
@@ -214,18 +228,12 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEOrientation()
 const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld()
 {
 
-  //delegate this to the caller
-  //UpdateModel(jointAngles);
-
-  //todo fix
 
   {
     //LF
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LF);
     ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::LF_WHEEL,
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
-
-    //std::cout << "Position LF: " << ee_pos_.at(ee_id).transpose() << std::endl;
   }
 
   {
@@ -233,8 +241,6 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RF);
     ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::RF_WHEEL,
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
-    //std::cout << "Position RF: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
   }
 
   {
@@ -242,8 +248,6 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::LH);
     ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::LH_WHEEL,
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
-    //std::cout << "Position LH: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
   }
 
   {
@@ -251,8 +255,6 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::RH);
     ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::RH_WHEEL,
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
-    //std::cout << "Position RH: " << ee_pos_.at(ee_id).transpose() << std::endl;
-
   }
 
   {
@@ -266,7 +268,7 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
 
 }
 
-void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
+void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjointsAndBaseOrientation()
 {
 
   MatrixXd tempJacobian(3, model_.getDofCount());
@@ -284,7 +286,7 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LF,
-                                      ee_trans_jac_joints_);
+                                      ee_trans_jac_base_orientation_);
   }
 
   {
@@ -299,7 +301,7 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RF,
-                                      ee_trans_jac_joints_);
+                                      ee_trans_jac_base_orientation_);
 
   }
 
@@ -314,7 +316,7 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LH,
-                                      ee_trans_jac_joints_);
+                                      ee_trans_jac_base_orientation_);
 
   }
 
@@ -329,7 +331,7 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH,
                                 legDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RH,
-                                      ee_trans_jac_joints_);
+                                      ee_trans_jac_base_orientation_);
 
   }
 
@@ -344,7 +346,7 @@ void M545KinematicModelFull::CalculateTranslationalJacobiansWRTjoints()
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
                                 boomDof, ee_trans_jac_joints_);
     ExtractOrientationJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::BOOM,
-                                      ee_trans_jac_joints_);
+                                      ee_trans_jac_base_orientation_);
 
   }
 
@@ -368,7 +370,6 @@ void M545KinematicModelFull::CalculateOrientationJacobiansWRTjoints()
 //    std::cout << "Jacobian LF \n" << tempJacobian.transpose() << std::endl << std::endl;
     ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
                                 legDof, ee_rot_jac_joints_);
-
   }
 
   {
@@ -425,11 +426,6 @@ void M545KinematicModelFull::CalculateOrientationJacobiansWRTjoints()
 
 }
 
-void M545KinematicModelFull::CalculateTranslatinalJacobianWRTbaseOrientation()
-{
-
-}
-
 //update base stuff and joints
 void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
                                          const Vector3d &base_position)
@@ -448,7 +444,10 @@ void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vect
   //update the joints
   UpdateModel(jointAngles);
 
-  //now calculate the jacobians
+  // calculate the jacobians
+  CalculateTranslationalJacobiansWRTjointsAndBaseOrientation();
+
+  CalculateOrientationJacobiansWRTjoints();
 
 }
 
