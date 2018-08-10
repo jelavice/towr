@@ -155,6 +155,10 @@ public:
   /** @see GetQuaternionBaseToWorld(t)  */
   static Eigen::Quaterniond GetQuaternionBaseToWorld(const EulerAngles& pos);
 
+  inline Vector3d GetEulerAngles(double t) const {
+    return euler_->GetPoint(t).p();
+  }
+
 private:
   NodeSpline::Ptr euler_;
 

@@ -6,6 +6,7 @@
  */
 
 #include <towr/constraints/range_of_motion_constraint_joints.h>
+#include <towr/variables/variable_names.h>
 
 namespace towr {
 
@@ -42,26 +43,41 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 
   int dimension = 0;
 
+  /* first get all the variables*/
   //todo make sure that the caller has set the right size of the state
   VectorXd joint_positions = joints_motion_->GetPoint(t).p();
 
-  //copy values of de joints
-  g.middleRows(GetRow(k,dimension), joint_positions.size()) = joint_positions;
-  dimension += joint_positions.size();
 
   // now update the value of the ee constraint
   // first get the position and euler shit
   Vector3d base_position = base_linear_->GetPoint(t).p();
-  //todo get rid of this conversions qut vs rotMat back and forth
-  Vector3d base_anglular = KinematicModelJoints::rotMat2ypr(base_angular_.GetRotationMatrixBaseToWorld(t));
+  Vector3d base_angular = base_angular_.GetEulerAngles(t);
 
   // second update the model
-  kinematic_model_->
-  Vector3d constraint_value;
-  //then get all athe positions and shit that I need
+  kinematic_model_->UpdateModel(joint_positions, base_angular, base_position);
+
+  //then get all the positions and shit that I need
+  Vector3d ee_position_from_joints = kinematic_model_->GetEEPositionsWorld().at(ee_);
+  Vector3d ee_position = ee_motion_->GetPoint(t).p();
 
 
+  //take out the yaw
+  double wheel_yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
 
+  //put it in the constraint
+  Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0,2); // get the x and y velocity
+
+  /*now update the actual constraints*/
+  //joint range constraint
+  g.middleRows(GetRow(k,dimension), joint_positions.size()) = joint_positions;
+  dimension += joint_positions.size();
+
+  //endeffector position
+  g.middleRows(GetRow(k,dimension), dim3) = ee_position_from_joints - ee_position;
+  dimension += dim3;
+
+  //no slip in lateral direction
+  g(GetRow(k,dimension)) = ee_vel.x()*std::sin(wheel_yaw) - ee_vel.y()*std::cos(wheel_yaw); // last row anyway
 
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
@@ -90,7 +106,55 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
 void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, std::string var_set,
                                                              Jacobian& jac) const
 {
-  //todo implement
+
+  // need
+
+  // 1. joints
+
+  // 2. base lin
+
+  // 3. base ang
+
+  // 4. end effectors
+
+  // 5. velocity
+
+  // 6. yaw angle for the wheels
+
+  //start with the joints since it is the easiest
+
+  int row_start = GetRow(k,0);
+
+  if (var_set == id::JointNodes(ee_)) {
+
+     // jacobian wrt to joints
+     int dim = kinematic_model_->GetNumDof(ee_);
+     jac.middleRows(row_start, dim) = joints_motion_->GetJacobianWrtNodes(t, kPos);
+     row_start += dim;
+
+     //now work out the end-effector constarint
+     dim = dim3;
+     jac.middleRows(row_start, dim) = kinematic_model_->GetTranslationalJacobiansWRTjoints().at(ee_) * joints_motion_->GetJacobianWrtNodes(t, kPos);
+     row_start += dim;
+
+     //need velocity and angle for the last constraint
+     //dis is the wheel heading constraint
+     dim = 1;
+     Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0,2); // get the x and y velocity
+     double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
+
+     jac.middleRows(row_start, dim) = kinematic_model_->GetOrientationJacobiansWRTjoints().at(ee_).row(2) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
+
+   }
+
+  if (var_set == id::base_ang_nodes){
+    int offset = kinematic_model_->GetNumDof(ee_);
+    row_start += offset;
+
+  }
+
+
+
 }
 
 int RangeOfMotionConstraintJoints::GetRow(int node, int dimension) const

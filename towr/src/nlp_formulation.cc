@@ -263,7 +263,10 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
 
     int numDof = model_.kinematic_model_->GetNumDof(ee);
     auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,
+
                                                                    id::JointNodes(ee), ee);
+
+    //todo look into initialization
     Eigen::VectorXd initial_joint_pos(numDof);
     Eigen::VectorXd final_joint_pos(numDof);
     std::vector<int> dimensions;
