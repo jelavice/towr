@@ -82,23 +82,23 @@ class M545KinematicModelFull : public KinematicModelJoints
   const EEPos &GetEEOrientation() override;
 
   //world frame
-  const EEJac &GetTranslationalJacobiansWRTjoints();
+  const EEJac &GetTranslationalJacobiansWRTjoints() final;
 
   //world
-  const EEJac &GetTranslationalJacobianWRTbasePosition();
+  const EEJac &GetTranslationalJacobianWRTbasePosition() final;
 
   //world
-  const EEJac &GetTranslatinalJacobianWRTbaseOrientation();
+  const EEJac &GetTranslatinalJacobianWRTbaseOrientation() final;
 
   // dis in the world frame
-  const EEJac &GetOrientationJacobiansWRTjoints();
+  const EEJac &GetOrientationJacobiansWRTjoints() final;
 
   // dis in the world frame (dis identity matrix)
-  const EEJac &GetOrientationJacobiansWRTbaseOrientation();
+  const EEJac &GetOrientationJacobiansWRTbaseOrientation() final;
 
   //todo fix the return by value, const don't make sense either
-  const VectorXd GetLowerJointLimits(int limbId) override;
-  const VectorXd GetUpperJointLimits(int limbId) override;
+  const VectorXd GetLowerJointLimits(int limbId) final;
+  const VectorXd GetUpperJointLimits(int limbId) final;
 
  private:
 
