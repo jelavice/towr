@@ -1,31 +1,31 @@
 /******************************************************************************
-Copyright (c) 2018, Alexander W. Winkler. All rights reserved.
+ Copyright (c) 2018, Alexander W. Winkler. All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
+ * Redistributions of source code must retain the above copyright notice, this
+ list of conditions and the following disclaimer.
 
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+ * Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation
+ and/or other materials provided with the distribution.
 
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+ * Neither the name of the copyright holder nor the names of its
+ contributors may be used to endorse or promote products derived from
+ this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************************************************************/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
 
 #ifndef TOWR_VARIABLES_ANGULAR_STATE_CONVERTER_H_
 #define TOWR_VARIABLES_ANGULAR_STATE_CONVERTER_H_
@@ -59,18 +59,19 @@ namespace towr {
  *
  * See matlab script "matlab/euler_converter.m" for derivation.
  */
-class EulerConverter {
-public:
-  using Vector3d    = Eigen::Vector3d;
-  using EulerAngles = Vector3d; ///< roll, pitch, yaw.
-  using EulerRates  = Vector3d; ///< derivative of the above
+class EulerConverter
+{
+ public:
+  using Vector3d = Eigen::Vector3d;
+  using EulerAngles = Vector3d;  ///< roll, pitch, yaw.
+  using EulerRates = Vector3d;  ///< derivative of the above
 
   using JacobianRow = Eigen::SparseVector<double, Eigen::RowMajor>;
-  using MatrixSXd   = Eigen::SparseMatrix<double, Eigen::RowMajor>;
-  using Jacobian    = MatrixSXd;
+  using MatrixSXd = Eigen::SparseMatrix<double, Eigen::RowMajor>;
+  using Jacobian = MatrixSXd;
   using JacRowMatrix = std::array<std::array<JacobianRow, k3D>, k3D>;
 
-  EulerConverter () = default;
+  EulerConverter() = default;
 
   /**
    * @brief Constructs and links this object to the Euler angle values
@@ -87,15 +88,15 @@ public:
    * double pitch = euler_angles->GetPoint(t).y();
    * double yaw   = euler_angles->GetPoint(t).z();
    */
-  EulerConverter (const NodeSpline::Ptr& euler_angles);
-  virtual ~EulerConverter () = default;
+  EulerConverter(const NodeSpline::Ptr& euler_angles);
+  virtual ~EulerConverter() = default;
 
   /**
    * @brief Converts the Euler angles at time t to a Quaternion.
    * @param t The current time in the euler angles spline.
    * @return A Quaternion the maps a vector from base to world frame.
    */
-  Eigen::Quaterniond GetQuaternionBaseToWorld (double t) const;
+  Eigen::Quaterniond GetQuaternionBaseToWorld(double t) const;
 
   /**
    * @brief Converts the Euler angles at time t to a rotation matrix.
@@ -155,11 +156,17 @@ public:
   /** @see GetQuaternionBaseToWorld(t)  */
   static Eigen::Quaterniond GetQuaternionBaseToWorld(const EulerAngles& pos);
 
-  inline Vector3d GetEulerAngles(double t) const {
+  inline Vector3d GetEulerAngles(double t) const
+  {
     return euler_->GetPoint(t).p();
   }
 
-private:
+  inline NodeSpline::Ptr GetNodeSpline() const
+  {
+    return euler_;
+  }
+
+ private:
   NodeSpline::Ptr euler_;
 
   // Internal calculations for the conversion from euler rates to angular
@@ -206,8 +213,7 @@ private:
   static Vector3d GetAngularAccelerationInWorld(State euler);
 
   /** @see GetAngularVelocityInWorld(t)  */
-  static Vector3d GetAngularVelocityInWorld(const EulerAngles& pos,
-                                            const EulerRates& vel);
+  static Vector3d GetAngularVelocityInWorld(const EulerAngles& pos, const EulerRates& vel);
 
   JacobianRow GetJac(double t, Dx deriv, Dim3D dim) const;
   Jacobian jac_wrt_nodes_structure_;

@@ -73,13 +73,13 @@ class M545KinematicModelFull : public KinematicModelJoints
   //todo implement caching for this function otherwise I get 4 (expensive) calls
   //update base stuff and joints
   void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
-                   const Vector3d &base_position);
+                   const Vector3d &base_position) final;
 
   // these are in the world frame
-  const EEPos &GetEEPositionsWorld() override;
+  const EEPos &GetEEPositionsWorld() final;
 
   // this is in the world frame
-  const EEPos &GetEEOrientation() override;
+  const EEPos &GetEEOrientation() final;
 
   //world frame
   const EEJac &GetTranslationalJacobiansWRTjoints() final;

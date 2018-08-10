@@ -24,7 +24,7 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
   using Vector3d = Eigen::Vector3d;
 
   RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr robot_model, double T, double dt,
-                                const EE& ee, const SplineHolder& spline_holder);
+                                EE ee, const SplineHolder& spline_holder);
 
   ~RangeOfMotionConstraintJoints() = default;
 
