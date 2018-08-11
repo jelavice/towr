@@ -7,6 +7,16 @@ find_package(ifopt 2.0.1 REQUIRED)
 
 find_package(excavator_model REQUIRED)
 find_package(loco_m545 REQUIRED)
+find_package(kindr REQUIRED)
+
+
+catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES ${PROJECT_NAME}
+   CATKIN_DEPENDS excavator_model loco_m545 kindr
+   DEPENDS ifopt
+)
+
 
 ###########
 ## Build ##
@@ -74,10 +84,12 @@ target_link_libraries(${PROJECT_NAME}
     ifopt::ifopt_core
     ${excavator_model_LIBRARIES}
     ${loco_m545_LIBRARIES}
+    ${kindr_LIBRARIES}
 )
 
 include_directories(${excavator_model_INCLUDE_DIRS})
 include_directories(${loco_m545_INCLUDE_DIRS})
+include_directories(${kindr_INCLUDE_DIRS})
 
 target_include_directories(${PROJECT_NAME} 
   PUBLIC

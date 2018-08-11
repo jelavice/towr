@@ -26,9 +26,14 @@
 
 	<depend>excavator_model</depend>
 	<depend>loco_m545</depend>
+	<depend>kindr</depend>
 
 	<!-- The following tags are recommended by REP-136 -->
 	<exec_depend>catkin</exec_depend>
+	
+	<!-- hacky solution with dis catkin stuff -->
+	<buildtool_depend>catkin</buildtool_depend>
+	
 	<buildtool_depend>cmake</buildtool_depend>
 	<export>
 		<build_type>cmake</build_type>
