@@ -41,6 +41,12 @@ namespace towr {
 bool Parameters::robot_has_wheels_ = false;
 bool Parameters::use_joint_formulation_ = false;
 
+Parameters::Parameters(int numEE): Parameters() {
+
+  numEE_ = numEE;
+
+}
+
 Parameters::Parameters()
 {
   // optimization variables
@@ -65,6 +71,12 @@ Parameters::Parameters()
   bounds_final_ang_vel = {X,Y,Z};
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
+
+  numEE_ = ee_in_contact_at_start_.size();
+}
+
+void Parameters::SetEECount(int numEE){
+  numEE_ = numEE;
 }
 
 void Parameters::SetNumberEEPolynomials(int n)
@@ -205,7 +217,8 @@ int Parameters::GetPhaseCount(EEID ee) const
 
 int Parameters::GetEECount() const
 {
-  return ee_in_contact_at_start_.size();
+  //return ee_in_contact_at_start_.size();
+  return numEE_;
 }
 
 double Parameters::GetTotalTime() const

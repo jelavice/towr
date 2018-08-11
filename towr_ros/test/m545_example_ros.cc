@@ -205,6 +205,7 @@ int main(int argc, char** argv)
   Parameters& params = formulation.params_;
   base_init_pos << 0.0, 0.0, 0.95;
   base_init_orientation << 0.0, 0.0, 0.0;
+  params.SetEECount(5);
 
   if (Parameters::use_joint_formulation_) {
 

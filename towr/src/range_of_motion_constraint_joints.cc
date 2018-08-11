@@ -26,7 +26,6 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   kinematic_model_ = model;
 
 
-
   //todo make this work for all terrain (also inclinations), gonna need more constraints
   num_constraints_per_node_ = k3D + 1;  // position (3 position constraints, and a yaw angle of the wheel)
 

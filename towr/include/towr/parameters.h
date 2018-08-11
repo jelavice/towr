@@ -166,6 +166,7 @@ struct Parameters {
    * @brief Default parameters to use.
    */
   Parameters();
+  Parameters(int numEE);
   Parameters(const DynamicModel *model);
 
   virtual ~Parameters() = default;
@@ -210,7 +211,14 @@ struct Parameters {
 
   void SetConstraints();
 
+  /// The number of endeffectors.
+   int GetEECount() const;
+
+   void SetEECount(int numEE);
+
 private:
+  int numEE_ = -1;
+
   /// Which constraints should be used in the optimization problem.
   UsedConstraints constraints_;
 
@@ -226,8 +234,7 @@ private:
   /// True if the phase durations should be optimized over.
   bool IsOptimizeTimings() const;
 
-  /// The number of endeffectors.
-  int GetEECount() const;
+
 
   /// Total duration [s] of the motion.
   double GetTotalTime() const;
