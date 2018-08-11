@@ -25,7 +25,6 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
 
   kinematic_model_ = model;
 
-
   //todo make this work for all terrain (also inclinations), gonna need more constraints
   num_constraints_per_node_ = k3D + 1;  // position (3 position constraints, and a yaw angle of the wheel)
 
@@ -37,9 +36,7 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   upper_bounds_ = kinematic_model_->GetUpperJointLimits(ee_);
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
-  std::cout << "Constructor from the joint constraint executed" << std::endl;
 }
-
 
 //this one is called first it seems
 void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, VectorXd& g) const
@@ -84,6 +81,7 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
+
   int dimension = 0;
 
   //first work out the joint bounds
@@ -105,7 +103,6 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
   bounds.at(GetRow(k, dimension)) = ifopt::BoundZero;
 
 }
-
 
 void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, std::string var_set,
                                                              Jacobian& jac) const
@@ -143,9 +140,10 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     dim = 1;
     Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0, 2);  // get the x and y velocity
     double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
+    Jacobian temp = kinematic_model_->GetOrientationJacobiansWRTjoints().at(ee_)
+            .row(2) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
 
-    jac.middleRows(row_start, dim) = kinematic_model_->GetOrientationJacobiansWRTjoints().at(ee_)
-        .row(2) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
+    jac.middleRows(row_start, dim) = temp;
   }
 
   if (var_set == id::base_lin_nodes) {
@@ -154,8 +152,9 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //work out the end-effector constraint
     row_start += kinematic_model_->GetNumDof(ee_);  //need to skip the rows corresponding to the first constraint
     int dim = dim3;
-    jac.middleRows(row_start, dim) = kinematic_model_->GetTranslationalJacobianWRTbasePosition().at(
+    Jacobian temp = kinematic_model_->GetTranslationalJacobianWRTbasePosition().at(
         ee_) * base_linear_->GetJacobianWrtNodes(t, kPos);
+    jac.middleRows(row_start, dim) = temp;
     row_start += dim;
 
     // jacobian of the last constraint is also zero wrt to the base lin nodes
@@ -177,11 +176,29 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0, 2);  // get the x and y velocity
     double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
 
-    jac.middleRows(row_start, dim) = kinematic_model_->GetOrientationJacobiansWRTbaseOrientation()
-        .at(ee_).row(2) * base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos).row(2)
-        * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
+//    std::cerr << "Size of the jacobian: \n" << jac.rows() << "x" << jac.cols() << std::endl;
+//    std::cerr << "row start \n" << row_start << std::endl;
+//    std::cerr << "the one from the kinematic model: \n"
+//              << kinematic_model_->GetOrientationJacobiansWRTbaseOrientation().at(ee_) << std::endl;
+//
+//    auto angJac = base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos);
+//    std::cerr << "ang spline \n" << base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos)
+//              << std::endl;
+//    std::cerr << "Size the one in the ang spline" << angJac.rows() << "x" << angJac.cols()
+//              << std::endl;
+
+    Jacobian temp = kinematic_model_->GetOrientationJacobiansWRTbaseOrientation().at(ee_)
+        * base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
+
+//    std::cout << "Size of the temp: " << temp.rows() << "x" << temp.cols() << std::endl;
+//    std::cout << "Velocity: " << ee_vel.transpose() << std::endl;
+
+    jac.row(row_start) = temp.row(2); //last row anyway
+
+    //std::cerr << "================" << std::endl << std::endl;
 
   }
+
 
   if (var_set == id::EEMotionNodes(ee_)) {
 
@@ -197,7 +214,9 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     dim = 1;
     double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
     Eigen::Vector3d constraint_partial_derivative(std::cos(yaw), std::sin(yaw), 0.0);
-    jac.middleRows(row_start, dim) = (constraint_partial_derivative * ee_motion_->GetJacobianWrtNodes(t, kPos)).eval().sparseView();
+    Jacobian temp = (constraint_partial_derivative
+        * ee_motion_->GetJacobianWrtNodes(t, kPos)).eval().sparseView();
+    jac.middleRows(row_start, dim) = temp;
 
   }
 

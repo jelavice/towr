@@ -501,15 +501,12 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
   //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
-    std::cout << ee << "/" << params_.GetEECount() << std::endl;
-    std::cout << "Casting int to unsigned int: " << static_cast<unsigned int>(ee);
     auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_ptr,
                                                              params_.GetTotalTime(),
                                                              params_.dt_constraint_range_of_motion_,
                                                              ee, s);
     constraints.push_back(c);
 
-    std::cout << "done" << std::endl;
   }
 
   std::cout << "made ROM with joints" << std::endl;

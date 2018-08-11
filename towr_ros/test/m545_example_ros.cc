@@ -273,7 +273,7 @@ int main(int argc, char** argv)
   // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
-  params.SetNumberEEPolynomials(9);
+  params.SetNumberEEPolynomials(2);
   params.SetDynamicConstraintDt(0.5);
   params.SetRangeOfMotionConstraintDt(0.5);
   params.SetPolynomialDurationBase(0.5);
@@ -287,6 +287,7 @@ int main(int argc, char** argv)
   // Pass this information to the actual solver
   ifopt::Problem nlp;
   SplineHolder solution;
+
   for (auto c : formulation.GetVariableSets(solution))
     nlp.AddVariableSet(c);
 
@@ -296,31 +297,33 @@ int main(int argc, char** argv)
   for (auto c : formulation.GetCosts())
     nlp.AddCostSet(c);
 
+
+
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
   solver->SetOption("ma57_pre_alloc", 3.0);
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-  solver->SetOption("max_iter", 1);
-  solver->SetOption("derivative_test", "first-order");
+  //solver->SetOption("max_iter", 1);
+  //solver->SetOption("derivative_test", "first-order");
   solver->SetOption("print_level", 4);
   solver->SetOption("derivative_test_perturbation", 1e-5);
   solver->SetOption("derivative_test_tol", 1e-3);
 
-  //solver->Solve(nlp);
+  solver->Solve(nlp);
 
   //printTrajectory(solution);
 
   // Defaults to /home/user/.ros/
-  std::string bag_file = "towr_trajectory.bag";
-  rosbag::Bag bag;
-  bag.open(bag_file, rosbag::bagmode::Write);
-  ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
-  auto final_trajectory = GetTrajectory(solution);
-  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired,
-                         formulation.terrain_.get());
-
-  bag.close();
+//  std::string bag_file = "towr_trajectory.bag";
+//  rosbag::Bag bag;
+//  bag.open(bag_file, rosbag::bagmode::Write);
+//  ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
+//  auto final_trajectory = GetTrajectory(solution);
+//  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired,
+//                         formulation.terrain_.get());
+//
+//  bag.close();
 
 }
