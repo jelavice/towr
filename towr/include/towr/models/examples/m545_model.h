@@ -15,6 +15,7 @@
 #include "excavator_model/Limits.hpp"
 #include "loco_m545/common/typedefs.hpp"
 
+
 namespace towr {
 
 /**
@@ -58,6 +59,7 @@ class M545KinematicModelFull : public KinematicModelJoints
     BOOM = J_TURN
   };
 
+  static constexpr unsigned int numEE = 5;
   static constexpr unsigned int legDof = 3;
   static constexpr unsigned int boomDof = NUM_JOINTS - 4 * legDof;
 

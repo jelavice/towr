@@ -33,6 +33,8 @@
 #include <towr_ros/topic_names.h>
 #include <towr_ros/towr_xpp_ee_map.h>
 
+#include <towr/models/examples/m545_model.h>
+
 using namespace xpp;
 using namespace towr;
 
@@ -187,44 +189,76 @@ int main(int argc, char** argv)
 
   // Kinematic limits and dynamic parameters of the hopper
   constexpr double dt = 0.01;
-  formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
   Parameters::robot_has_wheels_ = true;
-  Parameters::use_joint_formulation_ = false;
+  Parameters::use_joint_formulation_ = true;
 
-  if (Parameters::use_joint_formulation_ == true)
+  if (Parameters::use_joint_formulation_)
     formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
   else
     formulation.model_ = RobotModel(RobotModel::m545);
 
+  // set the initial position of the excavator
+  BaseState initial_base;
+  auto &base_init_pos = formulation.initial_base_.lin.at(towr::kPos);
+  auto &base_init_orientation = formulation.initial_base_.ang.at(towr::kPos);
+  base_init_pos << 0.0, 0.0, 0.95;
+  base_init_orientation << 0.0, 0.0, 0.0;
 
-    // set the initial position of the hopper
-    BaseState initial_base;
-  formulation.initial_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
-  //also in the world frame
-  const double x_nominal_b_front = 2.7;
-  const double y_nominal_b_front = 1.6;
+  if (Parameters::use_joint_formulation_) {
 
-  const double x_nominal_b_hind = 2.05;
-  const double y_nominal_b_hind = 1.26;
+    auto model = std::dynamic_pointer_cast<M545KinematicModelFull>(
+        formulation.model_.kinematic_model_);
 
-  const double z_nominal_b = 0.0;
+    if (model == nullptr)
+      throw std::runtime_error(
+          "Cannot do the dynamic cast from kinematic model to kinematic model full");
 
-  auto &nominal_stance = formulation.initial_ee_W_;
-  nominal_stance.resize(4);
+    Eigen::VectorXd joint_positions(static_cast<int>(M545KinematicModelFull::NUM_JOINTS));
 
-  nominal_stance.at(towr::QuadrupedIDs::LF) << x_nominal_b_front, y_nominal_b_front, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::RF) << x_nominal_b_front, -y_nominal_b_front, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
-  nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
+    joint_positions.setZero();
+
+    model->UpdateModel(joint_positions, base_init_orientation, base_init_pos );
+
+    auto &nominal_stance = formulation.initial_ee_W_;
+    nominal_stance.resize(model->numEE);
+
+    //then compute the ee positions
+
+    for (int i =0; i < model->numEE; ++i){
+        nominal_stance.at(i) = model->GetEEPositionsWorld().at(i);
+    }
+
+  }
+
+  else {  // if one ain't using joint formulations
+
+    //also in the world frame
+    const double x_nominal_b_front = 2.7;
+    const double y_nominal_b_front = 1.6;
+
+    const double x_nominal_b_hind = 2.05;
+    const double y_nominal_b_hind = 1.26;
+
+    const double z_nominal_b = 0.0;
+
+    auto &nominal_stance = formulation.initial_ee_W_;
+    nominal_stance.resize(4);
+
+    nominal_stance.at(towr::QuadrupedIDs::LF) << x_nominal_b_front, y_nominal_b_front, z_nominal_b;
+    nominal_stance.at(towr::QuadrupedIDs::RF) << x_nominal_b_front, -y_nominal_b_front, z_nominal_b;
+    nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
+    nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
+
+  }
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos) << 0.0, 5.0, 0.95;
+  formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
   Parameters& params = formulation.params_;
 
-  const double duration = 20.0;
-  params.SetNumberEEPolynomials(199);
+  const double duration = 1.0;
+  params.SetNumberEEPolynomials(9);
   params.SetDynamicConstraintDt(0.1);
   params.SetRangeOfMotionConstraintDt(0.1);
   params.SetPolynomialDurationBase(0.1);
@@ -258,11 +292,11 @@ int main(int argc, char** argv)
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-//  solver->SetOption("max_iter", 1);
-//  solver->SetOption("derivative_test", "first-order");
-//  solver->SetOption("print_level", 4);
-//  solver->SetOption("derivative_test_perturbation", 1e-5);
-//  solver->SetOption("derivative_test_tol", 1e-3);
+  solver->SetOption("max_iter", 1);
+  solver->SetOption("derivative_test", "first-order");
+  solver->SetOption("print_level", 4);
+  solver->SetOption("derivative_test_perturbation", 1e-5);
+  solver->SetOption("derivative_test_tol", 1e-3);
 
   solver->Solve(nlp);
 

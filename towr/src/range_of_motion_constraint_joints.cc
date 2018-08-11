@@ -38,6 +38,8 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
 }
 
+
+//this one is called first it seems
 void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, VectorXd& g) const
 {
 
@@ -102,8 +104,7 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
 
 }
 
-//todo see the order of the evaluation
-//Update of the model needs to be called before this crap
+
 void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, std::string var_set,
                                                              Jacobian& jac) const
 {
