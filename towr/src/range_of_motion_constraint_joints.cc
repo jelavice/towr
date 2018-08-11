@@ -18,12 +18,14 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   base_linear_ = spline_holder.base_linear_;
   base_angular_ = EulerConverter(spline_holder.base_angular_);
 
-  ee_motion_ = spline_holder.ee_motion_.at(ee);
+  ee_ = ee;
+
+  ee_motion_ = spline_holder.ee_motion_.at(ee_);
   joints_motion_ = spline_holder.joint_motion_.at(ee_);
 
-  kinematic_model_ = std::move(model);
+  kinematic_model_ = model;
 
-  ee_ = ee;
+
 
   //todo make this work for all terrain (also inclinations), gonna need more constraints
   num_constraints_per_node_ = k3D + 1;  // position (3 position constraints, and a yaw angle of the wheel)
@@ -36,6 +38,7 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   upper_bounds_ = kinematic_model_->GetUpperJointLimits(ee_);
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
+  std::cout << "Constructor from the joint constraint executed" << std::endl;
 }
 
 

@@ -84,11 +84,15 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
     joints = MakeJointVariables();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
 
+    std::cout << "Created joints and ee with wheels" << std::endl;
+
   } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
 
     //dis is what I am doing at the moment
     ee_motion = MakeEndeffectorVariablesWithWheels();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+    std::cout << "Created ee with wheels" << std::endl;
 
   } else if ((Parameters::robot_has_wheels_ == false) && Parameters::use_joint_formulation_) {
 
@@ -100,11 +104,15 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
     joints = MakeJointVariables();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
 
+    std::cout << "Created ee and joints" << std::endl;
+
   } else {
 
     //no wheels no joints all normal and easy
     ee_motion = MakeEndeffectorVariables();
     vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
+
+    std::cout << "Created ee only" << std::endl;
   }
   auto ee_force = MakeForceVariables();
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
@@ -287,6 +295,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
 
   }
 
+  std::cout << "made joint variables" << std::endl;
+
   return vars;
 }
 
@@ -319,8 +329,10 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
+
 // Endeffector Motions
   double T = params_.GetTotalTime();
+  //todo fix this such that the num ee is not dependent on the number ofthem that are in contact at the begining
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
     auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
@@ -341,6 +353,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
     nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
     vars.push_back(nodes);
   }
+
 
   return vars;
 }
@@ -405,6 +418,9 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionBoxConstraint(
     const SplineHolder& s) const
 {
   ContraintPtrVec c;
+
+  std::cout << "made box constraint" << std::endl;
+
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
@@ -472,6 +488,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
 {
   ContraintPtrVec constraints;
 
+  std::cout << "Started making rom with joints" << std::endl;
+
 
   //hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
@@ -479,14 +497,22 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
   if (model_ptr == nullptr)
     throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
 
+
   //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
+
+    std::cout << ee << "/" << params_.GetEECount() << std::endl;
+    std::cout << "Casting int to unsigned int: " << static_cast<unsigned int>(ee);
     auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_ptr,
                                                              params_.GetTotalTime(),
                                                              params_.dt_constraint_range_of_motion_,
                                                              ee, s);
     constraints.push_back(c);
+
+    std::cout << "done" << std::endl;
   }
+
+  std::cout << "made ROM with joints" << std::endl;
 
   return constraints;
 }

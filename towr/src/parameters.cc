@@ -34,6 +34,7 @@
 #include <numeric>      // std::accumulate
 #include <math.h>       // fabs
 #include <cassert>
+#include <iostream>
 
 namespace towr {
 
@@ -83,7 +84,8 @@ void Parameters::SetRangeOfMotionConstraintDt(double dt)
   dt_constraint_range_of_motion_ = dt;
 }
 
-void Parameters::SetPolynomialDurationBase(double dt){
+void Parameters::SetPolynomialDurationBase(double dt)
+{
   duration_base_polynomial_ = dt;
 }
 
@@ -95,12 +97,30 @@ void Parameters::SetConstraints()
   //now reset all the constraints with new quentities
   constraints_.push_back(Terrain);
   SetDynamicConstraint();
-  SetKinematicConstraint();
   SetForceConstraint();
 
-  //todo see which constraints need to be set when I add the joints
-  if (robot_has_wheels_)
+
+  if (robot_has_wheels_ && use_joint_formulation_) {
+    //set rom joints and ee with wheels
+    //SetWheelConstraint(); //dis hacly since I am building thos constraints in the joint constraints anyway
+    SetKinematicConstraintJoints();
+//    std::cout << "Added wheel and joint rom constraint" << std::endl;
+  }else if ((robot_has_wheels_ == false) && use_joint_formulation_){
+    //set rom with joints
+    SetKinematicConstraintJoints();
+//    std::cout << "Added joint rom constraint" << std::endl;
+  } else if ( robot_has_wheels_ && (use_joint_formulation_ == false)){
+    //set wheel heading and rom
     SetWheelConstraint();
+    SetKinematicConstraint();
+//    std::cout << "Added wheel and rom constraint" << std::endl;
+  } else
+  {
+    // set rom
+    SetKinematicConstraint();
+//    std::cout << "Added rom constraint only" << std::endl;
+  }
+
 }
 
 void Parameters::SetDynamicConstraint()
@@ -112,6 +132,11 @@ void Parameters::SetDynamicConstraint()
 void Parameters::SetKinematicConstraint()
 {
   constraints_.push_back(EndeffectorRom);
+}
+
+void Parameters::SetKinematicConstraintJoints()
+{
+  constraints_.push_back(EndeffectorRomJoints);
 }
 
 void Parameters::SetJointConstraint()

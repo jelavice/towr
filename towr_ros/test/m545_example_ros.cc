@@ -191,6 +191,7 @@ int main(int argc, char** argv)
   constexpr double dt = 0.01;
   Parameters::robot_has_wheels_ = true;
   Parameters::use_joint_formulation_ = true;
+  int numEE = 0;
 
   if (Parameters::use_joint_formulation_)
     formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
@@ -201,9 +202,9 @@ int main(int argc, char** argv)
   BaseState initial_base;
   auto &base_init_pos = formulation.initial_base_.lin.at(towr::kPos);
   auto &base_init_orientation = formulation.initial_base_.ang.at(towr::kPos);
+  Parameters& params = formulation.params_;
   base_init_pos << 0.0, 0.0, 0.95;
   base_init_orientation << 0.0, 0.0, 0.0;
-
 
   if (Parameters::use_joint_formulation_) {
 
@@ -218,16 +219,26 @@ int main(int argc, char** argv)
 
     joint_positions.setZero();
 
-    model->UpdateModel(joint_positions, base_init_orientation, base_init_pos );
+    model->UpdateModel(joint_positions, base_init_orientation, base_init_pos);
 
     auto &nominal_stance = formulation.initial_ee_W_;
     nominal_stance.resize(model->numEE);
 
     //then compute the ee positions
 
-    for (int i =0; i < model->numEE; ++i){
-        nominal_stance.at(i) = model->GetEEPositionsWorld().at(i);
+    for (int i = 0; i < model->numEE; ++i) {
+      nominal_stance.at(i) = model->GetEEPositionsWorld().at(i);
     }
+
+    const double duration = 1.0;
+    for (int i = 0; i < 4; ++i) {
+      params.ee_phase_durations_.push_back( { duration });
+      params.ee_in_contact_at_start_.push_back(true);
+    }
+
+    //the boom
+    params.ee_phase_durations_.push_back( { duration });
+    params.ee_in_contact_at_start_.push_back(false); //todo make sure that the boom is not a wheel
 
   }
 
@@ -250,26 +261,24 @@ int main(int argc, char** argv)
     nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
     nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
+    const double duration = 1.0;
+    for (int i = 0; i < 4; ++i) {
+      params.ee_phase_durations_.push_back( { duration });
+      params.ee_in_contact_at_start_.push_back(true);
+    }
+
   }
 
   // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
 
-  Parameters& params = formulation.params_;
-
-  const double duration = 1.0;
   params.SetNumberEEPolynomials(9);
-  params.SetDynamicConstraintDt(0.1);
-  params.SetRangeOfMotionConstraintDt(0.1);
-  params.SetPolynomialDurationBase(0.1);
+  params.SetDynamicConstraintDt(0.5);
+  params.SetRangeOfMotionConstraintDt(0.5);
+  params.SetPolynomialDurationBase(0.5);
 
   //must be called to override the constructor
   params.SetConstraints();
-
-  for (int i = 0; i < 4; ++i) {
-    params.ee_phase_durations_.push_back( { duration });
-    params.ee_in_contact_at_start_.push_back(true);
-  }
 
   if (Parameters::robot_has_wheels_ == false)
     params.SetSwingConstraint();
@@ -298,7 +307,7 @@ int main(int argc, char** argv)
   solver->SetOption("derivative_test_perturbation", 1e-5);
   solver->SetOption("derivative_test_tol", 1e-3);
 
-  solver->Solve(nlp);
+  //solver->Solve(nlp);
 
   //printTrajectory(solution);
 
