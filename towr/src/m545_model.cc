@@ -14,7 +14,7 @@
 namespace towr {
 
 M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescription, double dt)
-    : KinematicModelJoints( { legDof, legDof, legDof, legDof, boomDof }, numEE),
+    : KinematicModelJoints(numEE),
       model_(dt)
 {
 
@@ -61,15 +61,19 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 
   //std::cout << model_.getState() << std::endl;
 
-#ifdef M545MODELDEBUG
+  // initialize with zero
   Eigen::VectorXd jointAngles(static_cast<unsigned int>(NUM_JOINTS));
-  Eigen::VectorXd euler(3);
-  Eigen::VectorXd position(3);
+  Eigen::Vector3d euler(3);
+  Eigen::Vector3d position(3);
   jointAngles.setZero();
   euler.setZero();
   position.setZero();
+  position.z() = 0.95;
   UpdateModel(jointAngles, euler, position);
 
+  max_dev_from_nominal_.setZero();
+
+#ifdef M545MODELDEBUG
   std::cout << "Translational jacobians wrt joints: " << std::endl;
   for (const auto &x : ee_trans_jac_joints_) {
     std::cout << x << std::endl << std::endl;
@@ -276,6 +280,10 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
     ee_pos_.at(ee_id) = model_.getPositionWorldToBody(loco_m545::RD::BodyEnum::RH_WHEEL,
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
   }
+
+  //set the first 4 z positions to zero
+  for (int i = 0; i < 4; ++i)
+    ee_pos_.at(i).z() = 0;
 
   {
     //BOOM

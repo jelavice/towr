@@ -15,7 +15,6 @@
 #include "excavator_model/Limits.hpp"
 #include "loco_m545/common/typedefs.hpp"
 
-
 namespace towr {
 
 /**
@@ -102,6 +101,35 @@ class M545KinematicModelFull : public KinematicModelJoints
   const VectorXd GetLowerJointLimits(int limbId) final;
   const VectorXd GetUpperJointLimits(int limbId) final;
 
+  inline int GetNumDof(int limbId) final
+  {
+    return num_dof_limbs_.at(limbId);
+  }
+
+  int GetNumDofTotal() final
+    {
+
+      int numDof = 0;
+      for (int i = 0; i < GetNumberOfEndeffectors(); ++i)
+        numDof += GetNumDof(i);
+
+      return numDof;
+
+    }
+
+
+
+  EEPos GetNominalStanceInBase() const final
+  {
+    return ee_pos_;
+  }
+
+
+  Vector3d GetMaximumDeviationFromNominal() const final
+  {
+    return max_dev_from_nominal_;
+  }
+
  private:
 
   int getLimbStartingId(int LimbId);
@@ -127,9 +155,8 @@ class M545KinematicModelFull : public KinematicModelJoints
                                    LimbStartIndex limbStartIndex, unsigned int dof,
                                    EEJac &jacArray);
 
-  void ExtractOrientationJacobianEntries(const MatrixXd &bigJacobian,
-                                              loco_m545::RD::LimbEnum limb,
-                                              EEJac &jacArray);
+  void ExtractOrientationJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
+                                         EEJac &jacArray);
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
@@ -146,6 +173,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   //rotational jacobian
   EEJac ee_rot_jac_joints_;
   EEJac ee_rot_jac_base_orientation_;
+
+  std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
 
 };
 

@@ -10,7 +10,6 @@
 #include <Eigen/SparseCore>
 #include <kindr/Core>
 
-
 namespace towr {
 
 class KinematicModelJoints : public KinematicModel
@@ -21,28 +20,16 @@ class KinematicModelJoints : public KinematicModel
   using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
   using EEJac = std::vector<SparseMatrix>;
 
-  KinematicModelJoints(const std::vector<int> &limbdofs, int n_ee)
+  KinematicModelJoints(int n_ee)
       : KinematicModel(n_ee)
   {
-    num_dof_limbs_ = limbdofs;
   }
 
   virtual ~KinematicModelJoints() = default;
 
-  int GetNumDof(int limbId) override
+  virtual int GetNumDofTotal()
   {
-    return num_dof_limbs_.at(limbId);
-  }
-
-  int GetNumDofTotal()
-  {
-
-    int numDof = 0;
-    for (int i = 0; i < GetNumberOfEndeffectors(); ++i)
-      numDof += GetNumDof(i);
-
-    return numDof;
-
+    return -1;
   }
 
   static Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat)
@@ -65,33 +52,28 @@ class KinematicModelJoints : public KinematicModel
   virtual const VectorXd GetUpperJointLimits(int limbId) = 0;
 
   virtual void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
-                     const Vector3d &base_position) = 0;
+                           const Vector3d &base_position) = 0;
 
-
-    // these are in the world frame
+  // these are in the world frame
   virtual const EEPos &GetEEPositionsWorld() = 0;
 
-    // this is in the world frame
+  // this is in the world frame
   virtual const EEPos &GetEEOrientation() = 0;
 
-    //world frame
+  //world frame
   virtual const EEJac &GetTranslationalJacobiansWRTjoints() = 0;
 
-    //world
+  //world
   virtual const EEJac &GetTranslationalJacobianWRTbasePosition() = 0;
 
-    //world
+  //world
   virtual const EEJac &GetTranslatinalJacobianWRTbaseOrientation() = 0;
 
-    // dis in the world frame
+  // dis in the world frame
   virtual const EEJac &GetOrientationJacobiansWRTjoints() = 0;
 
-    // dis in the world frame (dis identity matrix)
+  // dis in the world frame (dis identity matrix)
   virtual const EEJac &GetOrientationJacobiansWRTbaseOrientation() = 0;
-
- protected:
-
-  std::vector<int> num_dof_limbs_;
 
 };
 
