@@ -406,8 +406,6 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionBoxConstraint(
 {
   ContraintPtrVec c;
 
-  std::cout << "made box constraint" << std::endl;
-
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
                                                          params_.GetTotalTime(),
@@ -474,8 +472,6 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
 {
   ContraintPtrVec constraints;
 
-  std::cout << "Started making rom with joints" << std::endl;
-
   //hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
@@ -491,8 +487,6 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
     constraints.push_back(c);
 
   }
-
-  std::cout << "made ROM with joints" << std::endl;
 
   return constraints;
 }
