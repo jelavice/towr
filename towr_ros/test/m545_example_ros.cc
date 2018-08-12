@@ -205,7 +205,7 @@ int main(int argc, char** argv)
   Parameters& params = formulation.params_;
   base_init_pos << 0.0, 0.0, 0.95;
   base_init_orientation << 0.0, 0.0, 0.0;
-  params.SetEECount(5);
+
 
   if (Parameters::use_joint_formulation_) {
 
@@ -231,6 +231,8 @@ int main(int argc, char** argv)
       nominal_stance.at(i) = model->GetEEPositionsWorld().at(i);
     }
 
+    params.SetEECount(5);
+
     const double duration = 1.0;
     for (int i = 0; i < 4; ++i) {
       params.ee_phase_durations_.push_back( { duration });
@@ -239,11 +241,11 @@ int main(int argc, char** argv)
 
     //the boom
     params.ee_phase_durations_.push_back( { duration });
-    params.ee_in_contact_at_start_.push_back(false); //todo make sure that the boom is not a wheel
+    params.ee_in_contact_at_start_.push_back(false);  //todo make sure that the boom is not a wheel
 
-  }
+  } else {  // if one ain't using joint formulations
 
-  else {  // if one ain't using joint formulations
+    params.SetEECount(4);
 
     //also in the world frame
     const double x_nominal_b_front = 2.7;
@@ -271,9 +273,9 @@ int main(int argc, char** argv)
   }
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, 0.95;
+  formulation.final_base_.lin.at(towr::kPos) << 1.0, 0.0, 0.95;
 
-  params.SetNumberEEPolynomials(2);
+  params.SetNumberEEPolynomials(1);
   params.SetDynamicConstraintDt(0.5);
   params.SetRangeOfMotionConstraintDt(0.5);
   params.SetPolynomialDurationBase(0.5);
@@ -281,8 +283,8 @@ int main(int argc, char** argv)
   //must be called to override the constructor
   params.SetConstraints();
 
-  if (Parameters::robot_has_wheels_ == false)
-    params.SetSwingConstraint();
+//  if (Parameters::robot_has_wheels_ == false)
+//    params.SetSwingConstraint();
 
   // Pass this information to the actual solver
   ifopt::Problem nlp;
@@ -297,16 +299,14 @@ int main(int argc, char** argv)
   for (auto c : formulation.GetCosts())
     nlp.AddCostSet(c);
 
-
-
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
   solver->SetOption("ma57_pre_alloc", 3.0);
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-  //solver->SetOption("max_iter", 1);
-  //solver->SetOption("derivative_test", "first-order");
+  solver->SetOption("max_iter", 1);
+  solver->SetOption("derivative_test", "first-order");
   solver->SetOption("print_level", 4);
   solver->SetOption("derivative_test_perturbation", 1e-5);
   solver->SetOption("derivative_test_tol", 1e-3);

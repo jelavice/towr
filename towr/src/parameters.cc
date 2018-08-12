@@ -151,10 +151,6 @@ void Parameters::SetKinematicConstraintJoints()
   constraints_.push_back(EndeffectorRomJoints);
 }
 
-void Parameters::SetJointConstraint()
-{
-  constraints_.push_back(EndeffectorRomJoints);
-}
 
 void Parameters::SetForceConstraint()
 {

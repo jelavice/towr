@@ -287,8 +287,6 @@ private:
 
   void SetWheelConstraint();
 
-  void SetJointConstraint();
-
   void SetKinematicConstraintJoints();
 
   /// which dimensions (x,y,z) of the final base state should be bounded
