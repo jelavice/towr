@@ -288,10 +288,6 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsWorld
                                                       loco_m545::RD::CoordinateFrameEnum::WORLD);
   }
 
-  //set the first 4 z positions to zero
-  for (int i = 0; i < 4; ++i)
-    ee_pos_.at(i).z() = 0;
-
   {
     //BOOM
     unsigned int ee_id = static_cast<unsigned int>(loco_m545::RD::LimbEnum::BOOM);
@@ -345,6 +341,10 @@ const M545KinematicModelFull::EEPos &M545KinematicModelFull::GetEEPositionsBase(
                                                           loco_m545::RD::BodyEnum::ENDEFFECTOR,
                                                           loco_m545::RD::CoordinateFrameEnum::BASE);
   }
+
+  for (int i=0; i < 4; ++i)
+    ee_pos_base_.at(i).z() = -base_xyz_.z();
+
 
   return ee_pos_base_;
 
@@ -588,6 +588,8 @@ void M545KinematicModelFull::UpdateModel(const VectorXd &jointAngles, const Vect
   excavator_model::ExcavatorState state = model_.getState();
   kindr::Position3D position;
   position.toImplementation() = base_position;
+
+  base_xyz_ = base_position;
 
   kindr::EulerAnglesYprD euler(ypr_base.z(), ypr_base.y(), ypr_base.x());
   euler.setUnique();

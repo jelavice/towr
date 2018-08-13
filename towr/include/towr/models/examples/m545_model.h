@@ -189,7 +189,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   EEJac ee_rot_jac_base_orientation_;
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
-  Eigen::Vector3d euler_ypr_;
+  Vector3d euler_ypr_;
+  Vector3d base_xyz_;
 
   //base frame
   EEPos ee_pos_base_;
