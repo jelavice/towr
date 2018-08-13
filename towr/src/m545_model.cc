@@ -45,12 +45,14 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
   //create sparse matrices
   for (int i = 0; i < numEE; ++i) {
 
+    int numDof = num_dof_limbs_.at(i);
+
     //rotational jacobians
-    ee_rot_jac_joints_.at(i).resize(3, NUM_JOINTS);
+    ee_rot_jac_joints_.at(i).resize(3, numDof);
     ee_rot_jac_base_orientation_.at(i).resize(3, 3);
 
     //translational jabional
-    ee_trans_jac_joints_.at(i).resize(3, NUM_JOINTS);
+    ee_trans_jac_joints_.at(i).resize(3, numDof);
     ee_trans_jac_base_orientation_.at(i).resize(3, 3);
     ee_trans_jac_base_position_.at(i).resize(3, 3);
 
@@ -536,7 +538,9 @@ void M545KinematicModelFull::ExtractJointJacobianEntries(const MatrixXd &bigJaco
   for (unsigned int j = 0; j < dim3; ++j)
     for (unsigned int i = 0; i < dof; ++i) {
       //std::cout <<  "coeffs: " << idStart + i << ", " << idStart_loco + i << std::endl;
-      jacArray.at(ee_id).coeffRef(j, idStart + i) = bigJacobian(j, idStart_loco + i);
+//      jacArray.at(ee_id).coeffRef(j, idStart + i) = bigJacobian(j, idStart_loco + i);
+      jacArray.at(ee_id).coeffRef(j, i) = bigJacobian(j, idStart_loco + i);
+
       //std::cout << "in the big matrix: " << bigJacobian(j, idStart_loco + i) << std::endl;
       //std::cout << "In the sparse matrix: " << jacArray.at(ee_id).coeffRef(j, idStart + i) << std::endl;
       //std:: cout << " done" << std::endl;
@@ -585,6 +589,7 @@ const M545KinematicModelFull::EEJac &M545KinematicModelFull::GetOrientationJacob
 {
   return ee_rot_jac_base_orientation_;
 }
+
 
 }
 /*namespace*/
