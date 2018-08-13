@@ -76,6 +76,15 @@ class M545KinematicModelFull : public KinematicModelJoints
   void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
                    const Vector3d &base_position) final;
 
+  /* base frame */
+  // these are in the world frame
+  const EEPos &GetEEPositionsBase() final;
+
+
+
+
+
+
   // these are in the world frame
   const EEPos &GetEEPositionsWorld() final;
 
@@ -130,6 +139,8 @@ class M545KinematicModelFull : public KinematicModelJoints
     return max_dev_from_nominal_;
   }
 
+  Eigen::Matrix3d angularVelocity3eulerDerivativesMat(const Vector3d &ypr);
+
  private:
 
   int getLimbStartingId(int LimbId);
@@ -158,6 +169,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   void ExtractOrientationJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
                                          EEJac &jacArray);
 
+  void CalculateTranslationalJacobiansWRTjointsBase();
+
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
   VectorXd upper_joint_limits_;
@@ -175,6 +188,11 @@ class M545KinematicModelFull : public KinematicModelJoints
   EEJac ee_rot_jac_base_orientation_;
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
+  Eigen::Vector3d euler_ypr_;
+
+  //base frame
+  EEPos ee_pos_base_;
+  EEJac ee_trans_jac_joints_base_;
 
 };
 

@@ -75,6 +75,14 @@ class KinematicModelJoints : public KinematicModel
   // dis in the world frame (dis identity matrix)
   virtual const EEJac &GetOrientationJacobiansWRTbaseOrientation() = 0;
 
+  /* base methods *
+   * */
+
+  virtual const EEPos &GetEEPositionsBase() = 0;
+
+  //base frame
+  virtual const EEJac &GetTranslationalJacobiansWRTjointsBase() = 0;
+
 };
 
 } /* namespace towr */
