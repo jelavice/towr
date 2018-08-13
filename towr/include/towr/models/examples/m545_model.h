@@ -80,6 +80,7 @@ class M545KinematicModelFull : public KinematicModelJoints
   // these are in the world frame
   const EEPos &GetEEPositionsBase() final;
 
+  const EEJac &GetTranslationalJacobiansWRTjointsBase() final;
 
 
 
