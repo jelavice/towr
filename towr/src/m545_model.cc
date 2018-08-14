@@ -547,7 +547,7 @@ void M545KinematicModelFull::ExtractJointJacobianEntries(const MatrixXd &bigJaco
     for (unsigned int i = 0; i < dof; ++i) {
       //std::cout <<  "coeffs: " << idStart + i << ", " << idStart_loco + i << std::endl;
 //      jacArray.at(ee_id).coeffRef(j, idStart + i) = bigJacobian(j, idStart_loco + i);
-      jacArray.at(ee_id)(j, i) = bigJacobian(j, idStart_loco + i);
+      jacArray.at(ee_id).coeffRef(j, i) = bigJacobian(j, idStart_loco + i);
 
       //std::cout << "in the big matrix: " << bigJacobian(j, idStart_loco + i) << std::endl;
       //std::cout << "In the sparse matrix: " << jacArray.at(ee_id).coeffRef(j, idStart + i) << std::endl;
@@ -564,7 +564,13 @@ void M545KinematicModelFull::ExtractJointJacobianEntries(const MatrixXd &bigJaco
 M545KinematicModelFull::SparseMatrix M545KinematicModelFull::GetTranslationalJacobiansWRTjointsBase(
     int limbId)
 {
-  return ee_trans_jac_joints_base_.at(limbId).sparseView();
+  return ee_trans_jac_joints_base_.at(limbId);
+}
+
+M545KinematicModelFull::MatrixXd M545KinematicModelFull::GetTranslationalJacobiansWRTjointsBaseDense(
+    int limbId)
+{
+  //return ee_trans_jac_joints_base_.at(limbId);
 }
 
 void M545KinematicModelFull::printCurrentJointPositions(){

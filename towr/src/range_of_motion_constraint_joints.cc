@@ -62,7 +62,7 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
   Vector3d vector_base_to_ee_B = b_R_w * (vector_base_to_ee_W);
 
   VectorXd joint_positions = joints_motion_->GetPoint(t).p();
-  //kinematic_model_->UpdateModel(joint_positions, ee_);
+  kinematic_model_->UpdateModel(joint_positions, ee_);
   Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionsBase(ee_);
 
   /*now update the actual constraints*/
@@ -72,7 +72,7 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
   rowStart += joint_positions.size();
 
   //endeffector position
-  g.middleRows(rowStart, dim3) = 0*pos_ee_joints_B - vector_base_to_ee_B;
+  g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
 
   rowStart += dim3;
 
@@ -84,9 +84,12 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 
   //no slip in lateral direction
   //g(GetRow(k, dimension)) = ee_vel.x() * std::sin(wheel_yaw) - ee_vel.y() * std::cos(wheel_yaw);  // last row anyway
+  //g(rowStart) = 0.0;
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
+
+  return;
 
   int rowStart = GetRow(k, 0);
 
@@ -104,10 +107,9 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
     bounds.at(rowStart++) = ifopt::BoundZero;
   }
 
-
   //then workout the heading direction
   //equality constraint
-  //bounds.at(GetRow(k, dimension)) = ifopt::BoundZero;
+  //bounds.at(rowStart) = ifopt::BoundZero;
 
 }
 
@@ -118,25 +120,8 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
   EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
 
-
-  // need
-
-  // 1. joints here I should also fit the end yaw angle constraint
-
-  // 2. base lin
-
-  // 3. base ang
-
-  // 4. end effector position and end effectors felocity
-
-  //start with the joints since it is the easiest
-
   int row_start = GetRow(k, 0);
 
-  //std::cerr << "k: " << k << std::endl;
-//  if (k == 0)
-//    std::cerr << "Size of the jacobian for " << var_set << " : \n" << jac.rows() << "x"
-//              << jac.cols() << std::endl;
 
   if (var_set == id::JointNodes(ee_)) {
 
@@ -150,24 +135,15 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
     //now work out the end-effector constarint
 
+    Jacobian temp1 = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_);
+    Jacobian temp2 = joints_motion_->GetJacobianWrtNodes(t, kPos);
     Jacobian temp = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-        * joints_motion_->GetJacobianWrtNodes(t, kPos);
+            * joints_motion_->GetJacobianWrtNodes(t, kPos);
 
 
-//    Jacobian transformDerivative = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_);
-//    std::cout << "leg: " << ee_ << " size of the transform derivative: " << transformDerivative.rows() << "x"
-//              << transformDerivative.cols() << std::endl;
-//    std::cout << std::endl << transformDerivative << std::endl;
-//
-//    Jacobian nodesDerivative = joints_motion_->GetJacobianWrtNodes(t, kPos);
-//    std::cout << "size of the nodes derivative: " << nodesDerivative.rows() << "x"
-//              << nodesDerivative.cols() << std::endl;
-//    std::cout << std::endl << nodesDerivative << std::endl;
-//
-//    std::cout << "size of this temp jacobian: " << temp.rows() << "x" << temp.cols() << std::endl;
-//    std::cout << std::endl << temp << std::endl;
 
-    //jac.middleRows(row_start, dim) = joints_motion_->GetJacobianWrtNodes(t, kPos);
+    jac.middleRows(row_start, dim3) = temp;
+
 
     //need velocity and angle for the last constraint
     //dis is the wheel heading constraint
@@ -180,6 +156,8 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
   }
 
+
+
   if (var_set == id::base_lin_nodes) {
 
     //skip the first constraint since the derivative is zero wrt to base lin nodes
@@ -191,6 +169,7 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     // jacobian of the last constraint is also zero wrt to the base lin nodes
 
   }
+
 
   if (var_set == id::base_ang_nodes) {
 
@@ -247,6 +226,9 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 //    jac.middleRows(row_start, dim) = temp;
 
   }
+
+  //std::cout << "Finised the update jacobian!" << std::endl;
+
 
 }
 

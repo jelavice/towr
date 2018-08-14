@@ -228,7 +228,7 @@ int main(int argc, char** argv)
 
     for (int i = 0; i < numEE; ++i) {
       nominal_stance.at(i) = model->GetEEPositionsBase(i);
-      //std::cout << nominal_stance.at(i).transpose() << std::endl;
+      std::cout << nominal_stance.at(i).transpose() << std::endl;
     }
 
     params.SetEECount(numEE);

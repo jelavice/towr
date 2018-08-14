@@ -25,6 +25,8 @@ class M545KinematicModelFull : public KinematicModelJoints
 {
  public:
 
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   //joint that are of interest for the planning
   enum Joints
   {
@@ -62,12 +64,12 @@ class M545KinematicModelFull : public KinematicModelJoints
   static constexpr unsigned int legDof = 3;
   static constexpr unsigned int boomDof = NUM_JOINTS - 4 * legDof;
 
-  using MatrixXd = Eigen::MatrixXd;
+  using MatrixXd = KinematicModelJoints::MatrixXd;
   using VectorXd = KinematicModelJoints::VectorXd;
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
   //using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
   using SparseMatrix = KinematicModelJoints::SparseMatrix;
-  using EEJac = std::vector<MatrixXd>;
+  using EEJac = std::vector<SparseMatrix>;
 
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
@@ -81,31 +83,9 @@ class M545KinematicModelFull : public KinematicModelJoints
   Eigen::Vector3d GetEEPositionsBase(int limbId) final;
 
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
+  MatrixXd GetTranslationalJacobiansWRTjointsBaseDense(int limbId) final;
 
 
-
-
-
-//  // these are in the world frame
-//  const EEPos &GetEEPositionsWorld() final;
-//
-//  // this is in the world frame
-//  const EEPos &GetEEOrientation() final;
-//
-//  //world frame
-//  const EEJac &GetTranslationalJacobiansWRTjoints() final;
-//
-//  //world
-//  const EEJac &GetTranslationalJacobianWRTbasePosition() final;
-//
-//  //world
-//  const EEJac &GetTranslatinalJacobianWRTbaseOrientation() final;
-//
-//  // dis in the world frame
-//  const EEJac &GetOrientationJacobiansWRTjoints() final;
-//
-//  // dis in the world frame (dis identity matrix)
-//  const EEJac &GetOrientationJacobiansWRTbaseOrientation() final;
 
   //todo fix the return by value, const don't make sense either
   const VectorXd GetLowerJointLimits(int limbId) final;

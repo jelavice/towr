@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
   auto kinematic_model = std::make_shared<M545KinematicModelFull>(urdfDescription, dt);
 
-  M545KinematicModelFull::EEJac ee_jac_base_num;
+  std::vector<Eigen::MatrixXd> ee_jac_base_num;
   M545KinematicModelFull::EEJac ee_jac_base;
   std::vector<Eigen::VectorXd> joint_angles_vector;
 
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     joint_angles_vector.at(i).resize(kinematic_model->GetNumDof(i));
   }
 
-  const int numTests = 50000;
+  const int numTests = 10000;
   int num_failed = 0;
   for (int n = 0; n < numTests; ++n) {
 

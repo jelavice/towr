@@ -15,10 +15,12 @@ namespace towr {
 class KinematicModelJoints : public KinematicModel
 {
  public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::shared_ptr<KinematicModelJoints>;
   using VectorXd = KinematicModel::VectorXd;
   using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
   using EEJac = std::vector<SparseMatrix>;
+  using MatrixXd = Eigen::MatrixXd;
 
   KinematicModelJoints(int n_ee)
       : KinematicModel(n_ee)
@@ -53,33 +55,15 @@ class KinematicModelJoints : public KinematicModel
 
   virtual void UpdateModel(VectorXd jointAngles, int limbId) = 0;
 
-//  // these are in the world frame
-//  virtual const EEPos &GetEEPositionsWorld() = 0;
-//
-//  // this is in the world frame
-//  virtual const EEPos &GetEEOrientation() = 0;
-//
-//  //world frame
-//  virtual const EEJac &GetTranslationalJacobiansWRTjoints() = 0;
-//
-//  //world
-//  virtual const EEJac &GetTranslationalJacobianWRTbasePosition() = 0;
-//
-//  //world
-//  virtual const EEJac &GetTranslatinalJacobianWRTbaseOrientation() = 0;
-//
-//  // dis in the world frame
-//  virtual const EEJac &GetOrientationJacobiansWRTjoints() = 0;
-//
-//  // dis in the world frame (dis identity matrix)
-//  virtual const EEJac &GetOrientationJacobiansWRTbaseOrientation() = 0;
-
   /* base methods *
    * */
 
   virtual Eigen::Vector3d GetEEPositionsBase(int limbId) = 0;
 
   virtual SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) = 0;
+
+  virtual MatrixXd GetTranslationalJacobiansWRTjointsBaseDense(int limbId) = 0;
+
 
 };
 
