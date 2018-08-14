@@ -126,6 +126,14 @@ target_link_libraries(m545-example
 )
 
 
+
+add_executable(jacobians_unit_test 
+  test/jacobians_unit_test.cpp
+)
+target_link_libraries(jacobians_unit_test
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
