@@ -74,7 +74,7 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   //todo implement caching for this function otherwise I get 4 (expensive) calls
   //update base stuff and joints
-  void UpdateModel(const VectorXd &jointAngles, int limbId) final;
+  void UpdateModel(VectorXd jointAngles, int limbId) final;
 
   /* base frame */
   // these are in the world frame
@@ -140,7 +140,7 @@ class M545KinematicModelFull : public KinematicModelJoints
     return max_dev_from_nominal_;
   }
 
-  Eigen::Matrix3d angularVelocity3eulerDerivativesMat(const Vector3d &ypr);
+  void printCurrentJointPositions();
 
  private:
 

@@ -51,7 +51,7 @@ class KinematicModelJoints : public KinematicModel
   virtual const VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual const VectorXd GetUpperJointLimits(int limbId) = 0;
 
-  virtual void UpdateModel(const VectorXd &jointAngles, int limbId) = 0;
+  virtual void UpdateModel(VectorXd jointAngles, int limbId) = 0;
 
 //  // these are in the world frame
 //  virtual const EEPos &GetEEPositionsWorld() = 0;
