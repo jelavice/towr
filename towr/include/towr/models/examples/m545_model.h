@@ -67,45 +67,45 @@ class M545KinematicModelFull : public KinematicModelJoints
   using JointLimitMap = std::unordered_map<std::string, std::unordered_map<std::string, double>>;
   //using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
   using SparseMatrix = KinematicModelJoints::SparseMatrix;
-  using EEJac = std::vector<SparseMatrix>;
+  using EEJac = std::vector<MatrixXd>;
+
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
   //todo implement caching for this function otherwise I get 4 (expensive) calls
   //update base stuff and joints
-  void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
-                   const Vector3d &base_position) final;
+  void UpdateModel(const VectorXd &jointAngles, int limbId) final;
 
   /* base frame */
   // these are in the world frame
-  const EEPos &GetEEPositionsBase() final;
+  Eigen::Vector3d GetEEPositionsBase(int limbId) final;
 
-  const EEJac &GetTranslationalJacobiansWRTjointsBase() final;
-
-
+  SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
 
 
 
-  // these are in the world frame
-  const EEPos &GetEEPositionsWorld() final;
 
-  // this is in the world frame
-  const EEPos &GetEEOrientation() final;
 
-  //world frame
-  const EEJac &GetTranslationalJacobiansWRTjoints() final;
-
-  //world
-  const EEJac &GetTranslationalJacobianWRTbasePosition() final;
-
-  //world
-  const EEJac &GetTranslatinalJacobianWRTbaseOrientation() final;
-
-  // dis in the world frame
-  const EEJac &GetOrientationJacobiansWRTjoints() final;
-
-  // dis in the world frame (dis identity matrix)
-  const EEJac &GetOrientationJacobiansWRTbaseOrientation() final;
+//  // these are in the world frame
+//  const EEPos &GetEEPositionsWorld() final;
+//
+//  // this is in the world frame
+//  const EEPos &GetEEOrientation() final;
+//
+//  //world frame
+//  const EEJac &GetTranslationalJacobiansWRTjoints() final;
+//
+//  //world
+//  const EEJac &GetTranslationalJacobianWRTbasePosition() final;
+//
+//  //world
+//  const EEJac &GetTranslatinalJacobianWRTbaseOrientation() final;
+//
+//  // dis in the world frame
+//  const EEJac &GetOrientationJacobiansWRTjoints() final;
+//
+//  // dis in the world frame (dis identity matrix)
+//  const EEJac &GetOrientationJacobiansWRTbaseOrientation() final;
 
   //todo fix the return by value, const don't make sense either
   const VectorXd GetLowerJointLimits(int limbId) final;
@@ -131,7 +131,7 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   EEPos GetNominalStanceInBase() const final
   {
-    return ee_pos_;
+    return ee_pos_base_;
   }
 
 
@@ -148,7 +148,7 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   //todo jacobian methods can be implemented more efficiently
   // if we use the Spatial Jacobian
-  void CalculateTranslationalJacobiansWRTjointsAndBaseOrientation();
+  void CalculateTranslationalJacobiansWRTjointsAndBaseOrientation(int limbId);
 
   // dis in the world frame
   void CalculateOrientationJacobiansWRTjoints();
@@ -170,27 +170,20 @@ class M545KinematicModelFull : public KinematicModelJoints
   void ExtractOrientationJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
                                          EEJac &jacArray);
 
-  void CalculateTranslationalJacobiansWRTjointsBase();
+  void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
   VectorXd upper_joint_limits_;
   VectorXd lower_joint_limits_;
-  EEPos ee_pos_;
-  EEPos ee_rot_;
 
-  //translational jacobian
-  EEJac ee_trans_jac_joints_;
-  EEJac ee_trans_jac_base_orientation_;
-  EEJac ee_trans_jac_base_position_;
 
-  //rotational jacobian
-  EEJac ee_rot_jac_joints_;
-  EEJac ee_rot_jac_base_orientation_;
+
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
   Vector3d euler_ypr_;
   Vector3d base_xyz_;
+  VectorXd joints_;
 
   //base frame
   EEPos ee_pos_base_;

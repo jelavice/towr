@@ -216,22 +216,22 @@ int main(int argc, char** argv)
       throw std::runtime_error(
           "Cannot do the dynamic cast from kinematic model to kinematic model full");
 
-    Eigen::VectorXd joint_positions(static_cast<int>(M545KinematicModelFull::NUM_JOINTS));
+    // joints will be set to zero by default
 
-    joint_positions.setZero();
-
-    model->UpdateModel(joint_positions, base_init_orientation, base_init_pos);
+    int numEE = model->numEE;
 
     auto &nominal_stance = formulation.initial_ee_W_;
-    nominal_stance.resize(model->numEE);
+    nominal_stance.resize(numEE);
 
     //then compute the ee positions
 
-    for (int i = 0; i < model->numEE; ++i) {
-      nominal_stance.at(i) = model->GetEEPositionsWorld().at(i);
+
+    for (int i = 0; i < numEE; ++i) {
+      nominal_stance.at(i) = model->GetEEPositionsBase(i);
+      //std::cout << nominal_stance.at(i).transpose() << std::endl;
     }
 
-    params.SetEECount(5);
+    params.SetEECount(numEE);
 
     const double duration = 1.0;
     for (int i = 0; i < 4; ++i) {
@@ -241,7 +241,8 @@ int main(int argc, char** argv)
 
     //the boom
     params.ee_phase_durations_.push_back( { duration });
-    params.ee_in_contact_at_start_.push_back(false);  //todo make sure that the boom is not a wheel
+    params.ee_in_contact_at_start_.push_back(false);
+    //todo make sure that the boom is not a wheel, i.e. it cannot move when in contact with he ground
 
   } else {  // if one ain't using joint formulations
 
@@ -271,6 +272,7 @@ int main(int argc, char** argv)
     }
 
   }
+
 
   // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr::kPos) << 1.0, 0.0, 0.95;
@@ -305,7 +307,7 @@ int main(int argc, char** argv)
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-  solver->SetOption("max_iter", 1);
+  solver->SetOption("max_iter", 0);
   solver->SetOption("derivative_test", "first-order");
   solver->SetOption("print_level", 4);
   solver->SetOption("derivative_test_perturbation", 1e-5);

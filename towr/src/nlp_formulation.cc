@@ -127,6 +127,7 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
                                  base_motion.at(1),  // angular
                                  params_.GetBasePolyDurations(), ee_motion, ee_force, joints,
                                  contact_schedule, params_.IsOptimizeTimings());
+
   } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
     //do what I am doing now
     spline_holder = SplineHolder(base_motion.at(0),  // linear
@@ -261,6 +262,14 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
 
     int numDof = model_.kinematic_model_->GetNumDof(ee);
+
+
+//    int numDof;
+//    if (ee == params_.GetEECount())
+//      numDof = 5;
+//    else
+//      numDof = 3;
+
     auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,id::JointNodes(ee), ee);
 
     //todo look into initialization
@@ -283,8 +292,6 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
     vars.push_back(joint_spline);
 
   }
-
-  std::cout << "made joint variables" << std::endl;
 
   return vars;
 }

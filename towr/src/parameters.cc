@@ -116,6 +116,7 @@ void Parameters::SetConstraints()
     //set rom joints and ee with wheels
     //SetWheelConstraint(); //dis hacly since I am building thos constraints in the joint constraints anyway
     SetKinematicConstraintJoints();
+    //SetKinematicConstraint();
 //    std::cout << "Added wheel and joint rom constraint" << std::endl;
   }else if ((robot_has_wheels_ == false) && use_joint_formulation_){
     //set rom with joints

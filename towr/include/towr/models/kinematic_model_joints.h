@@ -51,37 +51,35 @@ class KinematicModelJoints : public KinematicModel
   virtual const VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual const VectorXd GetUpperJointLimits(int limbId) = 0;
 
-  virtual void UpdateModel(const VectorXd &jointAngles, const Vector3d &ypr_base,
-                           const Vector3d &base_position) = 0;
+  virtual void UpdateModel(const VectorXd &jointAngles, int limbId) = 0;
 
-  // these are in the world frame
-  virtual const EEPos &GetEEPositionsWorld() = 0;
-
-  // this is in the world frame
-  virtual const EEPos &GetEEOrientation() = 0;
-
-  //world frame
-  virtual const EEJac &GetTranslationalJacobiansWRTjoints() = 0;
-
-  //world
-  virtual const EEJac &GetTranslationalJacobianWRTbasePosition() = 0;
-
-  //world
-  virtual const EEJac &GetTranslatinalJacobianWRTbaseOrientation() = 0;
-
-  // dis in the world frame
-  virtual const EEJac &GetOrientationJacobiansWRTjoints() = 0;
-
-  // dis in the world frame (dis identity matrix)
-  virtual const EEJac &GetOrientationJacobiansWRTbaseOrientation() = 0;
+//  // these are in the world frame
+//  virtual const EEPos &GetEEPositionsWorld() = 0;
+//
+//  // this is in the world frame
+//  virtual const EEPos &GetEEOrientation() = 0;
+//
+//  //world frame
+//  virtual const EEJac &GetTranslationalJacobiansWRTjoints() = 0;
+//
+//  //world
+//  virtual const EEJac &GetTranslationalJacobianWRTbasePosition() = 0;
+//
+//  //world
+//  virtual const EEJac &GetTranslatinalJacobianWRTbaseOrientation() = 0;
+//
+//  // dis in the world frame
+//  virtual const EEJac &GetOrientationJacobiansWRTjoints() = 0;
+//
+//  // dis in the world frame (dis identity matrix)
+//  virtual const EEJac &GetOrientationJacobiansWRTbaseOrientation() = 0;
 
   /* base methods *
    * */
 
-  virtual const EEPos &GetEEPositionsBase() = 0;
+  virtual Eigen::Vector3d GetEEPositionsBase(int limbId) = 0;
 
-  //base frame
-  virtual const EEJac &GetTranslationalJacobiansWRTjointsBase() = 0;
+  virtual SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) = 0;
 
 };
 
