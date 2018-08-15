@@ -70,9 +70,12 @@ class M545KinematicModelFull : public KinematicModelJoints
   //using JointVector = Eigen::Matrix<double, Joints::NUM_JOINTS, 1>;
   using SparseMatrix = KinematicModelJoints::SparseMatrix;
   using EEJac = std::vector<SparseMatrix>;
+  using LimbEnum = loco_m545::RD::LimbEnum;
 
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
+
+  bool EEhasWheel(int limbId) final;
 
   //update base stuff and joints
   void UpdateModel(VectorXd jointAngles, int limbId) final;

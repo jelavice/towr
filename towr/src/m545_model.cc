@@ -164,8 +164,6 @@ M545KinematicModelFull::VectorXd M545KinematicModelFull::GetUpperJointLimits(int
   return upper_joint_limits_.segment(getLimbStartingId(limbId), num_dof_limbs_.at(limbId));
 }
 
-
-
 Eigen::Vector3d M545KinematicModelFull::GetEEPositionsBase(int limbId)
 {
 
@@ -216,7 +214,6 @@ Eigen::Vector3d M545KinematicModelFull::GetEEPositionsBase(int limbId)
     }
 
   }
-
 
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
@@ -348,8 +345,8 @@ void M545KinematicModelFull::UpdateModel(VectorXd jointAngles, int limbId)
   CalculateTranslationalJacobiansWRTjointsBase(limbId);
 }
 
-void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,const VectorXd &jointAngles,
-                                                unsigned int dof)
+void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,
+                                                const VectorXd &jointAngles, unsigned int dof)
 {
   excavator_model::JointVectorD jointPositions;
   excavator_model::ExcavatorState state = model_.getState();
@@ -400,21 +397,29 @@ void M545KinematicModelFull::ExtractJointJacobianEntries(const MatrixXd &bigJaco
 
 }
 
-
-
-
 M545KinematicModelFull::SparseMatrix M545KinematicModelFull::GetTranslationalJacobiansWRTjointsBase(
     int limbId)
 {
   return ee_trans_jac_joints_base_.at(limbId);
 }
 
-void M545KinematicModelFull::printCurrentJointPositions(){
+void M545KinematicModelFull::printCurrentJointPositions()
+{
 
-  std::cout << "Joint positions: " << model_.getState().getJointPositions().toImplementation().transpose() << std::endl;
+  std::cout << "Joint positions: "
+      << model_.getState().getJointPositions().toImplementation().transpose() << std::endl;
 
 }
 
+bool M545KinematicModelFull::EEhasWheel(int limbId)
+{
+
+  if (static_cast<int>(LimbEnum::BOOM) == limbId)
+    return false;
+  else
+    return true;
+
+}
 
 }
 /*namespace*/
