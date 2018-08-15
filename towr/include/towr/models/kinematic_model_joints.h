@@ -50,8 +50,8 @@ class KinematicModelJoints : public KinematicModel
 
   }
 
-  virtual const VectorXd GetLowerJointLimits(int limbId) = 0;
-  virtual const VectorXd GetUpperJointLimits(int limbId) = 0;
+  virtual VectorXd GetLowerJointLimits(int limbId) = 0;
+  virtual VectorXd GetUpperJointLimits(int limbId) = 0;
 
   virtual void UpdateModel(VectorXd jointAngles, int limbId) = 0;
 
@@ -61,9 +61,6 @@ class KinematicModelJoints : public KinematicModel
   virtual Eigen::Vector3d GetEEPositionsBase(int limbId) = 0;
 
   virtual SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) = 0;
-
-  virtual MatrixXd GetTranslationalJacobiansWRTjointsBaseDense(int limbId) = 0;
-
 
 };
 

@@ -74,7 +74,6 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
 
-  //todo implement caching for this function otherwise I get 4 (expensive) calls
   //update base stuff and joints
   void UpdateModel(VectorXd jointAngles, int limbId) final;
 
@@ -83,13 +82,9 @@ class M545KinematicModelFull : public KinematicModelJoints
   Eigen::Vector3d GetEEPositionsBase(int limbId) final;
 
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
-  MatrixXd GetTranslationalJacobiansWRTjointsBaseDense(int limbId) final;
 
-
-
-  //todo fix the return by value, const don't make sense either
-  const VectorXd GetLowerJointLimits(int limbId) final;
-  const VectorXd GetUpperJointLimits(int limbId) final;
+  VectorXd GetLowerJointLimits(int limbId) final;
+  VectorXd GetUpperJointLimits(int limbId) final;
 
   inline int GetNumDof(int limbId) final
   {

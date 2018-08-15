@@ -135,14 +135,8 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
     //now work out the end-effector constarint
 
-    Jacobian temp1 = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_);
-    Jacobian temp2 = joints_motion_->GetJacobianWrtNodes(t, kPos);
-    Jacobian temp = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-            * joints_motion_->GetJacobianWrtNodes(t, kPos);
-
-
-
-    jac.middleRows(row_start, dim3) = temp;
+    jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
+    * joints_motion_->GetJacobianWrtNodes(t, kPos);
 
 
     //need velocity and angle for the last constraint
