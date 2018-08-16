@@ -14,13 +14,15 @@
 #include <ros/ros.h>
 
 #include <towr/models/examples/m545_model.h>
+#include <functional>
 
 using namespace towr;
 
 const double perturbation = 1e-4;
 
 Eigen::MatrixXd getJacobianNumerically(M545KinematicModelFull* kinematic_model, int limbId,
-                                       Eigen::VectorXd joint_angles)
+                                       Eigen::VectorXd joint_angles,
+                                       std::function<Eigen::Vector3d(int)> func_to_evaluate)
 {
 
   int num_joints = joint_angles.size();
@@ -36,13 +38,16 @@ Eigen::MatrixXd getJacobianNumerically(M545KinematicModelFull* kinematic_model, 
     unit_vector(j) = 1.0;
 
     kinematic_model->UpdateModel(joint_angles + perturbation * unit_vector, limbId);
-    right = kinematic_model->GetEEPositionsBase(limbId);
+
+    right = func_to_evaluate(limbId);
+    //right = kinematic_model->GetEEPositionsBase(limbId);
     //std::cout << "right: " << right.transpose() << std::endl;
     //std::cout << "right angles: " << (joint_angles + perturbation * unit_vector).transpose() << std::endl;
     //kinematic_model->printCurrentJointPositions();
 
     kinematic_model->UpdateModel(joint_angles - perturbation * unit_vector, limbId);
-    left = kinematic_model->GetEEPositionsBase(limbId);
+    left = func_to_evaluate(limbId);
+    //left = kinematic_model->GetEEPositionsBase(limbId);
     //std::cout << "Left: " << left.transpose() << std::endl;
     //std::cout << "left angles: " << (joint_angles - perturbation * unit_vector).transpose() << std::endl;
     //kinematic_model->printCurrentJointPositions();
@@ -65,6 +70,9 @@ int main(int argc, char** argv)
   std::string urdfDescription;
   nh.getParam("romo_mm_description", urdfDescription);
 
+  std::string which_test;
+  nh.getParam("which_test", which_test);
+
   // Kinematic limits and dynamic parameters of the hopper
   constexpr double dt = 0.01;
 
@@ -84,7 +92,7 @@ int main(int argc, char** argv)
     joint_angles_vector.at(i).resize(kinematic_model->GetNumDof(i));
   }
 
-  const int numTests = 10000;
+  const int numTests = 100000;
   int num_failed = 0;
   for (int n = 0; n < numTests; ++n) {
 
@@ -94,17 +102,39 @@ int main(int argc, char** argv)
 
       joint_angles_vector.at(i).setRandom() * 10;
       kinematic_model->UpdateModel(joint_angles_vector.at(i), i);
-      ee_jac_base.at(i) = kinematic_model->GetTranslationalJacobiansWRTjointsBase(i);
+
+      std::function<Eigen::Vector3d(int)> func_to_evaluate;
+
+      if (which_test == "trans_test") {
+        func_to_evaluate = [=](int limbId) {
+          return kinematic_model->GetEEPositionsBase(limbId);
+        };
+
+        ee_jac_base.at(i) = kinematic_model->GetTranslationalJacobiansWRTjointsBase(i);
+
+      }
+
+      if (which_test == "rot_test") {
+        func_to_evaluate = [=](int limbId) {
+          return kinematic_model->GetEEOrientationBase(limbId);
+        };
+
+        ee_jac_base.at(i) = kinematic_model->GetOrientationJacobiansWRTjointsBase(i);
+
+      }
 
       ee_jac_base_num.at(i) = getJacobianNumerically(kinematic_model.get(), i,
-                                                     joint_angles_vector.at(i));
+                                                     joint_angles_vector.at(i), func_to_evaluate);
 
       Eigen::MatrixXd res = ee_jac_base.at(i) - ee_jac_base_num.at(i);
-      if (res.lpNorm<Eigen::Infinity>() > 1e-3) {
+      double max_discrepancy = res.lpNorm<Eigen::Infinity>();
+      if ( max_discrepancy > 1e-3) {
         std::cout << "Big discrepancy in the jacobian for the limb: " << i << std::endl;
         std::cout << "Analytical: \n" << ee_jac_base.at(i) << std::endl;
         std::cout << "Numerical: \n" << ee_jac_base_num.at(i) << std::endl;
         std::cout << "Joints: " << joint_angles_vector.at(i).transpose() << std::endl;
+        std::cout << "position/Orientation: " << func_to_evaluate(i).transpose() << std::endl;
+        std::cout <<  "\n Max discrepancy: " << max_discrepancy << std::endl << std::endl;
         failed = true;
       }
     }
@@ -115,7 +145,20 @@ int main(int argc, char** argv)
 
   }
 
-  std::cout << "Tests passed: " << (numTests - num_failed) << "/" << numTests << std::endl;
+  if (which_test == "trans_test")
+    std::cout << "Translation jacobian, tests passed: " << (numTests - num_failed) << "/"
+              << numTests << std::endl;
+
+  if (which_test == "rot_test")
+    std::cout << "Rotation jacobian, tests passed: " << (numTests - num_failed) << "/" << numTests
+              << std::endl;
+
+//  int i = 0;
+//  std::cout << "Big discrepancy in the jacobian for the limb: " << i << std::endl;
+//  std::cout << "Analytical: \n" << ee_jac_base.at(i) << std::endl;
+//  std::cout << "Numerical: \n" << ee_jac_base_num.at(i) << std::endl;
+//  std::cout << "Joints: " << joint_angles_vector.at(i).transpose() << std::endl;
+
 
   return 0;
 

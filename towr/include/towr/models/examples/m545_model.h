@@ -158,6 +158,9 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
 
+  SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
+
+
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
   Vector3d euler_ypr_;

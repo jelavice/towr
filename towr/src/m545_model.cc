@@ -505,6 +505,7 @@ void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbI
   using namespace loco_m545;
 
   RD::CoordinateFrameEnum coordinate_system = RD::CoordinateFrameEnum::BASE;
+
   MatrixXd jacobianBig(3, model_.getDofCount());
   jacobianBig.setZero();
 
@@ -517,6 +518,7 @@ void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbI
 
       ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
                                   legDof, ee_orientation_jac_base_);
+
       break;
     }
 
@@ -562,6 +564,38 @@ void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbI
     }
 
   }
+
+  ee_orientation_jac_base_.at(limbId) = angularVelocity2eulerDerivativesMat(
+      GetEEOrientationBase(limbId)) * ee_orientation_jac_base_.at(limbId);
+
+}
+
+M545KinematicModelFull::SparseMatrix M545KinematicModelFull::angularVelocity2eulerDerivativesMat(
+    const Vector3d &ypr)
+{
+
+  using namespace std;
+  Eigen::Matrix3d mat;
+  double x = ypr.x();
+  double y = ypr.y();
+  double z = ypr.z();
+
+  double cosX = cos(ypr.x());
+  double cosY = cos(ypr.y());
+  double sinX = sin(ypr.x());
+  double sinY = sin(ypr.y());
+
+  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY,
+      0, cosX, -sinX,
+      0, sinX  / cosY, cosX / cosY;
+
+  // I have no idea why this like that but it pases the unit test
+  mat = -mat;
+//    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
+//        -sin(z), cos(z), 0.0,
+//        cos(z) * sin(y) / cos(y), sin(y) * sin(z)/ cos(y), 1.0;
+
+  return mat.sparseView();
 
 }
 

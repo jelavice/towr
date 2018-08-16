@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-    <!-- robot description loading parameters -->
-    <arg name="excavator_name"    default="m545"/>
-    <arg name="description_name"  default="/romo_mm_description"/>
-    <arg name="perfect_sensors"   default="false"/>
-    <arg name="fixed"             default="false"/>
-    <arg name="using_velodyne"    default="false"/>
-    <arg name="using_gps"         default="true"/>
-    <arg name="using_cabin_imu"   default="true"/>
-    <arg name="parse_xacro"    	  default="false"/>
+	<!-- robot description loading parameters -->
+	<arg name="excavator_name" default="m545" />
+	<arg name="description_name" default="/romo_mm_description" />
+	<arg name="perfect_sensors" default="false" />
+	<arg name="fixed" default="false" />
+	<arg name="using_velodyne" default="false" />
+	<arg name="using_gps" default="true" />
+	<arg name="using_cabin_imu" default="true" />
+	<arg name="parse_xacro" default="false" />
 
-	<node pkg="towr_ros" type="jacobians_unit_test" name="jacobians_unit_test"
-		output="screen">
+	<param name="which_test" type="string" value="rot_test" /> <!-- rot_test or rot_test-->
+
+	<node pkg="towr_ros" type="jacobians_unit_test"
+		name="jacobians_unit_test" output="screen">
 		<param name="description_name" type="string"
 			value="$(arg description_name)" />
 	</node>
