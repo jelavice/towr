@@ -71,6 +71,7 @@ class M545KinematicModelFull : public KinematicModelJoints
   using SparseMatrix = KinematicModelJoints::SparseMatrix;
   using EEJac = std::vector<SparseMatrix>;
   using LimbEnum = loco_m545::RD::LimbEnum;
+  using EEorientation = EEPos;
 
 
   M545KinematicModelFull(const std::string &urdfDescription, double dt);
@@ -81,10 +82,15 @@ class M545KinematicModelFull : public KinematicModelJoints
   void UpdateModel(VectorXd jointAngles, int limbId) final;
 
   /* base frame */
-  // these are in the world frame
+  // these are in the base frame
   Eigen::Vector3d GetEEPositionsBase(int limbId) final;
 
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
+
+  Eigen::Vector3d GetEEOrientationBase(int limbId) final;
+  SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) final;
+
+
 
   VectorXd GetLowerJointLimits(int limbId) final;
   VectorXd GetUpperJointLimits(int limbId) final;
@@ -124,13 +130,6 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   int getLimbStartingId(int LimbId);
 
-  //todo jacobian methods can be implemented more efficiently
-  // if we use the Spatial Jacobian
-  void CalculateTranslationalJacobiansWRTjointsAndBaseOrientation(int limbId);
-
-  // dis in the world frame
-  void CalculateOrientationJacobiansWRTjoints();
-
   void CalculateJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
                                            loco_m545::RD::LimbEnum limb, unsigned int dof);
@@ -138,6 +137,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   void UpdateModel(const VectorXd &jointAngles);
 
   void PrintJointLimits();
+
+
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof);
 
@@ -145,17 +146,17 @@ class M545KinematicModelFull : public KinematicModelJoints
                                    LimbStartIndex limbStartIndex, unsigned int dof,
                                    EEJac &jacArray);
 
-  void ExtractOrientationJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
-                                         EEJac &jacArray);
-
   void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
+
+
+  void CalculateRotationalJacobiansWRTjointsBase(int limbId);
 
   excavator_model::ExcavatorModel model_;
   JointLimitMap joint_limits_;
   VectorXd upper_joint_limits_;
   VectorXd lower_joint_limits_;
 
-
+  Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
 
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
@@ -166,6 +167,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   //base frame
   EEPos ee_pos_base_;
   EEJac ee_trans_jac_joints_base_;
+  EEorientation ee_ypr_;
+  EEJac ee_orientation_jac_base_;
 
 };
 

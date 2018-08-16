@@ -31,9 +31,11 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 
   //resize arrays
   ee_pos_base_.resize(numEE);
+  ee_ypr_.resize(numEE);
 
-  /*bas coordinate frame */
+  /*base coordinate frame */
   ee_trans_jac_joints_base_.resize(numEE);
+  ee_orientation_jac_base_.resize(numEE);
 
   //create sparse matrices
   for (int i = 0; i < numEE; ++i) {
@@ -42,6 +44,7 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
 
     /* jacobian in base frame */
     ee_trans_jac_joints_base_.at(i).resize(3, numDof);
+    ee_orientation_jac_base_.at(i).resize(3, numDof);
   }
 
   // initialize with zero
@@ -118,6 +121,22 @@ void M545KinematicModelFull::CalculateJointLimitsforSpecificLimb(
     lower_joint_limits_(id) = joint_limits_["lowerLimit"][currJoint];
     ++id;
   }
+}
+
+Eigen::Vector3d M545KinematicModelFull::rotMat2ypr(const Eigen::Matrix3d &mat)
+{
+
+  // rotation convention for this is yaw pitch roll in that order
+
+  kindr::RotationMatrixD rotMat(mat(0, 0), mat(0, 1), mat(0, 2), mat(1, 0), mat(1, 1), mat(1, 2),
+                                mat(2, 0), mat(2, 1), mat(2, 2));
+
+  kindr::EulerAnglesYprD euler(rotMat);
+
+  euler.setUnique();
+
+  return Eigen::Vector3d(euler.x(), euler.y(), euler.z());
+
 }
 
 void M545KinematicModelFull::PrintJointLimits()
@@ -343,6 +362,8 @@ void M545KinematicModelFull::UpdateModel(VectorXd jointAngles, int limbId)
   }
 
   CalculateTranslationalJacobiansWRTjointsBase(limbId);
+  CalculateRotationalJacobiansWRTjointsBase(limbId);
+
 }
 
 void M545KinematicModelFull::UpdateSpecificLimb(loco_m545::RD::LimbEnum limb,
@@ -403,6 +424,12 @@ M545KinematicModelFull::SparseMatrix M545KinematicModelFull::GetTranslationalJac
   return ee_trans_jac_joints_base_.at(limbId);
 }
 
+M545KinematicModelFull::SparseMatrix M545KinematicModelFull::GetOrientationJacobiansWRTjointsBase(
+    int limbId)
+{
+  return ee_orientation_jac_base_.at(limbId);
+}
+
 void M545KinematicModelFull::printCurrentJointPositions()
 {
 
@@ -418,6 +445,123 @@ bool M545KinematicModelFull::EEhasWheel(int limbId)
     return false;
   else
     return true;
+
+}
+
+Eigen::Vector3d M545KinematicModelFull::GetEEOrientationBase(int limbId)
+{
+
+  loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
+
+  switch (limbId) {
+
+    case 0: {
+      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                               loco_m545::BodyEnum::LF_WHEEL);
+      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
+      break;
+    }
+
+    case 1: {
+
+      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                               loco_m545::BodyEnum::RF_WHEEL);
+      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
+      break;
+    }
+
+    case 2: {
+
+      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                               loco_m545::BodyEnum::LH_WHEEL);
+      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
+      break;
+    }
+
+    case 3: {
+
+      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                               loco_m545::BodyEnum::RH_WHEEL);
+      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
+      break;
+    }
+
+    case 4: {
+
+      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                               loco_m545::BodyEnum::ENDEFFECTOR);
+      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
+      break;
+    }
+
+  }
+
+  return ee_ypr_.at(limbId);
+}
+
+void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbId)
+{
+
+  using namespace loco_m545;
+
+  RD::CoordinateFrameEnum coordinate_system = RD::CoordinateFrameEnum::BASE;
+  MatrixXd jacobianBig(3, model_.getDofCount());
+  jacobianBig.setZero();
+
+  switch (limbId) {
+
+    case 0: {
+
+      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::LF,
+                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
+
+      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
+                                  legDof, ee_orientation_jac_base_);
+      break;
+    }
+
+    case 1: {
+
+      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::RF,
+                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
+
+      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF,
+                                  legDof, ee_orientation_jac_base_);
+      break;
+    }
+
+    case 2: {
+
+      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::LH,
+                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
+
+      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH,
+                                  legDof, ee_orientation_jac_base_);
+      break;
+    }
+
+    case 3: {
+
+      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::RH,
+                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
+
+      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH,
+                                  legDof, ee_orientation_jac_base_);
+      break;
+    }
+
+    case 4: {
+
+      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::BOOM,
+                                                   RD::BodyNodeEnum::ENDEFFECTOR,
+                                                   coordinate_system);
+
+      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
+                                  boomDof, ee_orientation_jac_base_);
+      break;
+    }
+
+  }
 
 }
 

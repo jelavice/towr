@@ -34,22 +34,6 @@ class KinematicModelJoints : public KinematicModel
     return -1;
   }
 
-  static Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat)
-  {
-
-    // rotation convention for this is yaw pitch roll in that order
-
-    kindr::RotationMatrixD rotMat(mat(0, 0), mat(0, 1), mat(0, 2), mat(1, 0), mat(1, 1), mat(1, 2),
-                                  mat(2, 0), mat(2, 1), mat(2, 2));
-
-    kindr::EulerAnglesYprD euler(rotMat);
-
-    euler.setUnique();
-
-    return Eigen::Vector3d(euler.x(), euler.y(), euler.z());
-
-  }
-
   virtual VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual VectorXd GetUpperJointLimits(int limbId) = 0;
 
@@ -61,6 +45,12 @@ class KinematicModelJoints : public KinematicModel
   virtual Eigen::Vector3d GetEEPositionsBase(int limbId) = 0;
 
   virtual SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) = 0;
+
+  virtual bool EEhasWheel(int limbId) =0;
+
+  virtual Eigen::Vector3d GetEEOrientationBase(int limbId) =0;
+  virtual SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) =0;
+  ;
 
 };
 
