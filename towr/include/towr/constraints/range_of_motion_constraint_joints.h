@@ -56,6 +56,10 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
 
   int GetRow(int node, int dimension) const;
 
+  Eigen::Vector3d GetLateralWheelHeading() const;
+  Eigen::Vector3d GetLateralWheelHeadingDerivative() const;
+
+
 };
 
 }

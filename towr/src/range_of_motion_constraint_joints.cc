@@ -35,8 +35,9 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
 
   num_constraints_per_node_ += dim3;  // position (3 position constraints)
 
-  //num_constraints_per_node_ += 1;  // constraint for the yaw angle fo the wheel
-  //todo this doesn't hold for the boom
+//  // boom doesn't have a wheel, constraint only holds if you have wheels
+  if (kinematic_model_->EEhasWheel(ee_))
+    num_constraints_per_node_ += 1;  // constraint for the yaw angle fo the wheel
 
   //cache these guys
   lower_bounds_ = kinematic_model_->GetLowerJointLimits(ee_);
@@ -76,20 +77,20 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 
   rowStart += dim3;
 
+  //if we don't have wheels we don't need to constraint this crap
+  if (kinematic_model_->EEhasWheel(ee_) == false)
+    return;
+
   //take out the yaw
-//  double wheel_yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
-//
-//  //put it in the constraint
-//  Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0, 2);  // get the x and y velocity
+
+  Eigen::Vector3d ee_vel = ee_motion_->GetPoint(t).v();  // get the x and y  and the z velocity
+  Eigen::Vector3d lateral_direction = GetLateralWheelHeading();
 
   //no slip in lateral direction
-  //g(GetRow(k, dimension)) = ee_vel.x() * std::sin(wheel_yaw) - ee_vel.y() * std::cos(wheel_yaw);  // last row anyway
-  //g(rowStart) = 0.0;
+  g(rowStart) = ee_vel.transpose() * lateral_direction;  // last row anyway
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
-
-  return;
 
   int rowStart = GetRow(k, 0);
 
@@ -107,9 +108,12 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
     bounds.at(rowStart++) = ifopt::BoundZero;
   }
 
+  if (kinematic_model_->EEhasWheel(ee_) == false)
+    return;
+
   //then workout the heading direction
   //equality constraint
-  //bounds.at(rowStart) = ifopt::BoundZero;
+  bounds.at(rowStart) = ifopt::BoundZero;
 
 }
 
@@ -119,38 +123,41 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
   EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
-
   int row_start = GetRow(k, 0);
-
 
   if (var_set == id::JointNodes(ee_)) {
 
     VectorXd joint_positions = joints_motion_->GetPoint(t).p();
     kinematic_model_->UpdateModel(joint_positions, ee_);
 
+    Jacobian jacobianWrtNodes = joints_motion_->GetJacobianWrtNodes(t, kPos);
+
     // jacobian wrt to joints
     int dim = kinematic_model_->GetNumDof(ee_);
-    jac.middleRows(row_start, dim) = joints_motion_->GetJacobianWrtNodes(t, kPos);
+    jac.middleRows(row_start, dim) = jacobianWrtNodes;
     row_start += dim;
 
     //now work out the end-effector constarint
 
     jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-    * joints_motion_->GetJacobianWrtNodes(t, kPos);
+        * jacobianWrtNodes;
 
+    //if the end effector doesn't have any wheels we are done
+    if (kinematic_model_->EEhasWheel(ee_) == false)
+      return;
+
+    row_start += dim3;
 
     //need velocity and angle for the last constraint
     //dis is the wheel heading constraint
-//    Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0, 2);  // get the x and y velocity
-//    double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
-//    temp = kinematic_model_->GetOrientationJacobiansWRTjoints().at(ee_)
-//            .row(2) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
-//
-//    jac.row(row_start) = temp;
+    Vector3d ee_vel = ee_motion_->GetPoint(t).v();
+
+    auto temp = (b_R_w * ee_vel).transpose() * GetLateralWheelHeadingDerivative();
+
+    jac.row(row_start) = (temp * kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_)
+        * jacobianWrtNodes).eval();
 
   }
-
-
 
   if (var_set == id::base_lin_nodes) {
 
@@ -164,7 +171,6 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
   }
 
-
   if (var_set == id::base_ang_nodes) {
 
     //skip the first constraint since the derivative is zero wrt to base ang nodes
@@ -176,30 +182,18 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     Vector3d r_W = -1 * (ee_pos_W - base_W);
     jac.middleRows(row_start, dim3) = base_angular_.DerivOfRotVecMult(t, r_W, true);
 
-//    dim = 1;
-//    Eigen::Vector2d ee_vel = ee_motion_->GetPoint(t).v().segment(0, 2);  // get the x and y velocity
-//    double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
-//
-////    std::cerr << "Size of the jacobian: \n" << jac.rows() << "x" << jac.cols() << std::endl;
-////    std::cerr << "row start \n" << row_start << std::endl;
-////    std::cerr << "the one from the kinematic model: \n"
-////              << kinematic_model_->GetOrientationJacobiansWRTbaseOrientation().at(ee_) << std::endl;
-////
-////    auto angJac = base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos);
-////    std::cerr << "ang spline \n" << base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos)
-////              << std::endl;
-////    std::cerr << "Size the one in the ang spline" << angJac.rows() << "x" << angJac.cols()
-////              << std::endl;
-//
-//    temp = kinematic_model_->GetOrientationJacobiansWRTbaseOrientation().at(ee_)
-//        * base_angular_.GetNodeSpline()->GetJacobianWrtNodes(t, kPos) * (ee_vel.x() * std::cos(yaw) + ee_vel.y() * std::sin(yaw));
-//
-////    std::cout << "Size of the temp: " << temp.rows() << "x" << temp.cols() << std::endl;
-////    std::cout << "Velocity: " << ee_vel.transpose() << std::endl;
-//
-//    jac.row(row_start) = temp.row(2); //last row anyway
+    if (kinematic_model_->EEhasWheel(ee_) == false)
+      return;
 
-    //std::cerr << "================" << std::endl << std::endl;
+    row_start += dim3;
+
+    Vector3d ee_vel = ee_motion_->GetPoint(t).v();
+    // update the model
+    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
+    kinematic_model_->UpdateModel(joint_positions, ee_);
+
+    jac.row(row_start) = (GetLateralWheelHeading().transpose()
+        * base_angular_.DerivOfRotVecMult(t, ee_vel, true)).sparseView();
 
   }
 
@@ -211,18 +205,23 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //work out the end-effector constraint
     jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
 
-    //now work out the wheel direction constraint
-//    dim = 1;
-//    double yaw = kinematic_model_->GetEEOrientation().at(ee_).z();
-//    Eigen::Vector3d constraint_partial_derivative(std::cos(yaw), std::sin(yaw), 0.0);
-//    temp = (constraint_partial_derivative
-//        * ee_motion_->GetJacobianWrtNodes(t, kPos)).eval().sparseView();
-//    jac.middleRows(row_start, dim) = temp;
+    if (kinematic_model_->EEhasWheel(ee_) == false)
+      return;
+
+    // update the model
+    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
+    kinematic_model_->UpdateModel(joint_positions, ee_);
+
+    row_start += dim3;
+    Eigen::Vector3d ee_vel = ee_motion_->GetPoint(t).v();  // get the x and y velocity
+    Eigen::Vector3d wheel_lateral_heading = GetLateralWheelHeading();
+
+    jac.row(row_start) = (wheel_lateral_heading.transpose() * b_R_w
+        * ee_motion_->GetJacobianWrtNodes(t, kVel)).sparseView();
 
   }
 
   //std::cout << "Finised the update jacobian!" << std::endl;
-
 
 }
 
@@ -232,4 +231,21 @@ int RangeOfMotionConstraintJoints::GetRow(int node, int dimension) const
 
 }
 
-} /*namespace*/
+Eigen::Vector3d RangeOfMotionConstraintJoints::GetLateralWheelHeading() const
+{
+  //take out the yaw
+  double yaw = kinematic_model_->GetEEOrientationBase(ee_).z();
+
+  return Eigen::Vector3d(-std::sin(yaw), std::cos(yaw), 0.0);
+}
+
+Eigen::Vector3d RangeOfMotionConstraintJoints::GetLateralWheelHeadingDerivative() const
+{
+  //take out the yaw
+  double yaw = kinematic_model_->GetEEOrientationBase(ee_).z();
+
+  return Eigen::Vector3d(-std::cos(yaw), -std::sin(yaw), 0.0);
+}
+
+}
+/*namespace*/
