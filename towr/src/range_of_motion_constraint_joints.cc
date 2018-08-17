@@ -10,7 +10,6 @@
 
 namespace towr {
 
-Eigen::Vector3d constant(1.0, 2.0, 3.0);
 
 RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr model,
                                                              double T, double dt, EE ee,
@@ -89,8 +88,6 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
   //no slip in lateral direction
   g(rowStart) = lateral_direction.transpose() * b_R_w * ee_vel ;  // last row anyway
 
-  //g(rowStart) = GetLateralWheelHeading().transpose() * ee_vel;  // last row anyway
-
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
@@ -117,10 +114,6 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
   //then workout the heading direction
   //equality constraint
   bounds.at(rowStart) = ifopt::BoundZero;
-
-//  for (int dim = 0; dim < dim3; ++dim) {
-//    bounds.at(rowStart++) = ifopt::BoundZero;
-//  }
 
 }
 
@@ -159,15 +152,12 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //dis is the wheel heading constraint
     Vector3d ee_vel = ee_motion_->GetPoint(t).v();
 
-    auto temp = (b_R_w * ee_vel).transpose() * GetLateralWheelHeadingDerivative();
-    double productDouble = temp(0);
+    double scalar = ((b_R_w * ee_vel).transpose() * GetLateralWheelHeadingDerivative())(0);
 
     Jacobian product = kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_).row(Z)
         * joints_motion_->GetJacobianWrtNodes(t, kPos);
 
-    Jacobian temp4 = productDouble * product;
-
-    jac.row(row_start) = temp4;
+    jac.row(row_start) = scalar * product; //dis is normaly a memroy leak but maybe they fixed it in the version I is using
 
   }
 
@@ -200,6 +190,7 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     row_start += dim3;
 
     Vector3d ee_vel = ee_motion_->GetPoint(t).v();
+
     // update the model
     VectorXd joint_positions = joints_motion_->GetPoint(t).p();
     kinematic_model_->UpdateModel(joint_positions, ee_);
@@ -231,26 +222,12 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     Eigen::Vector3d ee_vel = ee_motion_->GetPoint(t).v();  // get the x and y velocity
 
     Jacobian lateral_wheel_heading = GetLateralWheelHeading().sparseView().transpose();
-    Jacobian firstProduct = lateral_wheel_heading.eval() * b_R_w;
-    Jacobian product = firstProduct * ee_motion_->GetJacobianWrtNodes(t, kVel);
+    Jacobian product = lateral_wheel_heading.eval() * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kVel);
 
-//    std::cout << "lateral wheel heading: " << lateral_wheel_heading << std::endl;
-//    std::cout << "b_R_w \n" << b_R_w << std::endl;
-//    std::cout << "derivative wrt to velocities: \n" << ee_motion_->GetJacobianWrtNodes(t, kVel)
-//              << std::endl;
-//    std::cout << "first product \n" << firstProduct << std::endl;
-//    std::cout << "Product: \n" << product << std::endl;
-//
     jac.row(row_start) = product;
 
 
-    //dis works when the vec is const
-//    Jacobian temp = (GetLateralWheelHeading().transpose() * ee_motion_->GetJacobianWrtNodes(t, kVel)).sparseView();
-//    jac.row(row_start) = temp;
-
   }
-
-//std::cout << "Finised the update jacobian!" << std::endl;
 
 }
 
