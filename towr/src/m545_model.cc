@@ -54,6 +54,14 @@ M545KinematicModelFull::M545KinematicModelFull(const std::string &urdfDescriptio
     Eigen::VectorXd jointAngles(num_dof_limbs_.at(i));
     jointAngles.setZero();
     UpdateModel(jointAngles, i);
+
+    //here also calcualte all the shit
+
+    GetEEPositionsBase(i);
+    GetEEOrientationBase(i);
+    CalculateRotationalJacobiansWRTjointsBase(i);
+    CalculateTranslationalJacobiansWRTjointsBase(i);
+
   }
 
   max_dev_from_nominal_.setZero();
@@ -237,8 +245,7 @@ Eigen::Vector3d M545KinematicModelFull::GetEEPositionsBase(int limbId)
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
   // spanned by x and y axis, below the base frame
-  for (int i = 0; i < 4; ++i)
-    ee_pos_base_.at(i).z() -= model_.getWheelRadius();
+  ee_pos_base_.at(limbId).z() -= model_.getWheelRadius();
 
   return ee_pos_base_.at(limbId);
 
@@ -585,9 +592,7 @@ M545KinematicModelFull::SparseMatrix M545KinematicModelFull::angularVelocity2eul
   double sinX = sin(ypr.x());
   double sinY = sin(ypr.y());
 
-  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY,
-      0, cosX, -sinX,
-      0, sinX  / cosY, cosX / cosY;
+  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
 
   // I have no idea why this like that but it pases the unit test
   mat = -mat;
@@ -596,6 +601,22 @@ M545KinematicModelFull::SparseMatrix M545KinematicModelFull::angularVelocity2eul
 //        cos(z) * sin(y) / cos(y), sin(y) * sin(z)/ cos(y), 1.0;
 
   return mat.sparseView();
+
+}
+
+Eigen::Vector3d M545KinematicModelFull::GetBasePosition()
+{
+
+  double z = 0;
+
+  for (int i = 0; i < 4; ++i) {
+    z += ee_pos_base_.at(i).z();
+    //std::cout << ee_pos_base_.at(i).z() << std::endl;
+  }
+
+  z = z / 4.0;
+
+  return Eigen::Vector3d(0.0, 0.0, std::abs(z));
 
 }
 

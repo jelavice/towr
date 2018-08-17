@@ -126,6 +126,8 @@ class M545KinematicModelFull : public KinematicModelJoints
 
   void printCurrentJointPositions();
 
+  Eigen::Vector3d GetBasePosition() final;
+
  private:
 
   int getLimbStartingId(int LimbId);
@@ -159,6 +161,8 @@ class M545KinematicModelFull : public KinematicModelJoints
   Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
 
   SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
+
+
 
 
 
