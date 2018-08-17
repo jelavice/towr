@@ -152,12 +152,29 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //dis is the wheel heading constraint
     Vector3d ee_vel = ee_motion_->GetPoint(t).v();
 
-    auto lateral_wheel_heading_derivative = GetLateralWheelHeadingDerivative().sparseView();
     auto temp = (b_R_w * ee_vel).transpose() * GetLateralWheelHeadingDerivative();
+    double productDouble = temp(0);
+
+    Jacobian product = kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_).row(Z)
+        * joints_motion_->GetJacobianWrtNodes(t, kPos);
+
+    Jacobian temp4 = productDouble * product;
+
+    std::cout << "b_R_w dimensions: \n" << b_R_w.rows() << "x" << b_R_w.cols() << std::endl;
+    std::cout << "b_R_w: \n" << b_R_w << std::endl;
+
+    std::cout << "product size: \n" << temp.rows() << "x" << temp.cols() << std::endl;
+    std::cout << "product: " << temp << " expressed as double: " << productDouble << std::endl
+              << std::endl;
+
+    std::cout << "Product of the leg jacobian and the nodes jacobians: " << product.rows() << "x"
+              << product.cols() << std::endl;
+    std::cout << "product \n" << product << std::endl;
+
+    //std::cout << "Product of those two: \n" << lateral_wheel_heading.eval() * rotVecDerivative << std::endl;
 
     //dis not segfault
-    jac.row(row_start) = (temp * kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_)
-        * jacobianWrtNodes).eval();
+    jac.row(row_start) = temp4;
 
   }
 
@@ -237,7 +254,8 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //std::cout << "Second product: \n" << product << std::endl;
 
     //dis segfaults
-    jac.row(row_start) = lateral_wheel_heading.eval() * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kVel);
+    jac.row(row_start) = lateral_wheel_heading.eval() * b_R_w
+        * ee_motion_->GetJacobianWrtNodes(t, kVel);
 
   }
 
