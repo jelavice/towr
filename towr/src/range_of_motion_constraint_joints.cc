@@ -152,8 +152,10 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     //dis is the wheel heading constraint
     Vector3d ee_vel = ee_motion_->GetPoint(t).v();
 
+    auto lateral_wheel_heading_derivative = GetLateralWheelHeadingDerivative().sparseView();
     auto temp = (b_R_w * ee_vel).transpose() * GetLateralWheelHeadingDerivative();
 
+    //dis not segfault
     jac.row(row_start) = (temp * kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_)
         * jacobianWrtNodes).eval();
 
@@ -192,8 +194,21 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     VectorXd joint_positions = joints_motion_->GetPoint(t).p();
     kinematic_model_->UpdateModel(joint_positions, ee_);
 
-    jac.row(row_start) = (GetLateralWheelHeading().transpose()
-        * base_angular_.DerivOfRotVecMult(t, ee_vel, true)).sparseView();
+    auto lateral_wheel_heading = GetLateralWheelHeading().sparseView().transpose();
+
+//  auto rotVecDerivative = base_angular_.DerivOfRotVecMult(t, ee_vel, true);
+
+//  std::cout << "size of the derivative of the rot mult vec: \n" << rotVecDerivative.rows() << "x" << rotVecDerivative.cols() << std::endl;
+//  std:: cout << "derivative of rot vec: " << rotVecDerivative << std::endl;
+//
+//  std::cout << "size of the derivative of the rot mult vec: \n" << lateral_wheel_heading.rows() << "x" << lateral_wheel_heading.cols() << std::endl;
+//  std:: cout << "derivative of rot vec: " << lateral_wheel_heading << std::endl << std::endl;
+//
+//  std::cout << "Product of those two: \n" << lateral_wheel_heading.eval() * rotVecDerivative << std::endl;
+
+    //dis segfaults
+    jac.row(row_start) = lateral_wheel_heading.eval()
+        * base_angular_.DerivOfRotVecMult(t, ee_vel, true);
 
   }
 
@@ -214,14 +229,19 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
 
     row_start += dim3;
     Eigen::Vector3d ee_vel = ee_motion_->GetPoint(t).v();  // get the x and y velocity
-    Eigen::Vector3d wheel_lateral_heading = GetLateralWheelHeading();
 
-    jac.row(row_start) = (wheel_lateral_heading.transpose() * b_R_w
-        * ee_motion_->GetJacobianWrtNodes(t, kVel)).sparseView();
+    auto lateral_wheel_heading = GetLateralWheelHeading().sparseView().transpose();
+    auto firstProduct = lateral_wheel_heading.eval() * b_R_w;
+    auto product = firstProduct * ee_motion_->GetJacobianWrtNodes(t, kVel);
+
+    //std::cout << "Second product: \n" << product << std::endl;
+
+    //dis segfaults
+    jac.row(row_start) = lateral_wheel_heading.eval() * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kVel);
 
   }
 
-  //std::cout << "Finised the update jacobian!" << std::endl;
+//std::cout << "Finised the update jacobian!" << std::endl;
 
 }
 
@@ -233,7 +253,7 @@ int RangeOfMotionConstraintJoints::GetRow(int node, int dimension) const
 
 Eigen::Vector3d RangeOfMotionConstraintJoints::GetLateralWheelHeading() const
 {
-  //take out the yaw
+//take out the yaw
   double yaw = kinematic_model_->GetEEOrientationBase(ee_).z();
 
   return Eigen::Vector3d(-std::sin(yaw), std::cos(yaw), 0.0);
@@ -241,7 +261,7 @@ Eigen::Vector3d RangeOfMotionConstraintJoints::GetLateralWheelHeading() const
 
 Eigen::Vector3d RangeOfMotionConstraintJoints::GetLateralWheelHeadingDerivative() const
 {
-  //take out the yaw
+//take out the yaw
   double yaw = kinematic_model_->GetEEOrientationBase(ee_).z();
 
   return Eigen::Vector3d(-std::cos(yaw), -std::sin(yaw), 0.0);

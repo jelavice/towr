@@ -22,6 +22,7 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
  public:
   using EE = uint;
   using Vector3d = Eigen::Vector3d;
+  using SparseVector = Eigen::SparseVector<double,Eigen::RowMajor>;
 
   RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr robot_model, double T, double dt,
                                 EE ee, const SplineHolder& spline_holder);
