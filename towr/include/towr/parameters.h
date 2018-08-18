@@ -209,6 +209,9 @@ struct Parameters {
 
   void SetPolynomialDurationBase(double dt);
 
+  void SetPolynomialDurationJoints(double dt);
+
+
   void SetConstraints();
 
   /// The number of endeffectors.
@@ -227,6 +230,11 @@ private:
 
   /// The durations of each base polynomial in the spline (lin+ang).
   VecTimes GetBasePolyDurations() const;
+
+  /// The durations of each joint polynomioal in the spline.
+  VecTimes GetJointsPolyDurations() const;
+
+  VecTimes GetAnyPolyDurations(double polynomial_duration) const;
 
   /// The number of phases allowed for endeffector ee.
   int GetPhaseCount(EEID ee) const;
@@ -253,6 +261,8 @@ private:
 
   /// Fixed duration of each cubic polynomial describing the base motion.
   double duration_base_polynomial_;
+
+  double duration_joints_polynomial_;
 
   /** Minimum and maximum time for each phase (swing,stance).
    *  Only used when optimizing over phase durations

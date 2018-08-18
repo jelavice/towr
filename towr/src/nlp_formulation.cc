@@ -125,8 +125,9 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
     // call with joint variables
     spline_holder = SplineHolder(base_motion.at(0),  // linear
                                  base_motion.at(1),  // angular
-                                 params_.GetBasePolyDurations(), ee_motion, ee_force, joints,
-                                 contact_schedule, params_.IsOptimizeTimings());
+                                 params_.GetBasePolyDurations(), params_.GetJointsPolyDurations(),
+                                 ee_motion, ee_force, joints, contact_schedule,
+                                 params_.IsOptimizeTimings());
 
   } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
     //do what I am doing now
@@ -256,21 +257,15 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
 
   // I gues this is the same for the joints and the base
   //todo look into that
-  int n_nodes = params_.GetBasePolyDurations().size() + 1;
+  int n_nodes = params_.GetJointsPolyDurations().size() + 1;
 
   //need to iterate and make for every goddamn limb its joint variables
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
 
     int numDof = model_.kinematic_model_->GetNumDof(ee);
 
-
-//    int numDof;
-//    if (ee == params_.GetEECount())
-//      numDof = 5;
-//    else
-//      numDof = 3;
-
-    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,id::JointNodes(ee), ee);
+    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,
+                                                                   id::JointNodes(ee), ee);
 
     //todo look into initialization
     Eigen::VectorXd initial_joint_pos(numDof);
@@ -395,6 +390,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::Constr
 NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseRangeOfMotionConstraint(
     const SplineHolder& s) const
 {
+
+  std::cout << "Made base range of motion constraint" << std::endl;
   return {std::make_shared<BaseMotionConstraint>(params_.GetTotalTime(),
         params_.dt_constraint_base_motion_,
         s)};
@@ -405,6 +402,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeDynamicConstraint(const Spli
   auto constraint = std::make_shared<DynamicConstraint>(model_.dynamic_model_,
                                                         params_.GetTotalTime(),
                                                         params_.dt_constraint_dynamic_, s);
+
+  std::cout << "Made dynamic constraint" << std::endl;
   return {constraint};
 }
 
@@ -421,6 +420,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionBoxConstraint(
     c.push_back(rom);
   }
 
+  std::cout << "Made box range of motion constraint" << std::endl;
+
   return c;
 }
 
@@ -433,7 +434,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeTotalTimeConstraint() const
     auto duration_constraint = std::make_shared<TotalDurationConstraint>(T, ee);
     c.push_back(duration_constraint);
   }
-
+  std::cout << "Made total time constraint" << std::endl;
   return c;
 }
 
@@ -445,6 +446,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const
     auto c = std::make_shared<TerrainConstraint>(terrain_, id::EEMotionNodes(ee));
     constraints.push_back(c);
   }
+
+  std::cout << "Made terrain constraints" << std::endl;
 
   return constraints;
 }
@@ -459,6 +462,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeForceConstraint() const
     constraints.push_back(c);
   }
 
+  std::cout << "Made force constraints" << std::endl;
+
   return constraints;
 }
 
@@ -470,6 +475,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
     auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
     constraints.push_back(c);
   }
+
+  std::cout << "Made wheel constraints" << std::endl;
 
   return constraints;
 }
@@ -488,12 +495,17 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
   //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
+    if (ee > 0)
+      break;
+
     auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_ptr, params_.GetTotalTime(),
                                                              params_.dt_constraint_range_of_motion_,
                                                              ee, s);
     constraints.push_back(c);
 
   }
+
+  std::cout << "Made range of motin constraint joints: " << std::endl;
 
   return constraints;
 }
@@ -507,6 +519,8 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const
     auto swing = std::make_shared<SwingConstraint>(id::EEMotionNodes(ee));
     constraints.push_back(swing);
   }
+
+  std::cout << "Made swing constraint" << std::endl;
 
   return constraints;
 }

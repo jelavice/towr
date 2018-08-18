@@ -62,6 +62,8 @@ Parameters::Parameters()
   //force_limit_in_normal_direction_ = 1000.0; //for the anymal
   force_limit_in_normal_direction_ = 30000.0;  //for the excavator
 
+  duration_joints_polynomial_ = 0.1;
+
   // these are the basic constraints that always have to be set
   SetConstraints();
 
@@ -99,6 +101,11 @@ void Parameters::SetRangeOfMotionConstraintDt(double dt)
 void Parameters::SetPolynomialDurationBase(double dt)
 {
   duration_base_polynomial_ = dt;
+}
+
+void Parameters::SetPolynomialDurationJoints(double dt)
+{
+  duration_joints_polynomial_ = dt;
 }
 
 void Parameters::SetConstraints()
@@ -190,21 +197,48 @@ void Parameters::PenalizeEndeffectorForces()
   costs_.push_back( { ForcesCostID, 1.0 });
 }
 
+
+Parameters::VecTimes Parameters::GetAnyPolyDurations(double polynomial_duration) const{
+
+  std::vector<double> any_spline_timings_;
+    double dt = polynomial_duration;
+    double t_left = GetTotalTime(); //todo check this
+
+    double eps = 1e-10;  // since repeated subtraction causes inaccuracies
+    while (t_left > eps) {
+      double duration = t_left > dt ? dt : t_left;
+      any_spline_timings_.push_back(duration);
+
+      t_left -= dt;
+    }
+
+    return any_spline_timings_;
+}
+
 Parameters::VecTimes Parameters::GetBasePolyDurations() const
 {
-  std::vector<double> base_spline_timings_;
-  double dt = duration_base_polynomial_;
-  double t_left = GetTotalTime();
+//  std::vector<double> base_spline_timings_;
+//  double dt = duration_base_polynomial_;
+//  double t_left = GetTotalTime();
+//
+//  double eps = 1e-10;  // since repeated subtraction causes inaccuracies
+//  while (t_left > eps) {
+//    double duration = t_left > dt ? dt : t_left;
+//    base_spline_timings_.push_back(duration);
+//
+//    t_left -= dt;
+//  }
+//
+//  return base_spline_timings_;
 
-  double eps = 1e-10;  // since repeated subtraction causes inaccuracies
-  while (t_left > eps) {
-    double duration = t_left > dt ? dt : t_left;
-    base_spline_timings_.push_back(duration);
+  return GetAnyPolyDurations(duration_base_polynomial_);
+}
 
-    t_left -= dt;
-  }
+Parameters::VecTimes Parameters::GetJointsPolyDurations() const
+{
 
-  return base_spline_timings_;
+  return GetAnyPolyDurations(duration_joints_polynomial_);
+
 }
 
 int Parameters::GetPhaseCount(EEID ee) const
