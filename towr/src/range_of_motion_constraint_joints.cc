@@ -10,7 +10,6 @@
 
 namespace towr {
 
-
 RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr model,
                                                              double T, double dt, EE ee,
                                                              const SplineHolder& spline_holder)
@@ -86,7 +85,7 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
   Eigen::Vector3d lateral_direction = GetLateralWheelHeading();
 
   //no slip in lateral direction
-  g(rowStart) = lateral_direction.transpose() * b_R_w * ee_vel ;  // last row anyway
+  g(rowStart) = lateral_direction.transpose() * b_R_w * ee_vel;  // last row anyway
 
 }
 void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
@@ -94,12 +93,38 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
 
   int rowStart = GetRow(k, 0);
 
-  //first work out the joint bounds
-  for (int j = 0; j < kinematic_model_->GetNumDof(ee_); ++j) {
+  //hack the joint limits for the boom
+  if (ee_ == 4) {
+
+    //no bound for the J_TURN
     ifopt::Bounds b;
-    b.lower_ = lower_bounds_(j);
-    b.upper_ = upper_bounds_(j);
+    b = ifopt::NoBound;
     bounds.at(rowStart++) = b;
+
+    //fix the J_BOOM
+    b.lower_ = -1.2;
+    b.upper_ = -1.2;
+    bounds.at(rowStart++) = b;
+
+    //fix the J_DIPPER
+    b.lower_ = 2.0;
+    b.upper_ = 2.0;
+    bounds.at(rowStart++) = b;
+
+    //fix the J_TELE
+    b.lower_ = 0.0;
+    b.upper_ = 0.0;
+    bounds.at(rowStart++) = b;
+
+  } else {
+
+    //first work out the joint bounds
+    for (int j = 0; j < kinematic_model_->GetNumDof(ee_); ++j) {
+      ifopt::Bounds b;
+      b.lower_ = lower_bounds_(j);
+      b.upper_ = upper_bounds_(j);
+      bounds.at(rowStart++) = b;
+    }
   }
 
   //now workout the endeffector constraint bounds
@@ -157,7 +182,7 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     Jacobian product = kinematic_model_->GetOrientationJacobiansWRTjointsBase(ee_).row(Z)
         * joints_motion_->GetJacobianWrtNodes(t, kPos);
 
-    jac.row(row_start) = scalar * product; //dis is normaly a memroy leak but maybe they fixed it in the version I is using
+    jac.row(row_start) = scalar * product;  //dis is normaly a memroy leak but maybe they fixed it in the version I is using
 
   }
 
@@ -222,10 +247,10 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     Eigen::Vector3d ee_vel = ee_motion_->GetPoint(t).v();  // get the x and y velocity
 
     Jacobian lateral_wheel_heading = GetLateralWheelHeading().sparseView().transpose();
-    Jacobian product = lateral_wheel_heading.eval() * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kVel);
+    Jacobian product = lateral_wheel_heading.eval() * b_R_w
+        * ee_motion_->GetJacobianWrtNodes(t, kVel);
 
     jac.row(row_start) = product;
-
 
   }
 
