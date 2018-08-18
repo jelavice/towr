@@ -98,8 +98,8 @@ class NodesVariablesPhaseBased : public NodesVariables
                            int n_polys_in_changing_phase, unsigned int dimension = towr::k3D);
 
   NodesVariablesPhaseBased(int phase_count, bool first_phase_constant, const std::string& var_name,
-                           int n_polys_in_changing_phase, Type type, unsigned int dimension =
-                               towr::k3D);
+                           int n_polys_in_changing_phase, bool is_driving_node,
+                           unsigned int dimension);
 
   virtual ~NodesVariablesPhaseBased() = default;
 
@@ -249,12 +249,12 @@ class NodesVariablesEEMotionWithWheels : public NodesVariablesPhaseBased
 {
  public:
   NodesVariablesEEMotionWithWheels(int phase_count, bool is_in_contact_at_start,
-                                   const std::string& name, int n_polys_in_changing_phase);
+                                   const std::string& name, int n_polys_in_changing_phase, bool is_driving_node);
   virtual ~NodesVariablesEEMotionWithWheels() = default;
   OptIndexMap GetPhaseBasedEEParameterization();
+
+  bool is_driving_node_;
 };
-
-
 
 } /* namespace towr */
 

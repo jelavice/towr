@@ -10,6 +10,8 @@
 
 namespace towr {
 
+
+//todo get rid of the wheel directinal constraints
 RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr model,
                                                              double T, double dt, EE ee,
                                                              const SplineHolder& spline_holder)
@@ -94,6 +96,7 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
   int rowStart = GetRow(k, 0);
 
   //hack the joint limits for the boom
+  //todo move this somewhere else
   if (ee_ == 4) {
 
     //no bound for the J_TURN
@@ -115,6 +118,13 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
     b.lower_ = 0.0;
     b.upper_ = 0.0;
     bounds.at(rowStart++) = b;
+
+    if (kinematic_model_->GetNumDof(ee_) > 4) {
+      //fix the EE_PITCH
+      b.lower_ = 2.2;
+      b.upper_ = 2.2;
+      bounds.at(rowStart++) = b;
+    }
 
   } else {
 

@@ -322,169 +322,6 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 
 // Endeffector Motions
   double T = params_.GetTotalTime();
-  //todo fix this such that the num ee is not dependent on the number ofthem that are in contact at the begining
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-
-    auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
-        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
-        params_.ee_polynomials_per_swing_phase_);
-
-    // initialize towards final footholds
-    double yaw = final_base_.ang.p().z();
-    Eigen::Vector3d euler(0.0, 0.0, yaw);
-    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
-    Vector3d final_ee_pos_W = final_base_.lin.p()
-        + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
-    double x = final_ee_pos_W.x();
-    double y = final_ee_pos_W.y();
-    double z = terrain_->GetHeight(x, y);
-    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
-
-    nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
-    vars.push_back(nodes);
-  }
-
-  return vars;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraints(
-    const SplineHolder& spline_holder) const
-{
-  ContraintPtrVec constraints;
-  for (auto name : params_.constraints_)
-    for (auto c : GetConstraint(name, spline_holder))
-      constraints.push_back(c);
-
-  return constraints;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::ConstraintName name,
-                                                              const SplineHolder& s) const
-{
-  switch (name) {
-    case Parameters::Dynamic:
-      return MakeDynamicConstraint(s);
-    case Parameters::EndeffectorRom:
-      return MakeRangeOfMotionBoxConstraint(s);
-    case Parameters::BaseRom:
-      return MakeBaseRangeOfMotionConstraint(s);
-    case Parameters::TotalTime:
-      return MakeTotalTimeConstraint();
-    case Parameters::Terrain:
-      return MakeTerrainConstraint();
-    case Parameters::Force:
-      return MakeForceConstraint();
-    case Parameters::Swing:
-      return MakeSwingConstraint();
-    case Parameters::BaseAcc:
-      return MakeBaseAccConstraint(s);
-    case Parameters::WheelHeading:
-      return MakeWheelConstraint(s);
-    case Parameters::EndeffectorRomJoints:
-      return MakeRangeOfMotionConstraintJoints(s);
-    default:
-      throw std::runtime_error("constraint not defined!");
-  }
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseRangeOfMotionConstraint(
-    const SplineHolder& s) const
-{
-
-  std::cout << "Made base range of motion constraint" << std::endl;
-  return {std::make_shared<BaseMotionConstraint>(params_.GetTotalTime(),
-        params_.dt_constraint_base_motion_,
-        s)};
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeDynamicConstraint(const SplineHolder& s) const
-{
-  auto constraint = std::make_shared<DynamicConstraint>(model_.dynamic_model_,
-                                                        params_.GetTotalTime(),
-                                                        params_.dt_constraint_dynamic_, s);
-
-  std::cout << "Made dynamic constraint" << std::endl;
-  return {constraint};
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionBoxConstraint(
-    const SplineHolder& s) const
-{
-  ContraintPtrVec c;
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
-                                                         params_.GetTotalTime(),
-                                                         params_.dt_constraint_range_of_motion_, ee,
-                                                         s);
-    c.push_back(rom);
-  }
-
-  std::cout << "Made box range of motion constraint" << std::endl;
-
-  return c;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeTotalTimeConstraint() const
-{
-  ContraintPtrVec c;
-  double T = params_.GetTotalTime();
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto duration_constraint = std::make_shared<TotalDurationConstraint>(T, ee);
-    c.push_back(duration_constraint);
-  }
-  std::cout << "Made total time constraint" << std::endl;
-  return c;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const
-{
-  ContraintPtrVec constraints;
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared<TerrainConstraint>(terrain_, id::EEMotionNodes(ee));
-    constraints.push_back(c);
-  }
-
-  std::cout << "Made terrain constraints" << std::endl;
-
-  return constraints;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeForceConstraint() const
-{
-  ContraintPtrVec constraints;
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared<ForceConstraint>(terrain_, params_.force_limit_in_normal_direction_,
-                                               ee);
-    constraints.push_back(c);
-  }
-
-  std::cout << "Made force constraints" << std::endl;
-
-  return constraints;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const SplineHolder& s) const
-{
-  ContraintPtrVec constraints;
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
-    constraints.push_back(c);
-  }
-
-  std::cout << "Made wheel constraints" << std::endl;
-
-  return constraints;
-}
-
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoints(
-    const SplineHolder& s) const
-{
-  ContraintPtrVec constraints;
 
   //hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
@@ -492,93 +329,270 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
   if (model_ptr == nullptr)
     throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
 
-  //todo see whether here we need to pass something else
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
-    if (ee > 0)
-      break;
+    bool is_driving_node = true;
 
-    auto c = std::make_shared<RangeOfMotionConstraintJoints>(model_ptr, params_.GetTotalTime(),
+    if (model_ptr->EEhasWheel(ee) == false)
+      is_driving_node = false;
+
+        auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
+            params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
+            params_.ee_polynomials_per_swing_phase_, is_driving_node);
+
+        // initialize towards final footholds
+        double yaw = final_base_.ang.p().z();
+        Eigen::Vector3d euler(0.0, 0.0, yaw);
+        Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+        Vector3d final_ee_pos_W = final_base_.lin.p()
+            + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+        double x = final_ee_pos_W.x();
+        double y = final_ee_pos_W.y();
+        double z = terrain_->GetHeight(x, y);
+        nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+
+        nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+        vars.push_back(nodes);
+      }
+
+      return vars;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraints(
+        const SplineHolder& spline_holder) const
+    {
+      ContraintPtrVec constraints;
+      for (auto name : params_.constraints_)
+        for (auto c : GetConstraint(name, spline_holder))
+          constraints.push_back(c);
+
+      return constraints;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::ConstraintName name,
+                                                                  const SplineHolder& s) const
+    {
+      switch (name) {
+        case Parameters::Dynamic:
+          return MakeDynamicConstraint(s);
+        case Parameters::EndeffectorRom:
+          return MakeRangeOfMotionBoxConstraint(s);
+        case Parameters::BaseRom:
+          return MakeBaseRangeOfMotionConstraint(s);
+        case Parameters::TotalTime:
+          return MakeTotalTimeConstraint();
+        case Parameters::Terrain:
+          return MakeTerrainConstraint();
+        case Parameters::Force:
+          return MakeForceConstraint();
+        case Parameters::Swing:
+          return MakeSwingConstraint();
+        case Parameters::BaseAcc:
+          return MakeBaseAccConstraint(s);
+        case Parameters::WheelHeading:
+          return MakeWheelConstraint(s);
+        case Parameters::EndeffectorRomJoints:
+          return MakeRangeOfMotionConstraintJoints(s);
+        default:
+          throw std::runtime_error("constraint not defined!");
+      }
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseRangeOfMotionConstraint(
+        const SplineHolder& s) const
+    {
+
+      std::cout << "Made base range of motion constraint" << std::endl;
+      return {std::make_shared<BaseMotionConstraint>(params_.GetTotalTime(),
+            params_.dt_constraint_base_motion_,
+            s)};
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeDynamicConstraint(
+        const SplineHolder& s) const
+    {
+      auto constraint = std::make_shared<DynamicConstraint>(model_.dynamic_model_,
+                                                            params_.GetTotalTime(),
+                                                            params_.dt_constraint_dynamic_, s);
+
+      std::cout << "Made dynamic constraint" << std::endl;
+      return {constraint};
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionBoxConstraint(
+        const SplineHolder& s) const
+    {
+      ContraintPtrVec c;
+
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
+                                                             params_.GetTotalTime(),
                                                              params_.dt_constraint_range_of_motion_,
                                                              ee, s);
-    constraints.push_back(c);
+        c.push_back(rom);
+      }
 
-  }
+      std::cout << "Made box range of motion constraint" << std::endl;
 
-  std::cout << "Made range of motin constraint joints: " << std::endl;
+      return c;
+    }
 
-  return constraints;
-}
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeTotalTimeConstraint() const
+    {
+      ContraintPtrVec c;
+      double T = params_.GetTotalTime();
+
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto duration_constraint = std::make_shared<TotalDurationConstraint>(T, ee);
+        c.push_back(duration_constraint);
+      }
+      std::cout << "Made total time constraint" << std::endl;
+      return c;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeTerrainConstraint() const
+    {
+      ContraintPtrVec constraints;
+
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto c = std::make_shared<TerrainConstraint>(terrain_, id::EEMotionNodes(ee));
+        constraints.push_back(c);
+      }
+
+      std::cout << "Made terrain constraints" << std::endl;
+
+      return constraints;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeForceConstraint() const
+    {
+      ContraintPtrVec constraints;
+
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto c = std::make_shared<ForceConstraint>(terrain_,
+                                                   params_.force_limit_in_normal_direction_, ee);
+        constraints.push_back(c);
+      }
+
+      std::cout << "Made force constraints" << std::endl;
+
+      return constraints;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const SplineHolder& s) const
+    {
+      ContraintPtrVec constraints;
+
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
+        constraints.push_back(c);
+      }
+
+      std::cout << "Made wheel constraints" << std::endl;
+
+      return constraints;
+    }
+
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoints(
+        const SplineHolder& s) const
+    {
+      ContraintPtrVec constraints;
+
+      //hack
+      auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
+
+      if (model_ptr == nullptr)
+        throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+
+      //todo see whether here we need to pass something else
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+
+        if (ee > 0)
+          break;
+
+        auto c = std::make_shared<RangeOfMotionConstraintJoints>(
+            model_ptr, params_.GetTotalTime(), params_.dt_constraint_range_of_motion_, ee, s);
+        constraints.push_back(c);
+
+      }
+
+      std::cout << "Made range of motin constraint joints: " << std::endl;
+
+      return constraints;
+    }
 
 //todo fix the segfault that I get when I use wheels and swing constraint
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const
-{
-  ContraintPtrVec constraints;
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeSwingConstraint() const
+    {
+      ContraintPtrVec constraints;
 
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto swing = std::make_shared<SwingConstraint>(id::EEMotionNodes(ee));
-    constraints.push_back(swing);
-  }
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        auto swing = std::make_shared<SwingConstraint>(id::EEMotionNodes(ee));
+        constraints.push_back(swing);
+      }
 
-  std::cout << "Made swing constraint" << std::endl;
+      std::cout << "Made swing constraint" << std::endl;
 
-  return constraints;
-}
+      return constraints;
+    }
 
-NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseAccConstraint(const SplineHolder& s) const
-{
-  ContraintPtrVec constraints;
+    NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseAccConstraint(
+        const SplineHolder& s) const
+    {
+      ContraintPtrVec constraints;
 
-  constraints.push_back(std::make_shared<SplineAccConstraint>(s.base_linear_, id::base_lin_nodes));
+      constraints.push_back(
+          std::make_shared<SplineAccConstraint>(s.base_linear_, id::base_lin_nodes));
 
-  constraints.push_back(std::make_shared<SplineAccConstraint>(s.base_angular_, id::base_ang_nodes));
+      constraints.push_back(
+          std::make_shared<SplineAccConstraint>(s.base_angular_, id::base_ang_nodes));
 
-  return constraints;
-}
+      return constraints;
+    }
 
-NlpFormulation::ContraintPtrVec NlpFormulation::GetCosts() const
-{
-  ContraintPtrVec costs;
-  for (const auto& pair : params_.costs_)
-    for (auto c : GetCost(pair.first, pair.second))
-      costs.push_back(c);
+    NlpFormulation::ContraintPtrVec NlpFormulation::GetCosts() const
+    {
+      ContraintPtrVec costs;
+      for (const auto& pair : params_.costs_)
+        for (auto c : GetCost(pair.first, pair.second))
+          costs.push_back(c);
 
-  return costs;
-}
+      return costs;
+    }
 
-NlpFormulation::CostPtrVec NlpFormulation::GetCost(const Parameters::CostName& name,
-                                                   double weight) const
-{
-  switch (name) {
-    case Parameters::ForcesCostID:
-      return MakeForcesCost(weight);
-    case Parameters::EEMotionCostID:
-      return MakeEEMotionCost(weight);
-    default:
-      throw std::runtime_error("cost not defined!");
-  }
-}
+    NlpFormulation::CostPtrVec NlpFormulation::GetCost(const Parameters::CostName& name,
+                                                       double weight) const
+    {
+      switch (name) {
+        case Parameters::ForcesCostID:
+          return MakeForcesCost(weight);
+        case Parameters::EEMotionCostID:
+          return MakeEEMotionCost(weight);
+        default:
+          throw std::runtime_error("cost not defined!");
+      }
+    }
 
-NlpFormulation::CostPtrVec NlpFormulation::MakeForcesCost(double weight) const
-{
-  CostPtrVec cost;
+    NlpFormulation::CostPtrVec NlpFormulation::MakeForcesCost(double weight) const
+    {
+      CostPtrVec cost;
 
-  for (int ee = 0; ee < params_.GetEECount(); ee++)
-    cost.push_back(std::make_shared<NodeCost>(id::EEForceNodes(ee), kPos, Z));
+      for (int ee = 0; ee < params_.GetEECount(); ee++)
+        cost.push_back(std::make_shared<NodeCost>(id::EEForceNodes(ee), kPos, Z));
 
-  return cost;
-}
+      return cost;
+    }
 
-NlpFormulation::CostPtrVec NlpFormulation::MakeEEMotionCost(double weight) const
-{
-  CostPtrVec cost;
+    NlpFormulation::CostPtrVec NlpFormulation::MakeEEMotionCost(double weight) const
+    {
+      CostPtrVec cost;
 
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, X));
-    cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, Y));
-  }
+      for (int ee = 0; ee < params_.GetEECount(); ee++) {
+        cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, X));
+        cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, Y));
+      }
 
-  return cost;
-}
+      return cost;
+    }
 
-} /* namespace towr */
+    } /* namespace towr */

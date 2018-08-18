@@ -74,14 +74,14 @@ std::vector<NodesVariablesPhaseBased::PolyInfo> BuildPolyInfosMotionWithWheels(
 
 NodesVariablesPhaseBased::NodesVariablesPhaseBased(int phase_count, bool first_phase_constant,
                                                    const std::string& name,
-                                                   int n_polys_in_changing_phase, Type type,
-                                                   unsigned int dimension /*= k3D*/)
+                                                   int n_polys_in_changing_phase,
+                                                   bool is_driving_node, unsigned int dimension)
     : NodesVariablesPhaseBased(phase_count, first_phase_constant, name, n_polys_in_changing_phase,
                                dimension)
 {
 
   //if this is MOtion with wheels then we need to do more work
-  if (type == MotionWithWheels) {
+  if (is_driving_node) {
     nodes_.clear();
     polynomial_info_.clear();
 
@@ -92,6 +92,9 @@ NodesVariablesPhaseBased::NodesVariablesPhaseBased(int phase_count, bool first_p
 
     isDrivingNode_ = true;
 
+  } else {
+    //handle non driving nodes
+    isDrivingNode_ = false;
   }
 
 }
@@ -222,13 +225,14 @@ void NodesVariablesPhaseBased::SetNumberOfVariables(int n_variables)
   SetRows(n_variables);
 }
 
-double NodesVariablesPhaseBased::GetTimeAtCurrentNode(int node_id, const PhaseDurations::VecDurations phase_durations)
+double NodesVariablesPhaseBased::GetTimeAtCurrentNode(
+    int node_id, const PhaseDurations::VecDurations phase_durations)
 {
   double curr_time = 0.0;
 
-  VecDurations polynomial_durations  = ConvertPhaseToPolyDurations(phase_durations);
+  VecDurations polynomial_durations = ConvertPhaseToPolyDurations(phase_durations);
 
-  for (int i =0; i < node_id; ++i){
+  for (int i = 0; i < node_id; ++i) {
     curr_time += polynomial_durations.at(i);
   }
 
@@ -381,10 +385,13 @@ NodesVariablesWheelAngle::OptIndexMap NodesVariablesWheelAngle::GetPhaseBasedEEP
 NodesVariablesEEMotionWithWheels::NodesVariablesEEMotionWithWheels(int phase_count,
                                                                    bool is_in_contact_at_start,
                                                                    const std::string& name,
-                                                                   int n_polys_in_changing_phase)
+                                                                   int n_polys_in_changing_phase,
+                                                                   bool is_driving_node)
     : NodesVariablesPhaseBased(phase_count, is_in_contact_at_start,  // contact phase for motion is constant
-                               name, n_polys_in_changing_phase, Type::MotionWithWheels)
+                               name, n_polys_in_changing_phase, is_driving_node, k3D),
+      is_driving_node_(is_driving_node)
 {
+
   index_to_node_value_info_ = GetPhaseBasedEEParameterization();
   SetNumberOfVariables(index_to_node_value_info_.size());
 }
@@ -393,23 +400,70 @@ NodesVariablesEEMotionWithWheels::OptIndexMap NodesVariablesEEMotionWithWheels::
 {
   OptIndexMap index_map;
 
-  int idx = 0;  // index in variables set
-  for (int node_id = 0; node_id < nodes_.size(); ++node_id) {
-    //always true I guess
-    if (!IsConstantNode(node_id)) {
-      for (int dim = 0; dim < GetDim(); ++dim) {
-        // intermediate way-point position of swing motion are optimized
-        index_map[idx++].push_back(NodeValueInfo(node_id, kPos, dim));
-        index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+  //todo remove the code copy-paste
+  if (is_driving_node_) {
+
+    int idx = 0;  // index in variables set
+    for (int node_id = 0; node_id < nodes_.size(); ++node_id) {
+      //always true I guess
+      if (!IsConstantNode(node_id)) {
+        for (int dim = 0; dim < GetDim(); ++dim) {
+          // intermediate way-point position of swing motion are optimized
+          index_map[idx++].push_back(NodeValueInfo(node_id, kPos, dim));
+          index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+        }
+      }
+      // stance node (next one will also be stance, so handle that one too):
+      else {
+        // will not really encounter any non constant nodes
       }
     }
-    // stance node (next one will also be stance, so handle that one too):
-    else {
-      // will not really encounter any non constant nodes
+  } else {
+
+    //todo remove the code copy paste
+
+    int idx = 0;  // index in variables set
+    for (int node_id = 0; node_id < nodes_.size(); ++node_id) {
+      // swing node:
+      if (!IsConstantNode(node_id)) {
+        for (int dim = 0; dim < GetDim(); ++dim) {
+          // intermediate way-point position of swing motion are optimized
+          index_map[idx++].push_back(NodeValueInfo(node_id, kPos, dim));
+
+          // velocity in vertical direction fixed to zero and not optimized.
+          // Since we often choose two polynomials per swing-phase, this restricts
+          // the swing to have reached it's extreme at half-time and creates
+          // smoother stepping motions.
+          if (dim == Z && false)
+            nodes_.at(node_id).at(kVel).z() = 0.0;
+          else
+            // velocity in x,y dimension during swing fully optimized.
+            index_map[idx++].push_back(NodeValueInfo(node_id, kVel, dim));
+        }
+      }
+      // stance node (next one will also be stance, so handle that one too):
+      else {
+        // ensure that foot doesn't move by not even optimizing over velocities
+        nodes_.at(node_id).at(kVel).setZero();
+        nodes_.at(node_id + 1).at(kVel).setZero();
+
+        // position of foot is still an optimization variable used for
+        // both start and end node of that polynomial
+        for (int dim = 0; dim < GetDim(); ++dim) {
+          index_map[idx].push_back(NodeValueInfo(node_id, kPos, dim));
+          index_map[idx].push_back(NodeValueInfo(node_id + 1, kPos, dim));
+          idx++;
+        }
+
+        node_id += 1;  // already added next constant node, so skip
+      }
     }
+
   }
 
   return index_map;
 }
+
+
 
 } /* namespace towr */
