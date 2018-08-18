@@ -129,6 +129,10 @@ void M545KinematicModelFull::CalculateJointLimitsforSpecificLimb(
     lower_joint_limits_(id) = joint_limits_["lowerLimit"][currJoint];
     ++id;
   }
+
+  upper_joint_limits_(LimbStartIndex::BOOM) = 1.0e20;
+  lower_joint_limits_(LimbStartIndex::BOOM) = -1.0e20;
+
 }
 
 Eigen::Vector3d M545KinematicModelFull::rotMat2ypr(const Eigen::Matrix3d &mat)
