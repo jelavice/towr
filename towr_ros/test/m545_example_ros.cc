@@ -144,11 +144,13 @@ void printTrajectory(const SplineHolder &x)
     cout << "LH: " << x.ee_force_.at(LH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
     cout << "RH: " << x.ee_force_.at(RH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
 
-    cout << "Wheel angle:          \n";
-    cout << "LF: " << x.ee_wheel_angles_.at(LF)->GetPoint(t).p() << "\t[N]" << endl;
-    cout << "RF: " << x.ee_wheel_angles_.at(RF)->GetPoint(t).p() << "\t[N]" << endl;
-    cout << "LH: " << x.ee_wheel_angles_.at(LH)->GetPoint(t).p() << "\t[N]" << endl;
-    cout << "RH: " << x.ee_wheel_angles_.at(RH)->GetPoint(t).p() << "\t[N]" << endl;
+
+    //not used for joints
+//    cout << "Wheel angle:          \n";
+//    cout << "LF: " << x.ee_wheel_angles_.at(LF)->GetPoint(t).p() << "\t[N]" << endl;
+//    cout << "RF: " << x.ee_wheel_angles_.at(RF)->GetPoint(t).p() << "\t[N]" << endl;
+//    cout << "LH: " << x.ee_wheel_angles_.at(LH)->GetPoint(t).p() << "\t[N]" << endl;
+//    cout << "RH: " << x.ee_wheel_angles_.at(RH)->GetPoint(t).p() << "\t[N]" << endl;
 
     bool contact = x.phase_durations_.at(LF)->IsContactPhase(t);
     std::string foot_in_contact = contact ? "yes" : "no";
@@ -206,6 +208,10 @@ int main(int argc, char** argv)
   base_init_pos << 0.0, 0.0, 0.95;
   base_init_orientation << 0.0, 0.0, 0.0;
 
+  const double duration = 1.0;
+
+  double baseHeight;
+
 
   if (Parameters::use_joint_formulation_) {
 
@@ -227,13 +233,15 @@ int main(int argc, char** argv)
 
 
     for (int i = 0; i < numEE; ++i) {
-      nominal_stance.at(i) = model->GetEEPositionsBase(i);
-      std::cout << nominal_stance.at(i).transpose() << std::endl;
+      Eigen::Vector3d stance_base = model->GetEEPositionsBase(i);
+      stance_base.z() = 0; // this sortof sets it to world frame
+      nominal_stance.at(i) = stance_base;
+      //std::cout << nominal_stance.at(i).transpose() << std::endl;
     }
 
     params.SetEECount(numEE);
 
-    const double duration = 1.0;
+
     for (int i = 0; i < 4; ++i) {
       params.ee_phase_durations_.push_back( { duration });
       params.ee_in_contact_at_start_.push_back(true);
@@ -242,7 +250,13 @@ int main(int argc, char** argv)
     //the boom
     params.ee_phase_durations_.push_back( { duration });
     params.ee_in_contact_at_start_.push_back(false);
-    //todo make sure that the boom is not a wheel, i.e. it cannot move when in contact with he ground
+
+
+
+    baseHeight= model->GetBasePosition().z();
+    base_init_pos << 0.0, 0.0, baseHeight;
+    base_init_orientation << 0.0, 0.0, 0.0;
+
 
   } else {  // if one ain't using joint formulations
 
@@ -265,7 +279,7 @@ int main(int argc, char** argv)
     nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
     nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
-    const double duration = 1.0;
+
     for (int i = 0; i < 4; ++i) {
       params.ee_phase_durations_.push_back( { duration });
       params.ee_in_contact_at_start_.push_back(true);
@@ -275,12 +289,23 @@ int main(int argc, char** argv)
 
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos) << 1.0, 0.0, 0.95;
+  formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, baseHeight;
 
-  params.SetNumberEEPolynomials(1);
-  params.SetDynamicConstraintDt(0.5);
-  params.SetRangeOfMotionConstraintDt(0.5);
-  params.SetPolynomialDurationBase(0.5);
+
+  std::cout << "Initial position of the base " << formulation.initial_base_.lin.at(towr::kPos).transpose();
+  std::cout << "Final position of the base " << formulation.final_base_.lin.at(towr::kPos).transpose();
+
+  std::cout << "EE initial positions: \n";
+  for (int i =0 ; i < formulation.model_.kinematic_model_->GetNumberOfEndeffectors(); ++i){
+    std::cout << "Position for the limb: " << i << " " << formulation.initial_ee_W_.at(i).transpose() << std::endl;
+  }
+
+
+  params.SetNumberEEPolynomials(50);
+  params.SetDynamicConstraintDt(0.2);
+  params.SetRangeOfMotionConstraintDt(0.2);
+  params.SetPolynomialDurationBase(0.1);
+  params.SetPolynomialDurationJoints(0.05);
 
   //must be called to override the constructor
   params.SetConstraints();
@@ -303,19 +328,19 @@ int main(int argc, char** argv)
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
-  solver->SetOption("ma57_pre_alloc", 3.0);
+  solver->SetOption("ma57_pre_alloc", 10.0);
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-  solver->SetOption("max_iter", 0);
-  solver->SetOption("derivative_test", "first-order");
-  solver->SetOption("print_level", 4);
-  solver->SetOption("derivative_test_perturbation", 1e-5);
-  solver->SetOption("derivative_test_tol", 1e-3);
+//  solver->SetOption("max_iter", 0);
+//  solver->SetOption("derivative_test", "first-order");
+//  solver->SetOption("print_level", 4);
+//  solver->SetOption("derivative_test_perturbation", 1e-5);
+//  solver->SetOption("derivative_test_tol", 1e-3);
 
   solver->Solve(nlp);
 
-  //printTrajectory(solution);
+  printTrajectory(solution);
 
   // Defaults to /home/user/.ros/
 //  std::string bag_file = "towr_trajectory.bag";
