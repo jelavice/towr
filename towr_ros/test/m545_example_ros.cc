@@ -144,7 +144,6 @@ void printTrajectory(const SplineHolder &x)
     cout << "LH: " << x.ee_force_.at(LH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
     cout << "RH: " << x.ee_force_.at(RH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
 
-
     //not used for joints
 //    cout << "Wheel angle:          \n";
 //    cout << "LF: " << x.ee_wheel_angles_.at(LF)->GetPoint(t).p() << "\t[N]" << endl;
@@ -174,26 +173,15 @@ void printTrajectory(const SplineHolder &x)
   }
 }
 
-int main(int argc, char** argv)
+void setParameters(NlpFormulation &formulation, double duration, const std::string &urdfDescription)
 {
 
-  ros::init(argc, argv, "m545_example_node");
-  ros::NodeHandle nh;
-
-  //get the excavator model
-  std::string urdfDescription;
-  nh.getParam("romo_mm_description", urdfDescription);
-
-  NlpFormulation formulation;
-
-  // terrain
-  formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
   // Kinematic limits and dynamic parameters of the hopper
-  constexpr double dt = 0.01;
-  Parameters::robot_has_wheels_ = true;
-  Parameters::use_joint_formulation_ = true;
-  int numEE = 0;
+    constexpr double dt = 0.01;
+    Parameters::robot_has_wheels_ = true;
+    Parameters::use_joint_formulation_ = true;
+    int numEE = 0;
 
   if (Parameters::use_joint_formulation_)
     formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
@@ -205,13 +193,13 @@ int main(int argc, char** argv)
   auto &base_init_pos = formulation.initial_base_.lin.at(towr::kPos);
   auto &base_init_orientation = formulation.initial_base_.ang.at(towr::kPos);
   Parameters& params = formulation.params_;
-  base_init_pos << 0.0, 0.0, 0.95;
+
+
+
+
+  double baseHeight = 0.95;
+  base_init_pos << 0.0, 0.0, baseHeight;
   base_init_orientation << 0.0, 0.0, 0.0;
-
-  const double duration = 1.0;
-
-  double baseHeight;
-
 
   if (Parameters::use_joint_formulation_) {
 
@@ -231,16 +219,14 @@ int main(int argc, char** argv)
 
     //then compute the ee positions
 
-
     for (int i = 0; i < numEE; ++i) {
-      Eigen::Vector3d stance_base = model->GetEEPositionsBase(i);
-      stance_base.z() = 0; // this sortof sets it to world frame
-      nominal_stance.at(i) = stance_base;
+      Eigen::Vector3d stance = model->GetEEPositionsBase(i);
+      stance.z() = 0;  // this sortof sets it to world frame
+      nominal_stance.at(i) = stance;
       //std::cout << nominal_stance.at(i).transpose() << std::endl;
     }
 
     params.SetEECount(numEE);
-
 
     for (int i = 0; i < 4; ++i) {
       params.ee_phase_durations_.push_back( { duration });
@@ -251,12 +237,9 @@ int main(int argc, char** argv)
     params.ee_phase_durations_.push_back( { duration });
     params.ee_in_contact_at_start_.push_back(false);
 
-
-
-    baseHeight= model->GetBasePosition().z();
+    baseHeight = model->GetBasePosition().z();
     base_init_pos << 0.0, 0.0, baseHeight;
     base_init_orientation << 0.0, 0.0, 0.0;
-
 
   } else {  // if one ain't using joint formulations
 
@@ -279,7 +262,6 @@ int main(int argc, char** argv)
     nominal_stance.at(towr::QuadrupedIDs::LH) << -x_nominal_b_hind, y_nominal_b_hind, z_nominal_b;
     nominal_stance.at(towr::QuadrupedIDs::RH) << -x_nominal_b_hind, -y_nominal_b_hind, z_nominal_b;
 
-
     for (int i = 0; i < 4; ++i) {
       params.ee_phase_durations_.push_back( { duration });
       params.ee_in_contact_at_start_.push_back(true);
@@ -287,25 +269,52 @@ int main(int argc, char** argv)
 
   }
 
-
-  // define the desired goal state of the hopper
   formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, baseHeight;
 
 
-  std::cout << "Initial position of the base " << formulation.initial_base_.lin.at(towr::kPos).transpose();
-  std::cout << "Final position of the base " << formulation.final_base_.lin.at(towr::kPos).transpose();
+}
 
-  std::cout << "EE initial positions: \n";
-  for (int i =0 ; i < formulation.model_.kinematic_model_->GetNumberOfEndeffectors(); ++i){
-    std::cout << "Position for the limb: " << i << " " << formulation.initial_ee_W_.at(i).transpose() << std::endl;
-  }
+int main(int argc, char** argv)
+{
+
+  ros::init(argc, argv, "m545_example_node");
+  ros::NodeHandle nh;
+
+  //get the excavator model
+  std::string urdfDescription;
+  nh.getParam("romo_mm_description", urdfDescription);
+
+  NlpFormulation formulation;
+  Parameters& params = formulation.params_;
+
+  // terrain
+  formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
 
-  params.SetNumberEEPolynomials(50);
+  const double duration = 1.0;
+
+  params.SetNumberEEPolynomials(5);
   params.SetDynamicConstraintDt(0.2);
   params.SetRangeOfMotionConstraintDt(0.2);
   params.SetPolynomialDurationBase(0.1);
-  params.SetPolynomialDurationJoints(0.05);
+  params.SetPolynomialDurationJoints(0.1);
+
+  setParameters(formulation, duration, urdfDescription);
+
+  // define the desired goal state of the hopper
+  formulation.final_base_.lin.at(towr::kPos).x() = 0.0;
+  formulation.final_base_.lin.at(towr::kPos).y() = 0.0;
+
+  std::cout << "Initial position of the base "
+            << formulation.initial_base_.lin.at(towr::kPos).transpose();
+  std::cout << "Final position of the base "
+            << formulation.final_base_.lin.at(towr::kPos).transpose();
+
+  std::cout << "EE initial positions: \n";
+  for (int i = 0; i < formulation.model_.kinematic_model_->GetNumberOfEndeffectors(); ++i) {
+    std::cout << "Position for the limb: " << i << " "
+              << formulation.initial_ee_W_.at(i).transpose() << std::endl;
+  }
 
   //must be called to override the constructor
   params.SetConstraints();
