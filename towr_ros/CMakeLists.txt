@@ -123,6 +123,7 @@ add_executable(m545-example
   test/m545_example_ros.cc
 )
 target_link_libraries(m545-example
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
