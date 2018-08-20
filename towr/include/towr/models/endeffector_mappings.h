@@ -42,6 +42,7 @@ namespace towr {
 // has to start at zero
 enum BipedIDs { L, R };
 enum QuadrupedIDs { LF, RF, LH, RH };
+enum ExcavatorIDs { exc_LF,exc_RF,exc_LH,exc_RH,exc_EE};
 
 } // namespace towr
 
