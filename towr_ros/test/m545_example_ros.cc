@@ -68,7 +68,8 @@ XppVec GetTrajectory(const SplineHolder &solution)
       state.ee_contact_.at(ee_xpp) = solution.phase_durations_.at(ee_towr)->IsContactPhase(t);
       state.ee_motion_.at(ee_xpp) = ToXpp(solution.ee_motion_.at(ee_towr)->GetPoint(t));
       state.ee_forces_.at(ee_xpp) = solution.ee_force_.at(ee_towr)->GetPoint(t).p();
-      state.wheel_angles_.at(ee_xpp) = solution.ee_wheel_angles_.at(ee_towr)->GetPoint(t).p()(0);
+      //state.wheel_angles_.at(ee_xpp) = solution.ee_wheel_angles_.at(ee_towr)->GetPoint(t).p()(0);
+      //std::cout << "ee_xpp: " << ee_xpp << "/" << n_ee << " : " << solution.ee_motion_.at(ee_towr)->GetPoint(t).p().transpose() << std::endl;
     }
 
     state.t_global_ = t;
@@ -90,8 +91,8 @@ void SaveTrajectoryInRosbag(rosbag::Bag& bag, const XppVec& traj, const std::str
     msg = xpp::Convert::ToRos(state);
 
     //todo remove the hack
-    for (auto wheel_angle : state.wheel_angles_.ToImpl())
-      msg.wheel_angles.push_back(wheel_angle);
+//    for (auto wheel_angle : state.wheel_angles_.ToImpl())
+//      msg.wheel_angles.push_back(wheel_angle);
 
     bag.write(topic, timestamp, msg);
 
@@ -293,22 +294,24 @@ int main(int argc, char** argv)
 
   const double duration = 1.0;
 
-  params.SetNumberEEPolynomials(5);
+  int num_polys = static_cast<int>(duration / 0.25);
+
+  params.SetNumberEEPolynomials(num_polys);
   params.SetDynamicConstraintDt(0.2);
   params.SetRangeOfMotionConstraintDt(0.2);
   params.SetPolynomialDurationBase(0.1);
-  params.SetPolynomialDurationJoints(0.1);
+  params.SetPolynomialDurationJoints(0.2);
 
   setParameters(formulation, duration, urdfDescription);
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos).x() = 0.0;
-  formulation.final_base_.lin.at(towr::kPos).y() = 0.0;
+  formulation.final_base_.lin.at(towr::kPos).x() = 1.0;
+  formulation.final_base_.lin.at(towr::kPos).y() = 1.0;
 
   std::cout << "Initial position of the base "
-            << formulation.initial_base_.lin.at(towr::kPos).transpose();
+            << formulation.initial_base_.lin.at(towr::kPos).transpose() << std::endl;
   std::cout << "Final position of the base "
-            << formulation.final_base_.lin.at(towr::kPos).transpose();
+            << formulation.final_base_.lin.at(towr::kPos).transpose() << std::endl;
 
   std::cout << "EE initial positions: \n";
   for (int i = 0; i < formulation.model_.kinematic_model_->GetNumberOfEndeffectors(); ++i) {
@@ -352,14 +355,14 @@ int main(int argc, char** argv)
   printTrajectory(solution);
 
   // Defaults to /home/user/.ros/
-//  std::string bag_file = "towr_trajectory.bag";
-//  rosbag::Bag bag;
-//  bag.open(bag_file, rosbag::bagmode::Write);
-//  ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
-//  auto final_trajectory = GetTrajectory(solution);
-//  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired,
-//                         formulation.terrain_.get());
-//
-//  bag.close();
+  std::string bag_file = "towr_trajectory.bag";
+  rosbag::Bag bag;
+  bag.open(bag_file, rosbag::bagmode::Write);
+  ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
+  auto final_trajectory = GetTrajectory(solution);
+  SaveTrajectoryInRosbag(bag, final_trajectory, xpp_msgs::robot_state_desired,
+                         formulation.terrain_.get());
+
+  bag.close();
 
 }
