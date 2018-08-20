@@ -146,31 +146,31 @@ grid on
 
 
 %plot the wheel angles
-accessor = @(feet) (feet.wheel_angles(1));
-[headingLF] = (ros.msgs2mat(msgs, accessor))';
-accessor = @(feet) (feet.wheel_angles(2));
-[headingRF] = (ros.msgs2mat(msgs, accessor))';
-accessor = @(feet) (feet.wheel_angles(3));
-[headingLH] = (ros.msgs2mat(msgs, accessor))';
-accessor = @(feet) (feet.wheel_angles(4));
-[headingRH] = (ros.msgs2mat(msgs, accessor))';
-figure
-subplot(4,1,1)
-plot(times, headingLF, 'Linewidth',2)
-grid on
-title('LF heading')
-subplot(4,1,2)
-plot(times, headingRF, 'Linewidth',2)
-grid on
-title('RF heading')
-subplot(4,1,3)
-plot(times, headingLH, 'Linewidth',2)
-grid on
-title('LH heading')
-subplot(4,1,4)
-plot(times, headingRH, 'Linewidth',2)
-grid on
-title('RH heading')
+% accessor = @(feet) (feet.wheel_angles(1));
+% [headingLF] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(feet) (feet.wheel_angles(2));
+% [headingRF] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(feet) (feet.wheel_angles(3));
+% [headingLH] = (ros.msgs2mat(msgs, accessor))';
+% accessor = @(feet) (feet.wheel_angles(4));
+% [headingRH] = (ros.msgs2mat(msgs, accessor))';
+% figure
+% subplot(4,1,1)
+% plot(times, headingLF, 'Linewidth',2)
+% grid on
+% title('LF heading')
+% subplot(4,1,2)
+% plot(times, headingRF, 'Linewidth',2)
+% grid on
+% title('RF heading')
+% subplot(4,1,3)
+% plot(times, headingLH, 'Linewidth',2)
+% grid on
+% title('LH heading')
+% subplot(4,1,4)
+% plot(times, headingRH, 'Linewidth',2)
+% grid on
+% title('RH heading')
 
 % 
 % 
@@ -245,6 +245,9 @@ hold on
 plot(times, xyzLH(:,2), 'Linewidth',2)
 legend('x', 'y');
 grid on
+
+
+
 title('LH pos')
 
 subplot(4,1,4)
