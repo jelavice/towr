@@ -30,7 +30,7 @@ class M545TrajectoryManager
  public:
 
   using XppVecCartesian = std::vector<xpp::RobotStateCartesian>;
-  using XppVectorJoints = std::vector<xpp::RobotStateJoint>;
+  using XppVecJoints = std::vector<xpp::RobotStateJoint>;
   using Vector3d = Eigen::Vector3d;
 
   M545TrajectoryManager(const HeightMap *terrain);
@@ -38,6 +38,10 @@ class M545TrajectoryManager
 
   XppVecCartesian GetTrajectoryCartesian(const SplineHolder &solution);
   void SaveTrajectoryInRosbagCartesian(rosbag::Bag& bag, const std::string& topic,
+                                       const SplineHolder &solution);
+
+  XppVecJoints GetTrajectoryJoints(const SplineHolder &solution);
+  void SaveTrajectoryInRosbagJoints(rosbag::Bag& bag, const std::string& topic,
                                        const SplineHolder &solution);
 
  private:

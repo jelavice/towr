@@ -16,26 +16,19 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
-
 #include <ifopt/ipopt_solver.h>
 
 #include <std_msgs/Int32.h>
-
 
 #include <towr/initialization/gait_generator.h>
 #include <towr/terrain/height_map.h>
 #include <towr/variables/euler_converter.h>
 #include <towr/nlp_formulation.h>
 
-//#include <towr_ros/topic_names.h>
-//#include <towr_ros/towr_xpp_ee_map.h>
-
 #include <towr/models/examples/m545_model.h>
 
 using namespace xpp;
 using namespace towr;
-
-
 
 void printTrajectory(const SplineHolder &x)
 {
@@ -107,12 +100,11 @@ void printTrajectory(const SplineHolder &x)
 void setParameters(NlpFormulation &formulation, double duration, const std::string &urdfDescription)
 {
 
-
   // Kinematic limits and dynamic parameters of the hopper
-    constexpr double dt = 0.01;
-    Parameters::robot_has_wheels_ = true;
-    Parameters::use_joint_formulation_ = true;
-    int numEE = 0;
+  constexpr double dt = 0.01;
+  Parameters::robot_has_wheels_ = true;
+  Parameters::use_joint_formulation_ = true;
+  int numEE = 0;
 
   if (Parameters::use_joint_formulation_)
     formulation.model_ = RobotModel(RobotModel::m545full, urdfDescription, dt);
@@ -124,9 +116,6 @@ void setParameters(NlpFormulation &formulation, double duration, const std::stri
   auto &base_init_pos = formulation.initial_base_.lin.at(towr::kPos);
   auto &base_init_orientation = formulation.initial_base_.ang.at(towr::kPos);
   Parameters& params = formulation.params_;
-
-
-
 
   double baseHeight = 0.95;
   base_init_pos << 0.0, 0.0, baseHeight;
@@ -202,7 +191,6 @@ void setParameters(NlpFormulation &formulation, double duration, const std::stri
 
   formulation.final_base_.lin.at(towr::kPos) << 0.0, 0.0, baseHeight;
 
-
 }
 
 int main(int argc, char** argv)
@@ -220,7 +208,6 @@ int main(int argc, char** argv)
 
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
-
 
   const double duration = 1.0;
 
@@ -283,16 +270,30 @@ int main(int argc, char** argv)
   solver->Solve(nlp);
 
   printTrajectory(solution);
+  {
+    // Defaults to /home/user/.ros/
+    towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
+    std::string bag_file = "towr_trajectory.bag";
+    rosbag::Bag bag;
+    bag.open(bag_file, rosbag::bagmode::Write);
+    ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
 
-  // Defaults to /home/user/.ros/
-  towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
-  std::string bag_file = "towr_trajectory.bag";
-  rosbag::Bag bag;
-  bag.open(bag_file, rosbag::bagmode::Write);
-  ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
+    trajectory_manager.SaveTrajectoryInRosbagCartesian(bag, xpp_msgs::robot_state_desired,
+                                                       solution);
 
-  trajectory_manager.SaveTrajectoryInRosbagCartesian(bag, xpp_msgs::robot_state_desired, solution );
+    bag.close();
+  }
 
+  {
+    towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
+    std::string bag_file = "towr_trajectory_joints.bag";
+    rosbag::Bag bag;
+    bag.open(bag_file, rosbag::bagmode::Write);
+    ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
 
+    trajectory_manager.SaveTrajectoryInRosbagJoints(bag, xpp_msgs::joint_desired, solution);
+
+    bag.close();
+  }
 
 }
