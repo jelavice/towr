@@ -286,7 +286,8 @@ int main(int argc, char** argv)
 
   {
     towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
-    std::string bag_file = "towr_trajectory_joints.bag";
+    std::string prefix = "/home/jelavice/Documents/catkin_workspaces/towr_ws/src/xpp/xpp_examples/bags";
+    std::string bag_file = prefix + "/m545.bag";
     rosbag::Bag bag;
     bag.open(bag_file, rosbag::bagmode::Write);
     ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
