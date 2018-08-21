@@ -184,7 +184,9 @@ void M545TrajectoryManager::SaveTrajectoryInRosbagJoints(rosbag::Bag& bag,
 
     }
 
-
+    //copy the joint contact info
+    for (int i =0; i < state.ee_contact_.GetEECount(); ++i)
+      msg.ee_contact.push_back(state.ee_contact_.at(i));
 
 
     bag.write(topic, timestamp, msg);
