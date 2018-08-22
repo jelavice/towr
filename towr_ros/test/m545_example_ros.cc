@@ -214,16 +214,18 @@ int main(int argc, char** argv)
   int num_polys = static_cast<int>(duration / 0.25);
 
   params.SetNumberEEPolynomials(num_polys);
-  params.SetDynamicConstraintDt(0.2);
-  params.SetRangeOfMotionConstraintDt(0.2);
-  params.SetPolynomialDurationBase(0.1);
+  params.SetDynamicConstraintDt(0.1);
+  params.SetRangeOfMotionConstraintDt(0.1);
+  params.SetPolynomialDurationBase(0.2);
   params.SetPolynomialDurationJoints(0.2);
 
   setParameters(formulation, duration, urdfDescription);
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos).x() = 1.0;
-  formulation.final_base_.lin.at(towr::kPos).y() = 1.0;
+  formulation.final_base_.lin.at(towr::kPos).x() = 0.0;
+  formulation.final_base_.lin.at(towr::kPos).y() = 0.0;
+
+  std::cout << "Number of polynomials for the phase based nodes: " << num_polys << std::endl;
 
   std::cout << "Initial position of the base "
             << formulation.initial_base_.lin.at(towr::kPos).transpose() << std::endl;
