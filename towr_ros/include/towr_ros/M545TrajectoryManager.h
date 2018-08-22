@@ -17,10 +17,12 @@
 #include <towr/terrain/height_map.h>
 #include <towr/variables/spline_holder.h>
 #include <xpp_states/robot_state_cartesian.h>
-#include <xpp_states/robot_state_joint.h>
+#include <xpp_states/robot_state_cartesian_plus_joints.h>
 
 #include <towr_ros/topic_names.h>
 #include <towr_ros/towr_xpp_ee_map.h>
+
+#include <towr/variables/euler_converter.h>
 
 namespace towr {
 
@@ -30,7 +32,7 @@ class M545TrajectoryManager
  public:
 
   using XppVecCartesian = std::vector<xpp::RobotStateCartesian>;
-  using XppVecJoints = std::vector<xpp::RobotStateJoint>;
+  using XppVecJoints = std::vector<xpp::RobotStateCartesianPlusJoints>;
   using Vector3d = Eigen::Vector3d;
 
   M545TrajectoryManager(const HeightMap *terrain);
@@ -42,9 +44,13 @@ class M545TrajectoryManager
 
   XppVecJoints GetTrajectoryJoints(const SplineHolder &solution);
   void SaveTrajectoryInRosbagJoints(rosbag::Bag& bag, const std::string& topic,
-                                       const SplineHolder &solution);
+                                    const SplineHolder &solution);
 
  private:
+
+  void FillCartesianState(double t, int n_ee, const SplineHolder &solution,
+                                                 EulerConverter &base_angular,
+                                                 xpp::RobotStateCartesian &state);
 
   const double visualization_dt_ = 0.1;
   const HeightMap *terrain_ = nullptr;
