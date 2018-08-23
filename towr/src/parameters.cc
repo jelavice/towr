@@ -41,7 +41,9 @@ namespace towr {
 bool Parameters::robot_has_wheels_ = false;
 bool Parameters::use_joint_formulation_ = false;
 
-Parameters::Parameters(int numEE): Parameters() {
+Parameters::Parameters(int numEE)
+    : Parameters()
+{
 
   numEE_ = numEE;
 
@@ -67,9 +69,14 @@ Parameters::Parameters()
   // these are the basic constraints that always have to be set
   SetConstraints();
 
+  bounds_initial_lin_pos = {X,Y};
+  bounds_initial_lin_vel = {X,Y,Z};
+  bounds_initial_ang_pos = {};
+  bounds_initial_ang_vel = {X,Y,Z};
+
   bounds_final_lin_pos = {X,Y};
   bounds_final_lin_vel = {X,Y,Z};
-  bounds_final_ang_pos = {X,Y,Z};
+  bounds_final_ang_pos = {};
   bounds_final_ang_vel = {X,Y,Z};
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
@@ -77,7 +84,8 @@ Parameters::Parameters()
   numEE_ = ee_in_contact_at_start_.size();
 }
 
-void Parameters::SetEECount(int numEE){
+void Parameters::SetEECount(int numEE)
+{
   numEE_ = numEE;
 }
 
@@ -108,6 +116,11 @@ void Parameters::SetPolynomialDurationJoints(double dt)
   duration_joints_polynomial_ = dt;
 }
 
+void Parameters::SetWheelsConstraintDt(double dt)
+{
+  dt_constraint_wheels_ = dt;
+}
+
 void Parameters::SetConstraints()
 {
   // first clear the shit from the constructor
@@ -118,24 +131,22 @@ void Parameters::SetConstraints()
   SetDynamicConstraint();
   SetForceConstraint();
 
-
   if (robot_has_wheels_ && use_joint_formulation_) {
     //set rom joints and ee with wheels
     //SetWheelConstraint(); //dis hacly since I am building thos constraints in the joint constraints anyway
     SetKinematicConstraintJoints();
     SetWheelConstraint();
 //    std::cout << "Added wheel and joint rom constraint" << std::endl;
-  }else if ((robot_has_wheels_ == false) && use_joint_formulation_){
+  } else if ((robot_has_wheels_ == false) && use_joint_formulation_) {
     //set rom with joints
     SetKinematicConstraintJoints();
 //    std::cout << "Added joint rom constraint" << std::endl;
-  } else if ( robot_has_wheels_ && (use_joint_formulation_ == false)){
+  } else if (robot_has_wheels_ && (use_joint_formulation_ == false)) {
     //set wheel heading and rom
     SetWheelConstraint();
     SetKinematicConstraint();
 //    std::cout << "Added wheel and rom constraint" << std::endl;
-  } else
-  {
+  } else {
     // set rom
     SetKinematicConstraint();
 //    std::cout << "Added rom constraint only" << std::endl;
@@ -158,7 +169,6 @@ void Parameters::SetKinematicConstraintJoints()
 {
   constraints_.push_back(EndeffectorRomJoints);
 }
-
 
 void Parameters::SetForceConstraint()
 {
@@ -197,22 +207,22 @@ void Parameters::PenalizeEndeffectorForces()
   costs_.push_back( { ForcesCostID, 1.0 });
 }
 
-
-Parameters::VecTimes Parameters::GetAnyPolyDurations(double polynomial_duration) const{
+Parameters::VecTimes Parameters::GetAnyPolyDurations(double polynomial_duration) const
+{
 
   std::vector<double> any_spline_timings_;
-    double dt = polynomial_duration;
-    double t_left = GetTotalTime(); //todo check this
+  double dt = polynomial_duration;
+  double t_left = GetTotalTime();  //todo check this
 
-    double eps = 1e-10;  // since repeated subtraction causes inaccuracies
-    while (t_left > eps) {
-      double duration = t_left > dt ? dt : t_left;
-      any_spline_timings_.push_back(duration);
+  double eps = 1e-10;  // since repeated subtraction causes inaccuracies
+  while (t_left > eps) {
+    double duration = t_left > dt ? dt : t_left;
+    any_spline_timings_.push_back(duration);
 
-      t_left -= dt;
-    }
+    t_left -= dt;
+  }
 
-    return any_spline_timings_;
+  return any_spline_timings_;
 }
 
 Parameters::VecTimes Parameters::GetBasePolyDurations() const

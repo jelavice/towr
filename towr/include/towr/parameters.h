@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <towr/models/robot_model.h>
 
-
 namespace towr {
 
 /**
@@ -131,34 +130,39 @@ namespace towr {
  *
  * @ingroup Parameters
  */
-struct Parameters {
+struct Parameters
+{
   /**
    * @brief Identifiers to be used to add certain constraints to the
    * optimization problem.
    */
-  enum ConstraintName { Dynamic,        ///< sets DynamicConstraint
-                        EndeffectorRom, ///< sets RangeOfMotionConstraint
-                        TotalTime,      ///< sets TotalDurationConstraint
-                        Terrain,        ///< sets TerrainConstraint
-                        Force,          ///< sets ForceConstraint
-                        Swing,          ///< sets SwingConstraint
-                        BaseRom,        ///< sets BaseMotionConstraint
-                        BaseAcc,         ///< sets SplineAccConstraint
-                        WheelHeading,
-                        EndeffectorRomJoints
+  enum ConstraintName
+  {
+    Dynamic,        ///< sets DynamicConstraint
+    EndeffectorRom,  ///< sets RangeOfMotionConstraint
+    TotalTime,      ///< sets TotalDurationConstraint
+    Terrain,        ///< sets TerrainConstraint
+    Force,          ///< sets ForceConstraint
+    Swing,          ///< sets SwingConstraint
+    BaseRom,        ///< sets BaseMotionConstraint
+    BaseAcc,         ///< sets SplineAccConstraint
+    WheelHeading,
+    EndeffectorRomJoints
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
    *  problem.
    */
-  enum CostName       { ForcesCostID,    ///< sets NodeCost on force nodes
-                        EEMotionCostID   ///< sets NodeCost on endeffector velocity
+  enum CostName
+  {
+    ForcesCostID,    ///< sets NodeCost on force nodes
+    EEMotionCostID   ///< sets NodeCost on endeffector velocity
   };
 
-  using CostWeights      = std::vector<std::pair<CostName, double>>;
-  using UsedConstraints  = std::vector<ConstraintName>;
-  using VecTimes         = std::vector<double>;
-  using EEID             = unsigned int;
+  using CostWeights = std::vector<std::pair<CostName, double>>;
+  using UsedConstraints = std::vector<ConstraintName>;
+  using VecTimes = std::vector<double>;
+  using EEID = unsigned int;
 
   friend class NlpFormulation;
 
@@ -211,15 +215,16 @@ struct Parameters {
 
   void SetPolynomialDurationJoints(double dt);
 
+  void SetWheelsConstraintDt(double dt);
 
   void SetConstraints();
 
   /// The number of endeffectors.
-   int GetEECount() const;
+  int GetEECount() const;
 
-   void SetEECount(int numEE);
+  void SetEECount(int numEE);
 
-private:
+ private:
   int numEE_ = -1;
 
   /// Which constraints should be used in the optimization problem.
@@ -242,13 +247,11 @@ private:
   /// True if the phase durations should be optimized over.
   bool IsOptimizeTimings() const;
 
-
-
   /// Total duration [s] of the motion.
   double GetTotalTime() const;
 
   /// Bounds for the phase durations.
-  std::array<double,2> GetPhaseDurationBounds() const;
+  std::array<double, 2> GetPhaseDurationBounds() const;
 
   /// Interval at which the dynamic constraint is enforced.
   double dt_constraint_dynamic_;
@@ -259,6 +262,8 @@ private:
   /// Interval at which the base motion constraint is enforced.
   double dt_constraint_base_motion_;
 
+  double dt_constraint_wheels_;
+
   /// Fixed duration of each cubic polynomial describing the base motion.
   double duration_base_polynomial_;
 
@@ -267,7 +272,7 @@ private:
   /** Minimum and maximum time for each phase (swing,stance).
    *  Only used when optimizing over phase durations
    */
-  std::array<double,2> bound_phase_duration_ = {{0.0, 1e10}};
+  std::array<double, 2> bound_phase_duration_ = { { 0.0, 1e10 } };
 
   /// Number of polynomials to parameterize foot movement during swing phases.
   int ee_polynomials_per_swing_phase_;
@@ -300,14 +305,17 @@ private:
   void SetKinematicConstraintJoints();
 
   /// which dimensions (x,y,z) of the final base state should be bounded
-  std::vector<int> bounds_final_lin_pos,
-                   bounds_final_lin_vel,
-                   bounds_final_ang_pos,
-                   bounds_final_ang_vel;
+  std::vector<int> bounds_final_lin_pos, bounds_final_lin_vel, bounds_final_ang_pos,
+      bounds_final_ang_vel;
 
+  std::vector<int> bounds_initial_lin_pos, bounds_initial_lin_vel, bounds_initial_ang_pos,
+      bounds_initial_ang_vel;
+
+  bool restrict_base_init_height_ = false;
+  bool restrict_base_init_rpy_ = false;
 
 };
 
-} // namespace towr
+}  // namespace towr
 
 #endif /* TOWR_OPTIMIZATION_PARAMETERS_H_ */
