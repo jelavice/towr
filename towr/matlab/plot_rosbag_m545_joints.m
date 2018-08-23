@@ -102,9 +102,12 @@ figure
 subplot(2,1,1)
 plot(time, euler(:,1), 'Linewidth',2);
 hold on
+
+
+
 plot(time, euler(:,2), 'Linewidth',2);
 plot(time, euler(:,3), 'Linewidth',2);
-legend('roll', 'pitch', 'yaw');
+legend('roll', 'yaw', 'pitch');
 grid on
 title('roll pitch yaw of the base');
 
