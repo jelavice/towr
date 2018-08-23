@@ -55,6 +55,8 @@ class WheelConstraintWithJoints : public TimeDiscretizationConstraint
   Eigen::Vector3d GetLateralWheelHeading() const;
   Eigen::Vector3d GetLateralWheelHeadingDerivative() const;
 
+  const double max_velocity_ = 1.0; //[m/s]
+
 
 };
 
