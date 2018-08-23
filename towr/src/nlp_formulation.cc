@@ -43,6 +43,7 @@
 #include <towr/constraints/wheel_direction_constraint.h>
 #include <towr/constraints/range_of_motion_constraint_joints.h>
 #include <towr/constraints/wheel_constraint_with_joints.h>
+#include <towr/constraints/joint_range_and_speed_constraint.h>
 
 #include <towr/costs/node_cost.h>
 #include <towr/variables/nodes_variables_all.h>
@@ -347,7 +348,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 
     auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
         params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
-        params_.ee_polynomials_per_swing_phase_, is_driving_node);
+        params_.ee_polynomials_per_phase_, is_driving_node);
 
     // initialize towards final footholds
     double yaw = final_base_.ang.p().z();
@@ -361,8 +362,9 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
     nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
 
     //do not add this constraint for the boom
-    if ()
+    if (ee < 4)
       nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+
     vars.push_back(nodes);
   }
 
@@ -404,9 +406,33 @@ NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::Constr
       return MakeWheelConstraint(s);
     case Parameters::EndeffectorRomJoints:
       return MakeRangeOfMotionConstraintJoints(s);
+    case Parameters::JointRangeAndSpeed:
+      return MakeJointRangeAndSpeedConstraint(s);
     default:
       throw std::runtime_error("constraint not defined!");
   }
+}
+
+NlpFormulation::ContraintPtrVec NlpFormulation::MakeJointRangeAndSpeedConstraint(
+    const SplineHolder& s) const
+{
+  ContraintPtrVec c;
+
+  //hack
+  auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
+
+  if (model_ptr == nullptr)
+    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+
+  for (int ee = 0; ee < params_.GetEECount(); ee++) {
+    auto joint_con = std::make_shared<JointRangeAndSpeedConstraint>(
+        model_ptr, params_.GetTotalTime(), params_.dt_constraint_range_of_motion_, ee, s);
+    c.push_back(joint_con);
+  }
+
+  std::cout << "Made joint range and speed constraint" << std::endl;
+
+  return c;
 }
 
 NlpFormulation::ContraintPtrVec NlpFormulation::MakeBaseRangeOfMotionConstraint(

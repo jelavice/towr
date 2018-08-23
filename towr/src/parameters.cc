@@ -184,6 +184,11 @@ void Parameters::SetSwingConstraint()
   constraints_.push_back(Swing);
 }
 
+void Parameters::SetJointRangeAndMotinConstraint(){
+
+  constraints_.push_back(JointRangeAndSpeed);
+}
+
 void Parameters::OptimizePhaseDurations()
 {
   // limiting this range can help convergence when optimizing gait

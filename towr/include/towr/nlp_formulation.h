@@ -128,11 +128,9 @@ private:
   ContraintPtrVec MakeSwingConstraint() const;
   ContraintPtrVec MakeBaseRangeOfMotionConstraint(const SplineHolder& s) const;
   ContraintPtrVec MakeBaseAccConstraint(const SplineHolder& s) const;
-
   ContraintPtrVec MakeWheelConstraint(const SplineHolder& s) const;
-  //todo add the nasty kinematic constraint
-
   ContraintPtrVec MakeRangeOfMotionConstraintJoints(const SplineHolder& s) const;
+  ContraintPtrVec MakeJointRangeAndSpeedConstraint(const SplineHolder& s) const;
 
 
   // costs
