@@ -249,7 +249,8 @@ Eigen::Vector3d M545KinematicModelFull::GetEEPositionsBase(int limbId)
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
   // spanned by x and y axis, below the base frame
-  ee_pos_base_.at(limbId).z() -= model_.getWheelRadius();
+  if (limbId != 4) //skip boom
+    ee_pos_base_.at(limbId).z() -= model_.getWheelRadius();
 
   return ee_pos_base_.at(limbId);
 
