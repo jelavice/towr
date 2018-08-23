@@ -148,7 +148,8 @@ struct Parameters
     BaseAcc,         ///< sets SplineAccConstraint
     WheelHeading,
     EndeffectorRomJoints,
-    JointRangeAndSpeed
+    JointRangeAndSpeed,
+    EEAcc
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -226,6 +227,8 @@ struct Parameters
   void SetEECount(int numEE);
 
   void SetJointRangeAndMotinConstraint();
+
+  void SetEEAccelerationConstraint();
 
  private:
   int numEE_ = -1;

@@ -131,6 +131,7 @@ private:
   ContraintPtrVec MakeWheelConstraint(const SplineHolder& s) const;
   ContraintPtrVec MakeRangeOfMotionConstraintJoints(const SplineHolder& s) const;
   ContraintPtrVec MakeJointRangeAndSpeedConstraint(const SplineHolder& s) const;
+  ContraintPtrVec MakeEEAccelerationConstraint(const SplineHolder &s) const;
 
 
   // costs

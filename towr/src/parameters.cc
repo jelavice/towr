@@ -131,6 +131,7 @@ void Parameters::SetConstraints()
   SetDynamicConstraint();
   SetForceConstraint();
   SetJointRangeAndMotinConstraint();
+  SetEEAccelerationConstraint();
 
   if (robot_has_wheels_ && use_joint_formulation_) {
     //set rom joints and ee with wheels
@@ -158,6 +159,10 @@ void Parameters::SetDynamicConstraint()
 {
   constraints_.push_back(Dynamic);
   constraints_.push_back(BaseAcc);  // so accelerations don't jump between polynomials
+}
+
+void Parameters::SetEEAccelerationConstraint(){
+  constraints_.push_back(EEAcc);
 }
 
 void Parameters::SetKinematicConstraint()

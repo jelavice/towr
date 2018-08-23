@@ -408,9 +408,21 @@ NlpFormulation::ContraintPtrVec NlpFormulation::GetConstraint(Parameters::Constr
       return MakeRangeOfMotionConstraintJoints(s);
     case Parameters::JointRangeAndSpeed:
       return MakeJointRangeAndSpeedConstraint(s);
+    case Parameters::EEAcc:
+      return MakeEEAccelerationConstraint(s);
     default:
       throw std::runtime_error("constraint not defined!");
   }
+}
+
+NlpFormulation::ContraintPtrVec NlpFormulation::MakeEEAccelerationConstraint(
+    const SplineHolder& s) const
+{
+  ContraintPtrVec c;
+  for (int i = 0; i < params_.GetEECount(); ++i)
+    c.push_back(std::make_shared<SplineAccConstraint>(s.ee_motion_.at(i), id::EEMotionNodes(i)));
+
+  return c;
 }
 
 NlpFormulation::ContraintPtrVec NlpFormulation::MakeJointRangeAndSpeedConstraint(
@@ -418,7 +430,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeJointRangeAndSpeedConstraint
 {
   ContraintPtrVec c;
 
-  //hack
+//hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
   if (model_ptr == nullptr)
