@@ -27,11 +27,7 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   kinematic_model_ = model;
 
   //need to include the constraints for all the joint bounds as well
-  num_constraints_per_node_ = kinematic_model_->GetNumDof(ee_) + dim3;  // position (3 position constraints)
-
-  //cache these guys
-  lower_bounds_ = kinematic_model_->GetLowerJointLimits(ee_);
-  upper_bounds_ = kinematic_model_->GetUpperJointLimits(ee_);
+  num_constraints_per_node_ =  dim3;  // position (3 position constraints)
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
 }
@@ -57,12 +53,6 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 
   Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionsBase(ee_);
 
-  /*now update the actual constraints*/
-
-  //joint range constraint
-  g.middleRows(rowStart, joint_positions.size()) = joint_positions;
-  rowStart += joint_positions.size();
-
   //endeffector position
   g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
 
@@ -72,39 +62,6 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
 
   int rowStart = GetRow(k, 0);
 
-  //hack the joint limits for the boom
-  //todo move this somewhere else
-  if (ee_ == 4) {
-
-    Eigen::VectorXd boom_bounds;
-
-    // fix the joints
-    // orser [TURN, BOOM, DIPPER, TELE, EE_PITCH]
-    if (kinematic_model_->GetNumDof(ee_) == 4) {
-      boom_bounds.resize(4);
-      boom_bounds << 0.0, -1.2, 2.0, 0.0;
-    } else {
-      boom_bounds.resize(4);
-      boom_bounds << 0.0, -1.2, 2.0, 0.0, 2.2;
-    }
-
-    ifopt::Bounds b;
-    for (int i = 0; i < boom_bounds.size(); ++i) {
-      b.lower_ = boom_bounds(i);
-      b.upper_ = boom_bounds(i);
-      bounds.at(rowStart++) = b;
-    }
-
-  } else {
-
-    //first work out the joint bounds
-    for (int j = 0; j < kinematic_model_->GetNumDof(ee_); ++j) {
-      ifopt::Bounds b;
-      b.lower_ = lower_bounds_(j);
-      b.upper_ = upper_bounds_(j);
-      bounds.at(rowStart++) = b;
-    }
-  }
 
 //now workout the endeffector constraint bounds
 //equality constarints
@@ -127,24 +84,12 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
     VectorXd joint_positions = joints_motion_->GetPoint(t).p();
     kinematic_model_->UpdateModel(joint_positions, ee_);
 
-    Jacobian jacobianWrtNodes = joints_motion_->GetJacobianWrtNodes(t, kPos);
-
-    // jacobian wrt to joints
-    int dim = kinematic_model_->GetNumDof(ee_);
-    jac.middleRows(row_start, dim) = jacobianWrtNodes;
-    row_start += dim;
-
-    //now work out the end-effector constarint
-
     jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-        * jacobianWrtNodes;
+        * joints_motion_->GetJacobianWrtNodes(t, kPos);
 
   }
 
   if (var_set == id::base_lin_nodes) {
-
-    //skip the first constraint since the derivative is zero wrt to base lin nodes
-    row_start += kinematic_model_->GetNumDof(ee_);  //need to skip the rows corresponding to the first constraint
 
     //work out the end-effector constraint
     jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
@@ -152,9 +97,6 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
   }
 
   if (var_set == id::base_ang_nodes) {
-
-    //skip the first constraint since the derivative is zero wrt to base ang nodes
-    row_start += kinematic_model_->GetNumDof(ee_);  //need to skip the rows corresponding to the first constraint
 
     //work out the end-effector constraint
     Vector3d base_W = base_linear_->GetPoint(t).p();
@@ -165,9 +107,6 @@ void RangeOfMotionConstraintJoints::UpdateJacobianAtInstance(double t, int k, st
   }
 
   if (var_set == id::EEMotionNodes(ee_)) {
-
-    //skip the first constraint since the derivative is zero wrt to base ang nodes
-    row_start += kinematic_model_->GetNumDof(ee_);  //need to skip the rows corresponding to the first constraint
 
     //work out the end-effector constraint
     jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);

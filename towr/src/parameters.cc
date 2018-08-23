@@ -130,6 +130,7 @@ void Parameters::SetConstraints()
   constraints_.push_back(Terrain);
   SetDynamicConstraint();
   SetForceConstraint();
+  SetJointRangeAndMotinConstraint();
 
   if (robot_has_wheels_ && use_joint_formulation_) {
     //set rom joints and ee with wheels

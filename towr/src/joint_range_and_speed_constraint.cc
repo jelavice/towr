@@ -43,6 +43,41 @@ void JointRangeAndSpeedConstraint::UpdateConstraintAtInstance(double t, int k, V
 }
 void JointRangeAndSpeedConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
+
+//  //hack for the boom
+//  if (ee_ == 4) {
+//
+//      Eigen::VectorXd boom_bounds;
+//
+//      // fix the joints
+//      // order [TURN, BOOM, DIPPER, TELE, EE_PITCH]
+//      if (kinematic_model_->GetNumDof(ee_) == 4) {
+//        boom_bounds.resize(4);
+//        boom_bounds << 0.0, -1.2, 2.0, 0.0;
+//      } else {
+//        boom_bounds.resize(4);
+//        boom_bounds << 0.0, -1.2, 2.0, 0.0, 2.2;
+//      }
+//
+//      ifopt::Bounds b;
+//      for (int i = 0; i < boom_bounds.size(); ++i) {
+//        b.lower_ = boom_bounds(i);
+//        b.upper_ = boom_bounds(i);
+//        bounds.at(rowStart++) = b;
+//      }
+//
+//    } else {
+//
+//      //first work out the joint bounds
+//      for (int j = 0; j < kinematic_model_->GetNumDof(ee_); ++j) {
+//        ifopt::Bounds b;
+//        b.lower_ = lower_bounds_(j);
+//        b.upper_ = upper_bounds_(j);
+//        bounds.at(rowStart++) = b;
+//      }
+//    }
+
+
   int row_start = GetRow(k);
   for (int i = 0; i < num_dof_; ++i) {
     bounds.at(row_start + i) = ifopt::Bounds(lower_bounds_(i), upper_bounds_(i));  //update joint position bounds

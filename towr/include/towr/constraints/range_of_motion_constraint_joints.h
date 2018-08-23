@@ -45,9 +45,6 @@ class RangeOfMotionConstraintJoints : public TimeDiscretizationConstraint
 
   KinematicModelJoints::Ptr kinematic_model_;
 
-  Eigen::VectorXd lower_bounds_;
-  Eigen::VectorXd upper_bounds_;
-
   const int dim3 = 3;
 
   // see TimeDiscretizationConstraint for documentation
