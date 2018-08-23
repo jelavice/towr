@@ -52,7 +52,7 @@ class M545TrajectoryManager
                                                  EulerConverter &base_angular,
                                                  xpp::RobotStateCartesian &state);
 
-  const double visualization_dt_ = 0.1;
+  const double visualization_dt_ = 0.02;
   const HeightMap *terrain_ = nullptr;
 
 };

@@ -165,8 +165,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const
   Vector3d final_pos(x, y, z);
 
   spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, params_.GetTotalTime());
-  spline_lin->AddStartBound(kPos, { X, Y, Z }, initial_base_.lin.p());
-  spline_lin->AddStartBound(kVel, { X, Y, Z }, initial_base_.lin.v());
+  spline_lin->AddStartBound(kPos, params_.bounds_initial_lin_pos, initial_base_.lin.p());
+  spline_lin->AddStartBound(kVel, params_.bounds_initial_lin_vel, initial_base_.lin.v());
   spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
   spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
   vars.push_back(spline_lin);
@@ -174,8 +174,8 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const
   auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
   spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(),
                                        params_.GetTotalTime());
-  spline_ang->AddStartBound(kPos, { X, Y, Z }, initial_base_.ang.p());
-  spline_ang->AddStartBound(kVel, { X, Y, Z }, initial_base_.ang.v());
+  spline_ang->AddStartBound(kPos, params_.bounds_initial_ang_pos, initial_base_.ang.p());
+  spline_ang->AddStartBound(kVel, params_.bounds_initial_ang_vel, initial_base_.ang.v());
   spline_ang->AddFinalBound(kPos, params_.bounds_final_ang_pos, final_base_.ang.p());
   spline_ang->AddFinalBound(kVel, params_.bounds_final_ang_vel, final_base_.ang.v());
   vars.push_back(spline_ang);
@@ -271,20 +271,28 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
     //todo look into initialization
     Eigen::VectorXd initial_joint_pos(numDof);
     Eigen::VectorXd final_joint_pos(numDof);
-    std::vector<int> dimensions;
     for (int j = 0; j < numDof; ++j) {
-      initial_joint_pos(j) = 0.0;
-      final_joint_pos(j) = 0.0;
-      dimensions.push_back(j);
+      double position = 0.0;
+
+      if (ee == 4 /*dis is the boom joint*/) {
+        Eigen::VectorXd boom_bounds;
+        if (numDof == 4) {
+          boom_bounds.resize(4);
+          boom_bounds << 0.0, -1.2, 2.0, 0.0;
+        } else {
+          boom_bounds.resize(5);
+          boom_bounds << 0.0, -1.2, 2.0, 0.0, 2.2;
+        }
+        position = boom_bounds(j);
+
+      }
+
+      initial_joint_pos(j) = position;
+      final_joint_pos(j) = position;
     }
 
     joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos,
                                            params_.GetTotalTime());
-    //not sure I even want these bounds, I only care about the positin of the base
-//    joint_spline->AddStartBound(kPos, dimensions, initial_joint_pos);
-//    joint_spline->AddStartBound(kVel, dimensions, initial_joint_pos); //initial joint velocoity is zero
-//    joint_spline->AddFinalBound(kPos, params_.bounds_final_lin_pos, final_base_.lin.p());
-//    joint_spline->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
     vars.push_back(joint_spline);
 
   }
@@ -324,7 +332,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 // Endeffector Motions
   double T = params_.GetTotalTime();
 
-  //hack
+//hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
   if (model_ptr == nullptr)
@@ -352,7 +360,9 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
     double z = terrain_->GetHeight(x, y);
     nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
 
-    nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+    //do not add this constraint for the boom
+    if ()
+      nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
     vars.push_back(nodes);
   }
 
@@ -483,7 +493,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
 {
   ContraintPtrVec constraints;
 
-  //todo fix this if
+//todo remove this if and make it nicer
   if (Parameters::use_joint_formulation_) {
 
     //hack
@@ -493,13 +503,13 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
       throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
 
     //skip the boom
-    for (int ee = 0; ee < params_.GetEECount() - 1; ee++) {
+    int skip_the_boom_count = params_.GetEECount() - 1;
+    for (int ee = 0; ee < skip_the_boom_count; ee++) {
 
       auto c = std::make_shared<WheelConstraintWithJoints>(model_ptr, params_.GetTotalTime(),
                                                            params_.dt_constraint_range_of_motion_,
                                                            ee, s);
       constraints.push_back(c);
-
 
     }
 
@@ -522,7 +532,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeRangeOfMotionConstraintJoint
 {
   ContraintPtrVec constraints;
 
-  //hack
+//hack
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
   if (model_ptr == nullptr)

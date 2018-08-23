@@ -10,7 +10,6 @@
 
 namespace towr {
 
-
 //todo get rid of the wheel directinal constraints
 RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoints::Ptr model,
                                                              double T, double dt, EE ee,
@@ -28,7 +27,7 @@ RangeOfMotionConstraintJoints::RangeOfMotionConstraintJoints(KinematicModelJoint
   kinematic_model_ = model;
 
   //need to include the constraints for all the joint bounds as well
-  num_constraints_per_node_ = kinematic_model_->GetNumDof(ee_) + dim3; // position (3 position constraints)
+  num_constraints_per_node_ = kinematic_model_->GetNumDof(ee_) + dim3;  // position (3 position constraints)
 
   //cache these guys
   lower_bounds_ = kinematic_model_->GetLowerJointLimits(ee_);
@@ -55,6 +54,7 @@ void RangeOfMotionConstraintJoints::UpdateConstraintAtInstance(double t, int k, 
 
   VectorXd joint_positions = joints_motion_->GetPoint(t).p();
   kinematic_model_->UpdateModel(joint_positions, ee_);
+
   Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionsBase(ee_);
 
   /*now update the actual constraints*/
@@ -76,30 +76,22 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
   //todo move this somewhere else
   if (ee_ == 4) {
 
-    //no bound for the J_TURN
+    Eigen::VectorXd boom_bounds;
+
+    // fix the joints
+    // orser [TURN, BOOM, DIPPER, TELE, EE_PITCH]
+    if (kinematic_model_->GetNumDof(ee_) == 4) {
+      boom_bounds.resize(4);
+      boom_bounds << 0.0, -1.2, 2.0, 0.0;
+    } else {
+      boom_bounds.resize(4);
+      boom_bounds << 0.0, -1.2, 2.0, 0.0, 2.2;
+    }
+
     ifopt::Bounds b;
-    b = ifopt::NoBound;
-    bounds.at(rowStart++) = b;
-
-    //fix the J_BOOM
-    b.lower_ = -1.2;
-    b.upper_ = -1.2;
-    bounds.at(rowStart++) = b;
-
-    //fix the J_DIPPER
-    b.lower_ = 2.0;
-    b.upper_ = 2.0;
-    bounds.at(rowStart++) = b;
-
-    //fix the J_TELE
-    b.lower_ = 0.0;
-    b.upper_ = 0.0;
-    bounds.at(rowStart++) = b;
-
-    if (kinematic_model_->GetNumDof(ee_) > 4) {
-      //fix the EE_PITCH
-      b.lower_ = 2.2;
-      b.upper_ = 2.2;
+    for (int i = 0; i < boom_bounds.size(); ++i) {
+      b.lower_ = boom_bounds(i);
+      b.upper_ = boom_bounds(i);
       bounds.at(rowStart++) = b;
     }
 
@@ -114,8 +106,8 @@ void RangeOfMotionConstraintJoints::UpdateBoundsAtInstance(double t, int k, VecB
     }
   }
 
-  //now workout the endeffector constraint bounds
-  //equality constarints
+//now workout the endeffector constraint bounds
+//equality constarints
   for (int dim = 0; dim < dim3; ++dim) {
     bounds.at(rowStart++) = ifopt::BoundZero;
   }
