@@ -111,8 +111,8 @@ private:
   // variables
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesAll() const;
-  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesNoWheels(int ee_id) const;
-  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesWithWheels(int ee_id) const;
+  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesNoWheels(int ee_id, bool add_starting_bound) const;
+  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesWithWheels(int ee_id, bool add_starting_bound) const;
 
   std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;

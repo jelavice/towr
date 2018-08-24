@@ -170,10 +170,11 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 
     NodesVariablesPhaseBased::Ptr nodes;
 
+    //todo put this as a paramter in the parameters structure
     if (model_.kinematic_model_->EEhasWheel(ee))
-      nodes = MakeEndeffectorVariablesWithWheels(ee);
+      nodes = MakeEndeffectorVariablesWithWheels(ee, true);
     else
-      nodes = MakeEndeffectorVariablesNoWheels(ee);
+      nodes = MakeEndeffectorVariablesNoWheels(ee, false);
 
     vars.push_back(nodes);
   }
@@ -182,7 +183,8 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariab
 
 }
 
-NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesNoWheels(int ee) const
+NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesNoWheels(
+    int ee, bool add_starting_bound) const
 {
 
 // Endeffector Motions
@@ -202,12 +204,13 @@ NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesNoWheels(i
   double z = terrain_->GetHeight(x, y);
   vars->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
 
-  vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+  if (add_starting_bound)
+    vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
 
   return vars;
 }
 
-NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels(int ee) const
+NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels(int ee, bool add_starting_bound) const
 {
 
 // Endeffector Motions
@@ -236,7 +239,8 @@ NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels
   double z = terrain_->GetHeight(x, y);
   vars->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
 
-  vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+  if (add_starting_bound)
+    vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
 
   return vars;
 }
