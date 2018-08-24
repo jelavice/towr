@@ -61,6 +61,7 @@ class KinematicModel
   {
     nominal_stance_.resize(n_ee);
     max_dev_from_nominal_.setZero();
+    n_ee_ = n_ee;
   }
 
   virtual ~KinematicModel() = default;
@@ -88,7 +89,7 @@ class KinematicModel
    */
   int GetNumberOfEndeffectors() const
   {
-    return nominal_stance_.size();
+    return n_ee_;
   }
 
   //todo see whether this needs to be in the base class
@@ -97,9 +98,19 @@ class KinematicModel
     return -1;
   }
 
+  virtual bool EEhasWheel(int ee_id) {
+    throw std::runtime_error("ee has wheel not implememnted");
+  }
+
+  virtual bool RobotHasWheels(){
+    return robot_has_wheels_;
+  }
+
  protected:
   EEPos nominal_stance_;
   Vector3d max_dev_from_nominal_;
+  int n_ee_;
+  bool robot_has_wheels_ = false;
 };
 
 } /* namespace towr */

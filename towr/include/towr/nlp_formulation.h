@@ -110,11 +110,13 @@ public:
 private:
   // variables
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
-  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesAll() const;
+  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesNoWheels(int ee_id) const;
+  NodesVariablesPhaseBased::Ptr MakeEndeffectorVariablesWithWheels(int ee_id) const;
+
   std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeWheelVariables() const;
-  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariablesWithWheels() const;
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
 
   // constraints

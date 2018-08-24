@@ -46,8 +46,6 @@ class KinematicModelJoints : public KinematicModel
 
   virtual SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) = 0;
 
-  virtual bool EEhasWheel(int limbId) =0;
-
   virtual Eigen::Vector3d GetEEOrientationBase(int limbId) =0;
   virtual SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) =0;
 

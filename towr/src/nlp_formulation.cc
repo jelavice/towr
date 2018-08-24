@@ -72,47 +72,24 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
   auto base_motion = MakeBaseVariables();
   vars.insert(vars.end(), base_motion.begin(), base_motion.end());
 
-  std::vector<NodesVariablesPhaseBased::Ptr> ee_motion;
   std::vector<NodesVariables::Ptr> joints;
   std::vector<NodesVariablesPhaseBased::Ptr> ee_wheels;
 
-  if (Parameters::use_joint_formulation_ && Parameters::use_joint_formulation_) {
+  auto ee_motion = MakeEndeffectorVariablesAll();
+  vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
 
-    //create motion variables
-    // with wheels just means that position is unconstrained during the stance phase
-    ee_motion = MakeEndeffectorVariablesWithWheels();
-    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
+  if (Parameters::use_joint_formulation_) {
     //create joins variables
     joints = MakeJointVariables();
     vars.insert(vars.end(), joints.begin(), joints.end());
-
-  } else if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
-
-    //dis is what I am doing at the moment
-    ee_motion = MakeEndeffectorVariablesWithWheels();
-    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
+  }
+  //specific cases
+  if (Parameters::robot_has_wheels_ && (Parameters::use_joint_formulation_ == false)) {
     ee_wheels = MakeWheelVariables();
     vars.insert(vars.end(), ee_wheels.begin(), ee_wheels.end());
 
-  } else if ((Parameters::robot_has_wheels_ == false) && Parameters::use_joint_formulation_) {
-
-    // not entirely sure what to do here
-    // create normal EE variables and the n also add joints
-    ee_motion = MakeEndeffectorVariables();
-    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
-    joints = MakeJointVariables();
-    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
-  } else {
-
-    //no wheels no joints all normal and easy
-    ee_motion = MakeEndeffectorVariables();
-    vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
-
   }
+
   auto ee_force = MakeForceVariables();
   vars.insert(vars.end(), ee_force.begin(), ee_force.end());
 
@@ -184,32 +161,82 @@ std::vector<NodesVariables::Ptr> NlpFormulation::MakeBaseVariables() const
   return vars;
 }
 
-std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariables() const
+std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariablesAll() const
 {
+
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  // Endeffector Motions
-  double T = params_.GetTotalTime();
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
-    auto nodes = std::make_shared<NodesVariablesEEMotion>(params_.GetPhaseCount(ee),
-                                                          params_.ee_in_contact_at_start_.at(ee),
-                                                          id::EEMotionNodes(ee),
-                                                          params_.ee_polynomials_per_swing_phase_);
 
-    // initialize towards final footholds
-    double yaw = final_base_.ang.p().z();
-    Eigen::Vector3d euler(0.0, 0.0, yaw);
-    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
-    Vector3d final_ee_pos_W = final_base_.lin.p()
-        + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
-    double x = final_ee_pos_W.x();
-    double y = final_ee_pos_W.y();
-    double z = terrain_->GetHeight(x, y);
-    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+    NodesVariablesPhaseBased::Ptr nodes;
 
-    nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+    if (model_.kinematic_model_->EEhasWheel(ee))
+      nodes = MakeEndeffectorVariablesWithWheels(ee);
+    else
+      nodes = MakeEndeffectorVariablesNoWheels(ee);
+
     vars.push_back(nodes);
   }
+
+  return vars;
+
+}
+
+NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesNoWheels(int ee) const
+{
+
+// Endeffector Motions
+  double T = params_.GetTotalTime();
+  NodesVariablesPhaseBased::Ptr vars = std::make_shared<NodesVariablesEEMotion>(
+      params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
+      params_.ee_polynomials_per_swing_phase_);
+
+  // initialize towards final footholds
+  double yaw = final_base_.ang.p().z();
+  Eigen::Vector3d euler(0.0, 0.0, yaw);
+  Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+  Vector3d final_ee_pos_W = final_base_.lin.p()
+      + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+  double x = final_ee_pos_W.x();
+  double y = final_ee_pos_W.y();
+  double z = terrain_->GetHeight(x, y);
+  vars->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+
+  vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+
+  return vars;
+}
+
+NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels(int ee) const
+{
+
+// Endeffector Motions
+  double T = params_.GetTotalTime();
+
+//hack
+  auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
+
+  if (model_ptr == nullptr)
+    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+
+  bool is_driving_node = true;
+
+  NodesVariablesPhaseBased::Ptr vars = std::make_shared<NodesVariablesEEMotionWithWheels>(
+      params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
+      params_.ee_polynomials_per_phase_, is_driving_node);
+
+  // initialize towards final footholds
+  double yaw = final_base_.ang.p().z();
+  Eigen::Vector3d euler(0.0, 0.0, yaw);
+  Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+  Vector3d final_ee_pos_W = final_base_.lin.p()
+      + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+  double x = final_ee_pos_W.x();
+  double y = final_ee_pos_W.y();
+  double z = terrain_->GetHeight(x, y);
+  vars->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+
+  vars->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
 
   return vars;
 }
@@ -251,17 +278,16 @@ std::vector<PhaseDurations::Ptr> NlpFormulation::MakeContactScheduleVariables() 
   return vars;
 }
 
-//todo implement
 std::vector<NodesVariables::Ptr> NlpFormulation::MakeJointVariables() const
 {
 
   std::vector<NodesVariables::Ptr> vars;
 
-  // I gues this is the same for the joints and the base
-  //todo look into that
+// I gues this is the same for the joints and the base
+//todo look into that
   int n_nodes = params_.GetJointsPolyDurations().size() + 1;
 
-  //need to iterate and make for every goddamn limb its joint variables
+//need to iterate and make for every goddamn limb its joint variables
   for (int ee = 0; ee < params_.GetEECount(); ++ee) {
 
     int numDof = model_.kinematic_model_->GetNumDof(ee);
@@ -320,51 +346,6 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeWheelVariables() 
 
     angle_wheel_final(0) = 10.0 / 180.0 * M_PI * 0.0;
     nodes->SetByLinearInterpolation(angle_wheel, angle_wheel_final, T);  // stay constant
-    vars.push_back(nodes);
-  }
-
-  return vars;
-}
-
-std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulation::MakeEndeffectorVariablesWithWheels() const
-{
-  std::vector<NodesVariablesPhaseBased::Ptr> vars;
-
-// Endeffector Motions
-  double T = params_.GetTotalTime();
-
-//hack
-  auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
-
-  if (model_ptr == nullptr)
-    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
-
-  for (int ee = 0; ee < params_.GetEECount(); ee++) {
-
-    bool is_driving_node = true;
-
-    if (model_ptr->EEhasWheel(ee) == false)
-      is_driving_node = false;
-
-    auto nodes = std::make_shared<NodesVariablesEEMotionWithWheels>(
-        params_.GetPhaseCount(ee), params_.ee_in_contact_at_start_.at(ee), id::EEMotionNodes(ee),
-        params_.ee_polynomials_per_phase_, is_driving_node);
-
-    // initialize towards final footholds
-    double yaw = final_base_.ang.p().z();
-    Eigen::Vector3d euler(0.0, 0.0, yaw);
-    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
-    Vector3d final_ee_pos_W = final_base_.lin.p()
-        + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
-    double x = final_ee_pos_W.x();
-    double y = final_ee_pos_W.y();
-    double z = terrain_->GetHeight(x, y);
-    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
-
-    //do not add this constraint for the boom
-    if (ee < 4)
-      nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
-
     vars.push_back(nodes);
   }
 
@@ -554,6 +535,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
     std::cout << "Made wheel constraints with joints" << std::endl;
 
   } else {
+    int skip_the_boom_count = params_.GetEECount() - 1;
     for (int ee = 0; ee < params_.GetEECount(); ee++) {
       auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
       constraints.push_back(c);
