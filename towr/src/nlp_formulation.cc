@@ -210,7 +210,8 @@ NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesNoWheels(
   return vars;
 }
 
-NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels(int ee, bool add_starting_bound) const
+NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels(
+    int ee, bool add_starting_bound) const
 {
 
 // Endeffector Motions
@@ -407,6 +408,9 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeEEAccelerationConstraint(
   for (int i = 0; i < params_.GetEECount(); ++i)
     c.push_back(std::make_shared<SplineAccConstraint>(s.ee_motion_.at(i), id::EEMotionNodes(i)));
 
+
+  std::cout << "Made EE acceleration constraint" << std::endl;
+
   return c;
 }
 
@@ -526,23 +530,25 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeWheelConstraint(const Spline
       throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
 
     //skip the boom
-    int skip_the_boom_count = params_.GetEECount() - 1;
-    for (int ee = 0; ee < skip_the_boom_count; ee++) {
+    for (int ee = 0; ee < params_.GetEECount(); ee++) {
 
-      auto c = std::make_shared<WheelConstraintWithJoints>(model_ptr, params_.GetTotalTime(),
-                                                           params_.dt_constraint_range_of_motion_,
-                                                           ee, s);
-      constraints.push_back(c);
+      if (model_.kinematic_model_->EEhasWheel(ee)) {
+        auto c = std::make_shared<WheelConstraintWithJoints>(model_ptr, params_.GetTotalTime(),
+                                                             params_.dt_constraint_range_of_motion_,
+                                                             ee, s);
+        constraints.push_back(c);
+      }
 
     }
 
     std::cout << "Made wheel constraints with joints" << std::endl;
 
   } else {
-    int skip_the_boom_count = params_.GetEECount() - 1;
     for (int ee = 0; ee < params_.GetEECount(); ee++) {
-      auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
-      constraints.push_back(c);
+      if (model_.kinematic_model_->EEhasWheel(ee)) {
+        auto c = std::make_shared<WheelDirectionConstraint>(ee, &s);
+        constraints.push_back(c);
+      }
     }
 
     std::cout << "Made wheel constraints w/o joints" << std::endl;
