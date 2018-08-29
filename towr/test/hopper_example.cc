@@ -65,22 +65,22 @@ int main()
   // alternating stance and swing:     ____-----_____-----_____-----_____
   formulation.params_.ee_phase_durations_.push_back( { 0.4, 0.2, 0.4, 0.2, 0.4, 0.2, 0.2 });
   formulation.params_.ee_in_contact_at_start_.push_back(true);
-  formulation.params_.SetSwingConstraint();
-  std::cout << "Set all the params" << std::endl;
+  //formulation.params_.SetSwingConstraint();
+
 
 
   // Initialize the nonlinear-programming problem with the variables,
   // constraints and costs.
   ifopt::Problem nlp;
   SplineHolder solution;
-  for (auto c : formulation.GetVariableSets(solution))
-    nlp.AddVariableSet(c);
-
-  for (auto c : formulation.GetConstraints(solution))
-    nlp.AddConstraintSet(c);
-
-  for (auto c : formulation.GetCosts())
-    nlp.AddCostSet(c);
+//  for (auto c : formulation.GetVariableSets(solution))
+//    nlp.AddVariableSet(c);
+//
+//  for (auto c : formulation.GetConstraints(solution))
+//    nlp.AddConstraintSet(c);
+//
+//  for (auto c : formulation.GetCosts())
+//    nlp.AddCostSet(c);
   // You can add your own elements to the nlp as well, simply by calling:
   // nlp.AddVariablesSet(your_custom_variables);
   // nlp.AddConstraintSet(your_custom_constraints);
@@ -92,7 +92,8 @@ int main()
   solver->SetOption("linear_solver", "ma57");
   solver->SetOption("ma57_pre_alloc", 3.0);
   solver->SetOption("max_cpu_time", 80.0);
-  std::cout << "About to solve the damn thing" << std::endl;
+  std::cout << "Tried to solve" << std::endl;
+
   solver->Solve(nlp);
 
   // Can directly view the optimization variables through:

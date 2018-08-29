@@ -249,7 +249,7 @@ Eigen::Vector3d M545KinematicModelFull::GetEEPositionsBase(int limbId)
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
   // spanned by x and y axis, below the base frame
-  if (limbId != 4) //skip boom
+  if (limbId != 4)  //skip boom
     ee_pos_base_.at(limbId).z() -= model_.getWheelRadius();
 
   return ee_pos_base_.at(limbId);
@@ -462,51 +462,7 @@ bool M545KinematicModelFull::EEhasWheel(int limbId)
 
 Eigen::Vector3d M545KinematicModelFull::GetEEOrientationBase(int limbId)
 {
-
-  loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
-
-  switch (limbId) {
-
-    case 0: {
-      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                               loco_m545::BodyEnum::LF_WHEEL);
-      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
-      break;
-    }
-
-    case 1: {
-
-      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                               loco_m545::BodyEnum::RF_WHEEL);
-      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
-      break;
-    }
-
-    case 2: {
-
-      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                               loco_m545::BodyEnum::LH_WHEEL);
-      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
-      break;
-    }
-
-    case 3: {
-
-      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                               loco_m545::BodyEnum::RH_WHEEL);
-      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
-      break;
-    }
-
-    case 4: {
-
-      Eigen::Matrix3d rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                               loco_m545::BodyEnum::ENDEFFECTOR);
-      ee_ypr_.at(limbId) = rotMat2ypr(rotMat);
-      break;
-    }
-
-  }
+  ee_ypr_.at(limbId) = rotMat2ypr(GetRotMat(limbId));
 
   return ee_ypr_.at(limbId);
 }
@@ -514,6 +470,106 @@ Eigen::Vector3d M545KinematicModelFull::GetEEOrientationBase(int limbId)
 void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbId)
 {
 
+  ee_orientation_jac_base_.at(limbId) = angularVelocity2eulerDerivativesMat(
+      GetEEOrientationBase(limbId)) * ee_orientation_jac_base_.at(limbId);
+
+}
+
+M545KinematicModelFull::SparseMatrix M545KinematicModelFull::angularVelocity2eulerDerivativesMat(
+    const Vector3d &ypr)
+{
+
+  using namespace std;
+  Eigen::Matrix3d mat;
+  double x = ypr.x();
+  double y = ypr.y();
+  double z = ypr.z();
+
+  double cosX = cos(ypr.x());
+  double cosY = cos(ypr.y());
+  double sinX = sin(ypr.x());
+  double sinY = sin(ypr.y());
+
+  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
+
+  // I have no idea why this like that but it pases the unit test
+  mat = -mat;
+//    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
+//        -sin(z), cos(z), 0.0,
+//        cos(z) * sin(y) / cos(y), sin(y) * sin(z)/ cos(y), 1.0;
+
+  return mat.sparseView();
+
+}
+
+Eigen::Vector3d M545KinematicModelFull::GetBasePosition()
+{
+
+  double z = 0;
+
+  for (int i = 0; i < 4; ++i) {
+    z += ee_pos_base_.at(i).z();
+    //std::cout << ee_pos_base_.at(i).z() << std::endl;
+  }
+
+  z = z / 4.0;
+
+  return Eigen::Vector3d(0.0, 0.0, std::abs(z));
+
+}
+
+Eigen::Matrix3d M545KinematicModelFull::GetRotMat(int limbId)
+{
+
+  loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
+  Eigen::Matrix3d rotMat;
+
+  switch (limbId) {
+
+    case 0: {
+      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                               loco_m545::BodyEnum::LF_WHEEL);
+      break;
+    }
+
+    case 1: {
+      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                               loco_m545::BodyEnum::RF_WHEEL);
+      break;
+    }
+
+    case 2: {
+      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                               loco_m545::BodyEnum::LH_WHEEL);
+      break;
+    }
+
+    case 3: {
+      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                               loco_m545::BodyEnum::RH_WHEEL);
+      break;
+    }
+
+    case 4: {
+      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                               loco_m545::BodyEnum::ENDEFFECTOR);
+      break;
+    }
+
+  }
+
+  return rotMat;
+}
+
+Eigen::Vector3d M545KinematicModelFull::GetEEOrientationVectorBase(int limbId, int dim)
+{
+  Eigen::Matrix3d rotMat = GetRotMat(limbId);
+
+  return rotMat.col(dim);
+}
+
+void M545KinematicModelFull::CalculateAngularVelocityJacobian(int limbId)
+{
   using namespace loco_m545;
 
   RD::CoordinateFrameEnum coordinate_system = RD::CoordinateFrameEnum::BASE;
@@ -577,51 +633,11 @@ void M545KinematicModelFull::CalculateRotationalJacobiansWRTjointsBase(int limbI
 
   }
 
-  ee_orientation_jac_base_.at(limbId) = angularVelocity2eulerDerivativesMat(
-      GetEEOrientationBase(limbId)) * ee_orientation_jac_base_.at(limbId);
-
 }
 
-M545KinematicModelFull::SparseMatrix M545KinematicModelFull::angularVelocity2eulerDerivativesMat(
-    const Vector3d &ypr)
+M545KinematicModelFull::SparseMatrix M545KinematicModelFull::GetOrientationVectorJacobianBase(
+    int limbId, int dim)
 {
-
-  using namespace std;
-  Eigen::Matrix3d mat;
-  double x = ypr.x();
-  double y = ypr.y();
-  double z = ypr.z();
-
-  double cosX = cos(ypr.x());
-  double cosY = cos(ypr.y());
-  double sinX = sin(ypr.x());
-  double sinY = sin(ypr.y());
-
-  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
-
-  // I have no idea why this like that but it pases the unit test
-  mat = -mat;
-//    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
-//        -sin(z), cos(z), 0.0,
-//        cos(z) * sin(y) / cos(y), sin(y) * sin(z)/ cos(y), 1.0;
-
-  return mat.sparseView();
-
-}
-
-Eigen::Vector3d M545KinematicModelFull::GetBasePosition()
-{
-
-  double z = 0;
-
-  for (int i = 0; i < 4; ++i) {
-    z += ee_pos_base_.at(i).z();
-    //std::cout << ee_pos_base_.at(i).z() << std::endl;
-  }
-
-  z = z / 4.0;
-
-  return Eigen::Vector3d(0.0, 0.0, std::abs(z));
 
 }
 

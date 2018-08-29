@@ -69,6 +69,7 @@ NlpFormulation::VariablePtrVec NlpFormulation::GetVariableSets(SplineHolder& spl
 {
   VariablePtrVec vars;
 
+
   auto base_motion = MakeBaseVariables();
   vars.insert(vars.end(), base_motion.begin(), base_motion.end());
 

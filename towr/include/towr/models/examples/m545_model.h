@@ -88,8 +88,9 @@ class M545KinematicModelFull : public KinematicModelJoints
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
 
   Eigen::Vector3d GetEEOrientationBase(int limbId) final;
+  Eigen::Vector3d GetEEOrientationVectorBase(int limbId, int dim) final;
   SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) final;
-
+  SparseMatrix GetOrientationVectorJacobianBase(int limbId, int dim) final;
 
 
   VectorXd GetLowerJointLimits(int limbId) final;
@@ -111,8 +112,6 @@ class M545KinematicModelFull : public KinematicModelJoints
 
     }
 
-
-
   EEPos GetNominalStanceInBase() const final
   {
     return ee_pos_base_;
@@ -129,6 +128,10 @@ class M545KinematicModelFull : public KinematicModelJoints
   Eigen::Vector3d GetBasePosition() final;
 
  private:
+
+  void CalculateAngularVelocityJacobian(int limbId);
+
+  Eigen::Matrix3d GetRotMat(int limbId);
 
   int getLimbStartingId(int LimbId);
 

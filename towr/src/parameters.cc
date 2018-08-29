@@ -49,6 +49,7 @@ Parameters::Parameters(int numEE)
 
 }
 
+//here put the default values from the Alex's formulation
 Parameters::Parameters()
 {
   // optimization variables
@@ -61,27 +62,21 @@ Parameters::Parameters()
   dt_constraint_dynamic_ = 0.1;
 
   // all the shit for the anymal
-  //force_limit_in_normal_direction_ = 1000.0; //for the anymal
-  force_limit_in_normal_direction_ = 30000.0;  //for the excavator
+  force_limit_in_normal_direction_ = 1000.0;  //for the anymal
 
-  duration_joints_polynomial_ = 0.1;
-
-  // these are the basic constraints that always have to be set
-  SetConstraints();
-
-  bounds_initial_lin_pos = {X,Y};
-  bounds_initial_lin_vel = {X,Y,Z};
-  bounds_initial_ang_pos = {};
-  bounds_initial_ang_vel = {X,Y,Z};
+  //constraints from the original Alex's formulation
+//  SetTerrainConstraint();
+//  SetDynamicConstraint();
+//  SetKinematicConstraint();
+//  SetForceConstraint();
 
   bounds_final_lin_pos = {X,Y};
   bounds_final_lin_vel = {X,Y,Z};
-  bounds_final_ang_pos = {};
+  bounds_final_ang_pos = {X,Y,Z};
   bounds_final_ang_vel = {X,Y,Z};
   // additional restrictions are set directly on the variables in nlp_factory,
   // such as e.g. initial and endeffector,...
 
-  numEE_ = ee_in_contact_at_start_.size();
 }
 
 void Parameters::SetEECount(int numEE)
@@ -94,6 +89,11 @@ void Parameters::SetNumberEEPolynomials(int n)
   //todo fix this such that we don't have to have the the same number of polynomials
   force_polynomials_per_stance_phase_ = ee_polynomials_per_swing_phase_ =
       ee_polynomials_per_phase_ = n;
+}
+
+void Parameters::SetForceLimitNormalDirection(double maxForce)
+{
+  force_limit_in_normal_direction_ = maxForce;  //30000 for the excavator
 }
 
 void Parameters::SetDynamicConstraintDt(double dt)
@@ -121,38 +121,16 @@ void Parameters::SetWheelsConstraintDt(double dt)
   dt_constraint_wheels_ = dt;
 }
 
-void Parameters::SetConstraints()
+void Parameters::ClearConstraints()
 {
   // first clear the shit from the constructor
   constraints_.clear();
 
-  //now reset all the constraints with new quentities
+}
+
+void Parameters::SetTerrainConstraint()
+{
   constraints_.push_back(Terrain);
-  SetDynamicConstraint();
-  SetForceConstraint();
-  SetJointRangeAndMotinConstraint();
-  SetEEAccelerationConstraint();
-
-  if (robot_has_wheels_ && use_joint_formulation_) {
-    //set rom joints and ee with wheels
-    SetKinematicConstraintJoints();
-    SetWheelConstraint();
-//    std::cout << "Added wheel and joint rom constraint" << std::endl;
-  } else if ((robot_has_wheels_ == false) && use_joint_formulation_) {
-    //set rom with joints
-    SetKinematicConstraintJoints();
-//    std::cout << "Added joint rom constraint" << std::endl;
-  } else if (robot_has_wheels_ && (use_joint_formulation_ == false)) {
-    //set wheel heading and rom
-    SetWheelConstraint();
-    SetKinematicConstraint();
-//    std::cout << "Added wheel and rom constraint" << std::endl;
-  } else {
-    // set rom
-    SetKinematicConstraint();
-//    std::cout << "Added rom constraint only" << std::endl;
-  }
-
 }
 
 void Parameters::SetDynamicConstraint()
@@ -161,7 +139,8 @@ void Parameters::SetDynamicConstraint()
   constraints_.push_back(BaseAcc);  // so accelerations don't jump between polynomials
 }
 
-void Parameters::SetEEAccelerationConstraint(){
+void Parameters::SetEEAccelerationConstraint()
+{
   constraints_.push_back(EEAcc);
 }
 
@@ -190,7 +169,8 @@ void Parameters::SetSwingConstraint()
   constraints_.push_back(Swing);
 }
 
-void Parameters::SetJointRangeAndMotinConstraint(){
+void Parameters::SetJointRangeAndMotinConstraint()
+{
 
   constraints_.push_back(JointRangeAndSpeed);
 }

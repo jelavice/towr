@@ -93,7 +93,7 @@ void printTrajectory(const SplineHolder &x)
 
     cout << endl;
 
-    t += 0.5;
+    t += 0.2;
   }
 }
 
@@ -137,9 +137,9 @@ void setParameters(NlpFormulation &formulation, double duration, const std::stri
     auto &nominal_stance = formulation.initial_ee_W_;
     nominal_stance.resize(numEE);
 
-    //then compute the ee positions
+    //then compute the ee positions, but skip the boom
 
-    for (int i = 0; i < numEE; ++i) {
+    for (int i = 0; i < numEE - 1; ++i) {
       Eigen::Vector3d stance = model->GetEEPositionsBase(i);
       stance.z() = 0;  // this sortof sets it to world frame
       nominal_stance.at(i) = stance;
@@ -209,21 +209,33 @@ int main(int argc, char** argv)
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
+  params.bounds_initial_lin_pos = {towr::X,towr::Y};
+  params.bounds_initial_lin_vel = {towr::X,towr::Y,towr::Z};
+  params.bounds_initial_ang_pos = {};
+  params.bounds_initial_ang_vel = {towr::X,towr::Y,towr::Z};
+
+  params.bounds_final_lin_pos = {towr::X,towr::Y};
+  params.bounds_final_lin_vel = {towr::X,towr::Y,towr::Z};
+  params.bounds_final_ang_pos = {};
+  params.bounds_final_ang_vel = {towr::X,towr::Y,towr::Z};
+
   const double duration = 1.0;
 
-  int num_polys = static_cast<int>(duration / 0.25);
+  int num_polys = static_cast<int>(duration / 0.2);
 
   params.SetNumberEEPolynomials(num_polys);
+  params.SetPolynomialDurationBase(0.1);
+  params.SetPolynomialDurationJoints(0.1);
+
   params.SetDynamicConstraintDt(0.1);
   params.SetRangeOfMotionConstraintDt(0.1);
-  params.SetPolynomialDurationBase(0.2);
-  params.SetPolynomialDurationJoints(0.2);
+  params.SetWheelsConstraintDt(0.1);
 
   setParameters(formulation, duration, urdfDescription);
 
   // define the desired goal state of the hopper
-  formulation.final_base_.lin.at(towr::kPos).x() = 0.0;
-  formulation.final_base_.lin.at(towr::kPos).y() = 0.0;
+  formulation.final_base_.lin.at(towr::kPos).x() = 10.0;
+  formulation.final_base_.lin.at(towr::kPos).y() = 10.0;
 
   std::cout << "Number of polynomials for the phase based nodes: " << num_polys << std::endl;
 
@@ -271,7 +283,7 @@ int main(int argc, char** argv)
 
   solver->Solve(nlp);
 
-  printTrajectory(solution);
+  //printTrajectory(solution);
   {
     // Defaults to /home/user/.ros/
     towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
@@ -288,7 +300,8 @@ int main(int argc, char** argv)
 
   {
     towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
-    std::string prefix = "/home/jelavice/Documents/catkin_workspaces/towr_ws/src/xpp/xpp_examples/bags";
+    std::string prefix =
+        "/home/jelavice/Documents/catkin_workspaces/towr_ws/src/xpp/xpp_examples/bags";
     std::string bag_file = prefix + "/m545.bag";
     rosbag::Bag bag;
     bag.open(bag_file, rosbag::bagmode::Write);

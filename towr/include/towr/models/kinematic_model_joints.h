@@ -51,6 +51,15 @@ class KinematicModelJoints : public KinematicModel
 
   virtual Eigen::Vector3d GetBasePosition() = 0;
 
+  virtual Eigen::Vector3d GetEEOrientationVectorBase(int limbId, int dim) {
+    throw std::runtime_error("Not implemented the get ee orientation vector base");
+  }
+
+  virtual SparseMatrix GetOrientationVectorJacobianBase(int limbId, int dim){
+    throw std::runtime_error("Not implemented the get jacobian ee orientation vector base");
+  }
+
+
 };
 
 } /* namespace towr */
