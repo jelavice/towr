@@ -221,7 +221,7 @@ NodesVariablesPhaseBased::Ptr NlpFormulation::MakeEndeffectorVariablesWithWheels
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
   if (model_ptr == nullptr)
-    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+    throw std::runtime_error("MakeEndeffectorVariablesWithWheels:: Dynamic cast to KinematicModelJoints failed");
 
   bool is_driving_node = true;
 
@@ -423,7 +423,7 @@ NlpFormulation::ContraintPtrVec NlpFormulation::MakeJointRangeAndSpeedConstraint
   auto model_ptr = std::dynamic_pointer_cast<KinematicModelJoints>(model_.kinematic_model_);
 
   if (model_ptr == nullptr)
-    throw std::runtime_error("Dynamic cast to KinematicModelJoints failed");
+    throw std::runtime_error("MakeJointRangeAndSpeedConstraint: Dynamic cast to KinematicModelJoints failed");
 
   for (int ee = 0; ee < params_.GetEECount(); ee++) {
     auto joint_con = std::make_shared<JointRangeAndSpeedConstraint>(
