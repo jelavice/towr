@@ -13,22 +13,22 @@
 
 namespace towr {
 
-class KinematicModelJoints : public KinematicModel
+class KinematicModelWithJoints : public KinematicModel
 {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using Ptr = std::shared_ptr<KinematicModelJoints>;
+  using Ptr = std::shared_ptr<KinematicModelWithJoints>;
   using VectorXd = KinematicModel::VectorXd;
   using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
   using EEJac = std::vector<SparseMatrix>;
   using MatrixXd = Eigen::MatrixXd;
 
-  KinematicModelJoints(int n_ee)
+  KinematicModelWithJoints(int n_ee)
       : KinematicModel(n_ee)
   {
   }
 
-  virtual ~KinematicModelJoints() = default;
+  virtual ~KinematicModelWithJoints() = default;
 
   virtual int GetNumDofTotal()
   {
