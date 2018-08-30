@@ -5,6 +5,17 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 find_package(ifopt 2.0.1 REQUIRED)
 
 
+find_package(excavator_model REQUIRED)
+find_package(loco_m545 REQUIRED)
+find_package(kindr REQUIRED)
+
+catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES ${PROJECT_NAME}
+   CATKIN_DEPENDS excavator_model loco_m545 kindr
+   DEPENDS ifopt
+)
+
 ###########
 ## Build ##
 ###########
