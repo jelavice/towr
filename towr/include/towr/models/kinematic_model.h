@@ -50,6 +50,7 @@ public:
   using Ptr      = std::shared_ptr<KinematicModel>;
   using EEPos    = std::vector<Eigen::Vector3d>;
   using Vector3d = Eigen::Vector3d;
+  using VectorXd = Eigen::VectorXd;
 
   /**
    * @brief Constructs a kinematic model of a robot with zero range of motion.
@@ -59,6 +60,7 @@ public:
   {
     nominal_stance_.resize(n_ee);
     max_dev_from_nominal_.setZero();
+    n_ee_ = n_ee;
   }
 
   virtual ~KinematicModel () = default;
@@ -86,12 +88,13 @@ public:
    */
   int GetNumberOfEndeffectors() const
   {
-    return nominal_stance_.size();
+    return n_ee_;
   }
 
 protected:
   EEPos nominal_stance_;
   Vector3d max_dev_from_nominal_;
+  int n_ee_;
 };
 
 } /* namespace towr */
