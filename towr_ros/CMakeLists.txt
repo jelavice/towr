@@ -119,6 +119,13 @@ target_link_libraries(rosbag_geom_msg_extractor
 )
 
 
+add_executable(m545_model_with_joints_jacobians_unit_test 
+  test/m545_model_with_joints_jacobians_unit_test.cc
+)
+target_link_libraries(m545_model_with_joints_jacobians_unit_test
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

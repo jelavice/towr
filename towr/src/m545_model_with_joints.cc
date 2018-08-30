@@ -8,6 +8,7 @@
 #include <towr/models/examples/m545_model_with_joints.h>
 
 #include <kindr/Core>
+#include <fstream>
 
 //#define M545MODELDEBUG
 
@@ -396,7 +397,7 @@ void M545KinematicModelWithJoints::UpdateSpecificLimb(loco_m545::RD::LimbEnum li
   jointPositions = state.getJointPositions().toImplementation();
   jointPositions.segment(idStart, dof) = jointAngles;
   state.getJointPositions().toImplementation() = jointPositions;
-  //todo this line was woring, it wouldn't update the joints, see whether that is a bug in loco/kindr
+  //todo this line was not working, it wouldn't update the joints, see whether that is a bug in loco/kindr
   //state.getJointPositions().toImplementation().segment(idStart, dof) = jointPositions
   model_.setState(state, true, false, false);
 }
@@ -474,6 +475,7 @@ Vector3d M545KinematicModelWithJoints::GetEEOrientationBase(int limbId)
 
 void M545KinematicModelWithJoints::CalculateRotationalJacobiansWRTjointsBase(int limbId)
 {
+  CalculateAngularVelocityJacobian(limbId);
 
   ee_orientation_jac_base_.at(limbId) = angularVelocity2eulerDerivativesMat(
       GetEEOrientationBase(limbId)) * ee_orientation_jac_base_.at(limbId);

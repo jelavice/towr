@@ -75,7 +75,8 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   M545KinematicModelWithJoints() = delete;
   M545KinematicModelWithJoints(const std::string &urdfDescription, double dt);
 
-  bool EEhasWheel(int limbId) final;
+  //todo remove this maybe
+  bool EEhasWheel(int limbId);
 
   //update base stuff and joints
   void UpdateModel(VectorXd jointAngles, int limbId) final;
@@ -95,7 +96,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   VectorXd GetLowerJointLimits(int limbId) final;
   VectorXd GetUpperJointLimits(int limbId) final;
 
-  inline int GetNumDof(int limbId) final;
+  int GetNumDof(int limbId);
 
   int GetNumDofTotal() final;
 

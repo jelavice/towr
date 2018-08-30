@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} SHARED
   src/robot_model.cc
   src/dynamic_model.cc
   src/single_rigid_body_dynamics.cc
+  src/m545_model_with_joints.cc
   # constraints
   src/time_discretization_constraint.cc
   src/base_motion_constraint.cc
@@ -76,7 +77,15 @@ add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME} 
   PUBLIC 
     ifopt::ifopt_core
+    ${excavator_model_LIBRARIES}
+    ${loco_m545_LIBRARIES}
+    ${kindr_LIBRARIES}
 )
+
+include_directories(${excavator_model_INCLUDE_DIRS})
+include_directories(${loco_m545_INCLUDE_DIRS})
+include_directories(${kindr_INCLUDE_DIRS})
+
 target_include_directories(${PROJECT_NAME} 
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -114,6 +123,8 @@ if (TARGET GTest::GTest) # only build when modern targets exists
   )
   add_test(${PROJECT_NAME}-test ${PROJECT_NAME}-test)
 endif()
+
+
 
 
 #############
