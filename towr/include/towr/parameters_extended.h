@@ -13,8 +13,17 @@ namespace towr {
 
 class ParametersExtended : public Parameters
 {
-
  public:
+
+  //todo make a factory method from this so that I can control which variable sets get created
+  enum VariableSetName {
+    BaseVariables,
+    MotionEEVariables,
+    ContactForceVariables,
+    ContactScheduleVariables,
+    JointVariables
+  };
+
 
   using Base = Parameters;
 

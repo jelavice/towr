@@ -16,7 +16,6 @@ class NlpFormulationExtended : public NlpFormulation {
 
 public:
 
-
   using Base = NlpFormulation;
 
   NlpFormulationExtended();
@@ -26,9 +25,12 @@ private:
 
 ParametersExtended extended_params_;
 
-std::vector<NodesVariables::Ptr> MakeJointVariables() const final;
+std::vector<NodesVariables::Ptr> MakeJointVariables() const;
+
+VariablePtrVec GetVariableSets(SplineHolder& spline_holder) final;
 
 
+//todo see which functions I have to make virtual in the base class
 
 
 };

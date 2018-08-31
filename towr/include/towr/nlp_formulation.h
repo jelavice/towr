@@ -85,7 +85,7 @@ public:
    * @brief The ifopt variable sets that will be optimized over.
    * @param[in/out] builds fully-constructed splines from the variables.
    */
-  VariablePtrVec GetVariableSets(SplineHolder& spline_holder);
+  virtual VariablePtrVec GetVariableSets(SplineHolder& spline_holder);
 
   /**
    * @brief The ifopt constraints that enforce feasible motions.
@@ -114,8 +114,9 @@ protected:
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;
 
   // constraints
-  ContraintPtrVec GetConstraint(Parameters::ConstraintName name,
+  virtual ContraintPtrVec GetConstraint(Parameters::ConstraintName name,
                                 const SplineHolder& splines) const;
+
   ContraintPtrVec MakeDynamicConstraint(const SplineHolder& s) const;
   ContraintPtrVec MakeRangeOfMotionBoxConstraint(const SplineHolder& s) const;
   ContraintPtrVec MakeTotalTimeConstraint() const;
