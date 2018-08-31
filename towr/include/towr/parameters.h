@@ -239,7 +239,7 @@ struct Parameters
   CostWeights costs_;
 
   /// The durations of each base polynomial in the spline (lin+ang).
-  VecTimes GetBasePolyDurations() const;
+  virtual VecTimes GetBasePolyDurations() const;
 
   /// The number of phases allowed for endeffector ee.
   int GetPhaseCount(EEID ee) const;

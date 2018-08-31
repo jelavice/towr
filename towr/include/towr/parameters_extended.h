@@ -16,6 +16,8 @@ class ParametersExtended : public Parameters
 
  public:
 
+  using Base = Parameters;
+
   enum ExtendedConstraintSet
   {
   //thse enums are deifined in the base class
@@ -47,7 +49,13 @@ class ParametersExtended : public Parameters
 
   void SetRangeOfMotionConstraintDt(double dt);
 
+  VecTimes GetJointPolyDurations() const;
+
+  VecTimes GetBasePolyDurations() const;
+
  private:
+
+  VecTimes GetAnyPolyDurations(double polynomial_duration) const;
 
   int n_ee_;
 
