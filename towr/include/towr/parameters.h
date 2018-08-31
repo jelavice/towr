@@ -147,7 +147,7 @@ struct Parameters
     Swing,          ///< sets SwingConstraint
     BaseRom,        ///< sets BaseMotionConstraint
     BaseAcc,         ///< sets SplineAccConstraint
-    JointVelocityAndRangeOfMotion
+    JointVelocityAndPositionLimits
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -211,7 +211,7 @@ struct Parameters
   /**
    * @brief Ensures that the range of motion is respected at discrete times.
    */
-  void SetKinematicConstraint();
+  virtual void SetKinematicConstraint();
 
   /**
    * @brief Ensures unilateral forces and inside the friction cone.
