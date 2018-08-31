@@ -32,6 +32,8 @@
 
 #include <vector>
 #include <array>
+#include <boost/concept_check.hpp>
+
 
 namespace towr {
 
@@ -144,7 +146,8 @@ struct Parameters
     Force,          ///< sets ForceConstraint
     Swing,          ///< sets SwingConstraint
     BaseRom,        ///< sets BaseMotionConstraint
-    BaseAcc         ///< sets SplineAccConstraint
+    BaseAcc,         ///< sets SplineAccConstraint
+    JointVelocityAndRangeOfMotion
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -169,6 +172,22 @@ struct Parameters
   Parameters();
   virtual ~Parameters() = default;
 
+  template<class T>
+  T *as()
+  {
+    BOOST_CONCEPT_ASSERT((boost::Convertible<T *, Parameters *>));
+
+    return static_cast<T *>(this);
+  }
+
+  template<class T>
+  const T *as() const
+  {
+    BOOST_CONCEPT_ASSERT((boost::Convertible<T *, Parameters *>));
+
+    return static_cast<const T *>(this);
+  }
+
   /// Number and initial duration of each foot's swing and stance phases.
   std::vector<VecTimes> ee_phase_durations_;
 
@@ -177,7 +196,6 @@ struct Parameters
 
   /// Specifies that timings of all feet, so the gait, should be optimized.
   void OptimizePhaseDurations();
-
 
   //all the constraints
   /**

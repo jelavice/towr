@@ -11,15 +11,30 @@
 
 namespace towr {
 
-class ParametersExtended : public Parameters {
+class ParametersExtended : public Parameters
+{
 
+ public:
+
+  enum ExtendedConstraintSet
+  {
+    //thse enums are deifined in the base class
+    //todo fix this
+  };
 
   ParametersExtended() = delete;
   ParametersExtended(int n_ee);
   ~ParametersExtended() = default;
 
+  int GetEECount() const final;
 
-private:
+  void MakeTerrainConstraint();
+
+  void DeleteAllConstraints();
+
+  void SetJointVelocityAndRangeOfMotionConstraint();
+
+ private:
 
   int n_ee_;
 
