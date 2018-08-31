@@ -38,6 +38,7 @@ add_library(${PROJECT_NAME} SHARED
   src/nodes_variables_all.cc
   src/nodes_variables_phase_based.cc
   src/phase_durations.cc
+  src/nodes_variables_ee_joints.cc
   # models
   src/robot_model.cc
   src/dynamic_model.cc
