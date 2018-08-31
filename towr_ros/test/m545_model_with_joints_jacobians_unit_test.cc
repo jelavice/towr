@@ -73,10 +73,12 @@ int main(int argc, char** argv)
   std::string which_test;
   nh.getParam("which_test", which_test);
 
-  // Kinematic limits and dynamic parameters of the hopper
-  constexpr double dt = 0.01;
 
+  constexpr double dt = 0.01;
   auto kinematic_model = std::make_shared<M545KinematicModelWithJoints>(urdfDescription, dt);
+
+   //seed std library random generator
+  srand((unsigned int) time(nullptr));
 
   std::vector<Eigen::MatrixXd> ee_jac_base_num;
   M545KinematicModelWithJoints::EEJac ee_jac_base;
@@ -92,7 +94,8 @@ int main(int argc, char** argv)
     joint_angles_vector.at(i).resize(kinematic_model->GetNumDof(i));
   }
 
-  const int numTests = 1000;
+  int numTests = 10000;
+  nh.getParam("num_tests", numTests);
   int num_failed = 0;
   for (int n = 0; n < numTests; ++n) {
 
@@ -145,6 +148,8 @@ int main(int argc, char** argv)
 
   }
 
+  std::cout << "\n=================================================== \n";
+
   if (which_test == "trans_test")
     std::cout << "Translation jacobian, tests passed: " << (numTests - num_failed) << "/"
         << numTests << std::endl;
@@ -152,6 +157,7 @@ int main(int argc, char** argv)
   if (which_test == "rot_test")
     std::cout << "Rotation jacobian, tests passed: " << (numTests - num_failed) << "/" << numTests
         << std::endl;
+  std::cout << "=================================================== \n";
 
 //  int i = 0;
 //  std::cout << "Big discrepancy in the jacobian for the limb: " << i << std::endl;
