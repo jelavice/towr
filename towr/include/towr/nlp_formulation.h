@@ -104,7 +104,9 @@ public:
   HeightMap::Ptr terrain_;
   Parameters params_;
 
-private:
+
+protected:
+
   // variables
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
