@@ -96,7 +96,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   VectorXd GetLowerJointLimits(int limbId) final;
   VectorXd GetUpperJointLimits(int limbId) final;
 
-  int GetNumDof(int limbId);
+  int GetNumDof(int limbId) final;
 
   int GetNumDofTotal() final;
 

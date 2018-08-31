@@ -35,6 +35,8 @@ class KinematicModelWithJoints : public KinematicModel
     return -1;
   }
 
+  virtual int GetNumDof(int ee_id) = 0;
+
   virtual VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual VectorXd GetUpperJointLimits(int limbId) = 0;
 
