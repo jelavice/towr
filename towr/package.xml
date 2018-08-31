@@ -28,6 +28,7 @@
 
 	<depend>ifopt</depend>
 	<depend>eigen</depend>
+	<depend>boost</depend>
 
 	<depend>excavator_model</depend>
 	<depend>loco_m545</depend>
