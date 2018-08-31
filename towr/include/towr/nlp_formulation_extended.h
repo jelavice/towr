@@ -24,9 +24,9 @@ public:
 private:
 
 
-ParametersExtended params_extended_;
+ParametersExtended extended_params_;
 
-
+std::vector<NodesVariables::Ptr> MakeJointVariables() const final;
 
 
 
