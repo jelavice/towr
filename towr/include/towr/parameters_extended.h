@@ -37,8 +37,21 @@ class ParametersExtended : public Parameters
   ParametersExtended(int n_ee);
   ~ParametersExtended() = default;
 
-  int GetEECount() const final;
+  //variables
+  void AddBaseVariables();
 
+  void AddMotinEEVariables();
+
+  void AddContactForceVariables();
+
+  void AddContactScheduleVariables();
+
+  void AddJointVariables();
+
+  void ClearAllVariables();
+
+
+  //constraints
   void MakeTerrainConstraint();
 
   void DeleteAllConstraints();
@@ -58,9 +71,12 @@ class ParametersExtended : public Parameters
 
   void SetRangeOfMotionConstraintDt(double dt);
 
+  //other useful or not so useful shit
   VecTimes GetJointPolyDurations() const;
 
   VecTimes GetBasePolyDurations() const;
+
+  int GetEECount() const final;
 
  private:
 
@@ -70,6 +86,8 @@ class ParametersExtended : public Parameters
 
   double dt_joint_velocity_and_position_limit_constraint_;
   double duration_joint_polynomials_;
+
+  std::vector<VariableSetName> variables_used_;
 
 };
 

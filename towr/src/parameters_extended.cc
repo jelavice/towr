@@ -17,12 +17,36 @@ ParametersExtended::ParametersExtended(int n_ee)
   n_ee_ = n_ee;
 
   DeleteAllConstraints();  //base class will have set buncha crap already that might be redundant
+
+}
+//variables
+
+void ParametersExtended::AddContactForceVariables()
+{
+  variables_used_.push_back(ContactForceVariables);
 }
 
-int ParametersExtended::GetEECount() const
+void ParametersExtended::AddBaseVariables()
 {
-  return n_ee_;
+  variables_used_.push_back(BaseVariables);
 }
+
+void ParametersExtended::AddContactScheduleVariables()
+{
+  variables_used_.push_back(ContactScheduleVariables);
+}
+
+void ParametersExtended::AddJointVariables()
+{
+  variables_used_.push_back(JointVariables);
+}
+
+void ParametersExtended::ClearAllVariables()
+{
+  variables_used_.clear();
+}
+
+// constraints
 
 void ParametersExtended::MakeTerrainConstraint()
 {
@@ -38,6 +62,8 @@ void ParametersExtended::SetJointVelocityAndPositionLimitConstraint()
 {
   constraints_.push_back(JointVelocityAndPositionLimits);
 }
+
+//parameters
 
 void ParametersExtended::SetJointPolynomialDuration(double dt)
 {
@@ -68,6 +94,8 @@ void ParametersExtended::SetRangeOfMotionConstraintDt(double dt)
 {
   dt_constraint_range_of_motion_ = dt;
 }
+
+// other methods
 
 VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) const
 {
@@ -100,7 +128,10 @@ VecTimes ParametersExtended::GetJointPolyDurations() const
 
 }
 
-
+int ParametersExtended::GetEECount() const
+{
+  return n_ee_;
+}
 
 } /* namespace*/
 
