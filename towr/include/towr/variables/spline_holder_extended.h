@@ -30,11 +30,27 @@ struct SplineHolderExtended : public SplineHolder {
 
   void InitializeJointMotion(std::vector<NodesVariables::Ptr> joint_motion,  const std::vector<double>& joint_poly_durations);
 
+  void InitializeBaseLinMotion(NodesVariables::Ptr base_lin, const std::vector<double>& base_poly_durations);
+
+  void InitializeBaseAngMotion(NodesVariables::Ptr base_ang, const std::vector<double>& base_poly_durations);
+
+  void InitializeEEMotion(std::vector<NodesVariablesPhaseBased::Ptr> ee_motion, bool durations_change);
+
+  void InitializeEEForce(std::vector<NodesVariablesPhaseBased::Ptr> ee_force, bool durations_change);
+
+  void InitializePhaseDurations(std::vector<PhaseDurations::Ptr> phase_durations);
+
+
 
 
   std::vector<NodeSpline::Ptr> joint_motion_; // for each ee there is one node spline class
 
 
+ private:
+  void InitializePhaseBasedDurations(std::vector<NodesVariablesPhaseBased::Ptr> nodes_phase_based,
+                                     bool durations_change, std::vector<NodeSpline::Ptr> &node_spline);
+
+  bool phase_durations_initialized_ = false;
 
 
 };
