@@ -33,6 +33,7 @@
 #include <vector>
 #include <array>
 #include <boost/concept_check.hpp>
+#include <memory>
 
 
 namespace towr {
@@ -133,6 +134,8 @@ namespace towr {
  */
 struct Parameters
 {
+
+  using Ptr = std::shared_ptr<Parameters>;
   /**
    * @brief Identifiers to be used to add certain constraints to the
    * optimization problem.

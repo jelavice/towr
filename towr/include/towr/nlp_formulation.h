@@ -102,8 +102,7 @@ public:
   EEPos  initial_ee_W_;
   RobotModel model_;
   HeightMap::Ptr terrain_;
-  Parameters params_;
-
+  Parameters::Ptr params_;
 
 protected:
 

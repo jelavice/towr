@@ -10,30 +10,28 @@
 #include <towr/nlp_formulation.h>
 #include <towr/parameters_extended.h>
 
-namespace towr{
+namespace towr {
 
-class NlpFormulationExtended : public NlpFormulation {
+class NlpFormulationExtended : public NlpFormulation
+{
 
-public:
+ public:
 
   using Base = NlpFormulation;
+  using VariableSetName = ParametersExtended::VariableSetName;
+  using Params = ParametersExtended;
 
   NlpFormulationExtended();
 
-private:
+  std::vector<NodesVariables::Ptr> MakeJointVariables() const;
+
+  VariablePtrVec GetVariableSets(SplineHolder& spline_holder) final;
 
 
-ParametersExtended extended_params_;
+ private:
 
-std::vector<NodesVariables::Ptr> MakeJointVariables() const;
-
-VariablePtrVec GetVariableSets(SplineHolder& spline_holder) final;
-
-
-//todo see which functions I have to make virtual in the base class
-
+  void GetVariableSet(VariableSetName var_set, SplineHolder &spline_holder, VariablePtrVec &vars);
 
 };
-
 
 } /* namespace */

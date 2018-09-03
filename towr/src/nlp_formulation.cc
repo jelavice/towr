@@ -63,6 +63,8 @@ NlpFormulation::NlpFormulation ()
 NlpFormulation::VariablePtrVec
 NlpFormulation::GetVariableSets (SplineHolder& spline_holder)
 {
+  params_ = std::make_shared<Parameters>(new Parameters());
+
   VariablePtrVec vars;
 
   auto base_motion = MakeBaseVariables();
@@ -77,18 +79,18 @@ NlpFormulation::GetVariableSets (SplineHolder& spline_holder)
   auto contact_schedule = MakeContactScheduleVariables();
   // can also just be fixed timings that aren't optimized over, but still added
   // to spline_holder.
-  if (params_.IsOptimizeTimings()) {
+  if (params_->IsOptimizeTimings()) {
     vars.insert(vars.end(), contact_schedule.begin(), contact_schedule.end());
   }
 
   // stores these readily constructed spline
   spline_holder = SplineHolder(base_motion.at(0), // linear
                                base_motion.at(1), // angular
-                               params_.GetBasePolyDurations(),
+                               params_->GetBasePolyDurations(),
                                ee_motion,
                                ee_force,
                                contact_schedule,
-                               params_.IsOptimizeTimings());
+                               params_->IsOptimizeTimings());
   return vars;
 }
 
@@ -97,7 +99,7 @@ NlpFormulation::MakeBaseVariables () const
 {
   std::vector<NodesVariables::Ptr> vars;
 
-  int n_nodes = params_.GetBasePolyDurations().size() + 1;
+  int n_nodes = params_->GetBasePolyDurations().size() + 1;
 
   auto spline_lin = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_lin_nodes);
 
@@ -106,19 +108,19 @@ NlpFormulation::MakeBaseVariables () const
   double z = terrain_->GetHeight(x,y) - model_.kinematic_model_->GetNominalStanceInBase().front().z();
   Vector3d final_pos(x, y, z);
 
-  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, params_.GetTotalTime());
+  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, params_->GetTotalTime());
   spline_lin->AddStartBound(kPos, {X,Y,Z}, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, {X,Y,Z}, initial_base_.lin.v());
-  spline_lin->AddFinalBound(kPos, params_.bounds_final_lin_pos,   final_base_.lin.p());
-  spline_lin->AddFinalBound(kVel, params_.bounds_final_lin_vel, final_base_.lin.v());
+  spline_lin->AddFinalBound(kPos, params_->bounds_final_lin_pos,   final_base_.lin.p());
+  spline_lin->AddFinalBound(kVel, params_->bounds_final_lin_vel, final_base_.lin.v());
   vars.push_back(spline_lin);
 
   auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
-  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(), params_.GetTotalTime());
+  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(), params_->GetTotalTime());
   spline_ang->AddStartBound(kPos, {X,Y,Z}, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, {X,Y,Z}, initial_base_.ang.v());
-  spline_ang->AddFinalBound(kPos, params_.bounds_final_ang_pos, final_base_.ang.p());
-  spline_ang->AddFinalBound(kVel, params_.bounds_final_ang_vel, final_base_.ang.v());
+  spline_ang->AddFinalBound(kPos, params_->bounds_final_ang_pos, final_base_.ang.p());
+  spline_ang->AddFinalBound(kVel, params_->bounds_final_ang_vel, final_base_.ang.v());
   vars.push_back(spline_ang);
 
   return vars;
@@ -130,13 +132,13 @@ NlpFormulation::MakeEndeffectorVariables () const
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
   // Endeffector Motions
-  double T = params_.GetTotalTime();
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  double T = params_->GetTotalTime();
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto nodes = std::make_shared<NodesVariablesEEMotion>(
-                                              params_.GetPhaseCount(ee),
-                                              params_.ee_in_contact_at_start_.at(ee),
+                                              params_->GetPhaseCount(ee),
+                                              params_->ee_in_contact_at_start_.at(ee),
                                               id::EEMotionNodes(ee),
-                                              params_.ee_polynomials_per_swing_phase_);
+                                              params_->ee_polynomials_per_swing_phase_);
 
     // initialize towards final footholds
     double yaw = final_base_.ang.p().z();
@@ -160,19 +162,19 @@ NlpFormulation::MakeForceVariables () const
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  double T = params_.GetTotalTime();
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  double T = params_->GetTotalTime();
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto nodes = std::make_shared<NodesVariablesEEForce>(
-                                              params_.GetPhaseCount(ee),
-                                              params_.ee_in_contact_at_start_.at(ee),
+                                              params_->GetPhaseCount(ee),
+                                              params_->ee_in_contact_at_start_.at(ee),
                                               id::EEForceNodes(ee),
-                                              params_.force_polynomials_per_stance_phase_);
+                                              params_->force_polynomials_per_stance_phase_);
 
     // initialize with mass of robot distributed equally on all legs
     double m = model_.dynamic_model_->m();
     double g = model_.dynamic_model_->g();
 
-    Vector3d f_stance(0.0, 0.0, m*g/params_.GetEECount());
+    Vector3d f_stance(0.0, 0.0, m*g/params_->GetEECount());
     nodes->SetByLinearInterpolation(f_stance, f_stance, T); // stay constant
     vars.push_back(nodes);
   }
@@ -185,12 +187,12 @@ NlpFormulation::MakeContactScheduleVariables () const
 {
   std::vector<PhaseDurations::Ptr> vars;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto var = std::make_shared<PhaseDurations>(ee,
-                                                params_.ee_phase_durations_.at(ee),
-                                                params_.ee_in_contact_at_start_.at(ee),
-                                                params_.GetPhaseDurationBounds().front(),
-                                                params_.GetPhaseDurationBounds().back());
+                                                params_->ee_phase_durations_.at(ee),
+                                                params_->ee_in_contact_at_start_.at(ee),
+                                                params_->GetPhaseDurationBounds().front(),
+                                                params_->GetPhaseDurationBounds().back());
     vars.push_back(var);
   }
 
@@ -201,7 +203,7 @@ NlpFormulation::ContraintPtrVec
 NlpFormulation::GetConstraints(const SplineHolder& spline_holder) const
 {
   ContraintPtrVec constraints;
-  for (auto name : params_.constraints_)
+  for (auto name : params_->constraints_)
     for (auto c : GetConstraint(name, spline_holder))
       constraints.push_back(c);
 
@@ -229,8 +231,8 @@ NlpFormulation::GetConstraint (Parameters::ConstraintName name,
 NlpFormulation::ContraintPtrVec
 NlpFormulation::MakeBaseRangeOfMotionConstraint (const SplineHolder& s) const
 {
-  return {std::make_shared<BaseMotionConstraint>(params_.GetTotalTime(),
-                                                 params_.dt_constraint_base_motion_,
+  return {std::make_shared<BaseMotionConstraint>(params_->GetTotalTime(),
+                                                 params_->dt_constraint_base_motion_,
                                                  s)};
 }
 
@@ -238,8 +240,8 @@ NlpFormulation::ContraintPtrVec
 NlpFormulation::MakeDynamicConstraint(const SplineHolder& s) const
 {
   auto constraint = std::make_shared<DynamicConstraint>(model_.dynamic_model_,
-                                                        params_.GetTotalTime(),
-                                                        params_.dt_constraint_dynamic_,
+                                                        params_->GetTotalTime(),
+                                                        params_->dt_constraint_dynamic_,
                                                         s);
   return {constraint};
 }
@@ -249,10 +251,10 @@ NlpFormulation::MakeRangeOfMotionBoxConstraint (const SplineHolder& s) const
 {
   ContraintPtrVec c;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
-                                                         params_.GetTotalTime(),
-                                                         params_.dt_constraint_range_of_motion_,
+                                                         params_->GetTotalTime(),
+                                                         params_->dt_constraint_range_of_motion_,
                                                          ee,
                                                          s);
     c.push_back(rom);
@@ -265,9 +267,9 @@ NlpFormulation::ContraintPtrVec
 NlpFormulation::MakeTotalTimeConstraint () const
 {
   ContraintPtrVec c;
-  double T = params_.GetTotalTime();
+  double T = params_->GetTotalTime();
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto duration_constraint = std::make_shared<TotalDurationConstraint>(T, ee);
     c.push_back(duration_constraint);
   }
@@ -280,7 +282,7 @@ NlpFormulation::MakeTerrainConstraint () const
 {
   ContraintPtrVec constraints;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto c = std::make_shared<TerrainConstraint>(terrain_, id::EEMotionNodes(ee));
     constraints.push_back(c);
   }
@@ -293,9 +295,9 @@ NlpFormulation::MakeForceConstraint () const
 {
   ContraintPtrVec constraints;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto c = std::make_shared<ForceConstraint>(terrain_,
-                                               params_.force_limit_in_normal_direction_,
+                                               params_->force_limit_in_normal_direction_,
                                                ee);
     constraints.push_back(c);
   }
@@ -308,7 +310,7 @@ NlpFormulation::MakeSwingConstraint () const
 {
   ContraintPtrVec constraints;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     auto swing = std::make_shared<SwingConstraint>(id::EEMotionNodes(ee));
     constraints.push_back(swing);
   }
@@ -334,7 +336,7 @@ NlpFormulation::ContraintPtrVec
 NlpFormulation::GetCosts() const
 {
   ContraintPtrVec costs;
-  for (const auto& pair : params_.costs_)
+  for (const auto& pair : params_->costs_)
     for (auto c : GetCost(pair.first, pair.second))
       costs.push_back(c);
 
@@ -356,7 +358,7 @@ NlpFormulation::MakeForcesCost(double weight) const
 {
   CostPtrVec cost;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++)
+  for (int ee=0; ee<params_->GetEECount(); ee++)
     cost.push_back(std::make_shared<NodeCost>(id::EEForceNodes(ee), kPos, Z));
 
   return cost;
@@ -367,7 +369,7 @@ NlpFormulation::MakeEEMotionCost(double weight) const
 {
   CostPtrVec cost;
 
-  for (int ee=0; ee<params_.GetEECount(); ee++) {
+  for (int ee=0; ee<params_->GetEECount(); ee++) {
     cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, X));
     cost.push_back(std::make_shared<NodeCost>(id::EEMotionNodes(ee), kVel, Y));
   }

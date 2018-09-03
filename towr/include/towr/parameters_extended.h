@@ -15,7 +15,8 @@ class ParametersExtended : public Parameters
 {
  public:
 
-  //todo make a factory method from this so that I can control which variable sets get created
+  using Ptr = std::shared_ptr<ParametersExtended>;
+
   enum VariableSetName {
     BaseVariables,
     MotionEEVariables,

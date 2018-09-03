@@ -33,6 +33,7 @@ add_library(${PROJECT_NAME} SHARED
   src/nlp_formulation.cc
   src/parameters.cc
   src/parameters_extended.cc
+  src/nlp_formulation_extended.cc
   # variables
   src/nodes_variables.cc
   src/nodes_variables_all.cc

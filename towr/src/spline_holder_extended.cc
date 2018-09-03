@@ -85,7 +85,7 @@ void SplineHolderExtended::InitializeEEForce(std::vector<NodesVariablesPhaseBase
 void SplineHolderExtended::InitializePhaseDurations(
     std::vector<PhaseDurations::Ptr> phase_durations)
 {
-  phase_durations_ = phase_durations;\
+  phase_durations_ = phase_durations;
   phase_durations_initialized_ = true;
 }
 

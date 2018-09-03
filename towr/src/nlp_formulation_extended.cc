@@ -7,6 +7,7 @@
 
 #include "towr/nlp_formulation_extended.h"
 #include "towr/models/kinematic_model_with_joints.h"
+#include "towr/variables/nodes_variables_ee_joints.h"\
 
 namespace towr {
 
@@ -22,13 +23,16 @@ NlpFormulationExtended::NlpFormulationExtended()
 
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
-  std::vector<NodesVariables::Ptr> vars;
-  int n_nodes = extended_params_.GetJointsPolyDurations().size() + 1;
 
-  for (int ee = 0; ee < extended_params_.GetEECount(); ++ee) {
+  auto extended_params = params_->as<Params>();
+
+  std::vector<NodesVariables::Ptr> vars;
+  int n_nodes = extended_params->GetJointPolyDurations().size() + 1;
+
+  for (int ee = 0; ee < extended_params->GetEECount(); ++ee) {
 
     int numDof = model_.kinematic_model_->as<KinematicModelWithJoints>()->GetNumDof(ee);
-    auto joint_spline = std::make_shared<NodesVariablesLimbJoints>(n_nodes, numDof,
+    auto joint_spline = std::make_shared<NodesVariablesEEJoints>(n_nodes, numDof,
                                                                    id::JointNodes(ee), ee);
     Eigen::VectorXd initial_joint_pos(numDof);
     Eigen::VectorXd final_joint_pos(numDof);
@@ -38,7 +42,7 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
       final_joint_pos(j) = position;
     }
     joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos,
-                                           extended_params_.GetTotalTime());
+                                           extended_params->GetTotalTime());
     vars.push_back(joint_spline);
   }
   return vars;
