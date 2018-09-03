@@ -16,24 +16,22 @@ class ParametersExtended : public Parameters
  public:
 
   using Ptr = std::shared_ptr<ParametersExtended>;
+  using Base = Parameters;
 
-  enum VariableSetName {
+  enum VariableSetName
+  {
     BaseVariables,
     MotionEEVariables,
     ContactForceVariables,
-    ContactScheduleVariables,
+    ContactScheduleVariables,  //added by default
     JointVariables
   };
-
-
-  using Base = Parameters;
 
   enum ExtendedConstraintSet
   {
   //thse enums are deifined in the base class
   //todo fix this
   };
-
 
   friend class NlpFormulationExtended;
 
@@ -48,12 +46,13 @@ class ParametersExtended : public Parameters
 
   void AddContactForceVariables();
 
+ private:
   void AddContactScheduleVariables();
 
+ public:
   void AddJointVariables();
 
   void ClearAllVariables();
-
 
   //constraints
   void MakeTerrainConstraint();
@@ -80,7 +79,7 @@ class ParametersExtended : public Parameters
 
   VecTimes GetBasePolyDurations() const;
 
-  int GetEECount() const final;
+  int GetEECount() const override final;
 
  private:
 

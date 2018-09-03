@@ -18,6 +18,9 @@ ParametersExtended::ParametersExtended(int n_ee)
 
   DeleteAllConstraints();  //base class will have set buncha crap already that might be redundant
 
+  //we need those by default
+  AddContactScheduleVariables();
+
 }
 //variables
 
@@ -132,6 +135,10 @@ int ParametersExtended::GetEECount() const
 {
   return n_ee_;
 }
+
+//bool ParametersExtended::IsOptimizeTimings() const {
+//  return Base::IsOptimizeTimings();
+//}
 
 } /* namespace*/
 

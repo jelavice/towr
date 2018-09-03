@@ -9,6 +9,7 @@
 
 #include <towr/nlp_formulation.h>
 #include <towr/parameters_extended.h>
+#include <towr/variables/spline_holder_extended.h>
 
 namespace towr {
 
@@ -20,6 +21,7 @@ class NlpFormulationExtended : public NlpFormulation
   using Base = NlpFormulation;
   using VariableSetName = ParametersExtended::VariableSetName;
   using Params = ParametersExtended;
+  using SplineContainer = SplineHolderExtended;
 
   NlpFormulationExtended();
 
@@ -30,7 +32,7 @@ class NlpFormulationExtended : public NlpFormulation
 
  private:
 
-  void GetVariableSet(VariableSetName var_set, SplineHolder &spline_holder, VariablePtrVec &vars);
+  void CreateVariableSet(VariableSetName var_set, SplineHolder &spline_holder, VariablePtrVec &vars);
 
 };
 
