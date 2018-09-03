@@ -76,7 +76,7 @@ protected:
    * When formulating your own application, here you can set your specific
    * set of constraints and variables.
    */
-  virtual Parameters GetTowrParameters(int n_ee, const TowrCommandMsg& msg) const = 0;
+  virtual Parameters::Ptr GetTowrParameters(int n_ee, const TowrCommandMsg& msg) const = 0;
 
   /**
    * @brief Sets the parameters of the nonlinear programming solver IPOPT.

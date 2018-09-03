@@ -7,7 +7,8 @@
 
 #include "towr/nlp_formulation_extended.h"
 #include "towr/models/kinematic_model_with_joints.h"
-#include "towr/variables/nodes_variables_ee_joints.h"\
+#include "towr/variables/nodes_variables_ee_joints.h"
+#include "towr/variables/variable_names.h"
 
 namespace towr {
 
@@ -33,7 +34,7 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
 
     int numDof = model_.kinematic_model_->as<KinematicModelWithJoints>()->GetNumDof(ee);
     auto joint_spline = std::make_shared<NodesVariablesEEJoints>(n_nodes, numDof,
-                                                                   id::JointNodes(ee), ee);
+                                                                   id::EEJointNodes(ee), ee);
     Eigen::VectorXd initial_joint_pos(numDof);
     Eigen::VectorXd final_joint_pos(numDof);
     for (int j = 0; j < numDof; ++j) {

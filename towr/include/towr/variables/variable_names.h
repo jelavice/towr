@@ -45,6 +45,7 @@ static const std::string base_ang_nodes    = "base-ang";
 static const std::string ee_motion_nodes   = "ee-motion_";
 static const std::string ee_force_nodes    = "ee-force_";
 static const std::string contact_schedule  = "ee-schedule";
+static const std::string ee_joint_nodes    = "ee-joints_";
 
 
 static std::string EEMotionNodes(uint ee)
@@ -60,6 +61,10 @@ static std::string EEForceNodes(uint ee)
 static std::string EESchedule(uint ee)
 {
   return  contact_schedule + std::to_string(ee);
+}
+
+static std::string EEJointNodes(uint ee){
+  return ee_joint_nodes + std::to_string(ee);
 }
 
 } // namespace id

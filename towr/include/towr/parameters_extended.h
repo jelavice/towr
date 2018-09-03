@@ -34,6 +34,9 @@ class ParametersExtended : public Parameters
   //todo fix this
   };
 
+
+  friend class NlpFormulationExtended;
+
   ParametersExtended() = delete;
   ParametersExtended(int n_ee);
   ~ParametersExtended() = default;

@@ -60,9 +60,9 @@ public:
   /**
    * @brief Sets the parameters required to formulate the TOWR problem.
    */
-  Parameters GetTowrParameters(int n_ee, const TowrCommandMsg& msg) const override
+  Parameters::Ptr GetTowrParameters(int n_ee, const TowrCommandMsg& msg) const override
   {
-    Parameters params;
+    Parameters::Ptr params = std::make_shared<Parameters>();
 
     // Instead of manually defining the initial durations for each foot and
     // step, for convenience we use a GaitGenerator with some predefined gaits
@@ -71,18 +71,18 @@ public:
     auto id_gait   = static_cast<GaitGenerator::Combos>(msg.gait);
     gait_gen_->SetCombo(id_gait);
     for (int ee=0; ee<n_ee; ++ee) {
-      params.ee_phase_durations_.push_back(gait_gen_->GetPhaseDurations(msg.total_duration, ee));
-      params.ee_in_contact_at_start_.push_back(gait_gen_->IsInContactAtStart(ee));
+      params->ee_phase_durations_.push_back(gait_gen_->GetPhaseDurations(msg.total_duration, ee));
+      params->ee_in_contact_at_start_.push_back(gait_gen_->IsInContactAtStart(ee));
     }
 
     // Here you can also add other constraints or values.
     // creates smoother swing motions, not absolutely required.
-    params.SetSwingConstraint();
+    params->SetSwingConstraint();
 
     // increases optimization time, but sometimes helps find a solution for
     // more difficult terrain.
     if (msg.optimize_phase_durations)
-      params.OptimizePhaseDurations();
+      params->OptimizePhaseDurations();
 
     return params;
   }

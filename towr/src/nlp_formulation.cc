@@ -63,7 +63,7 @@ NlpFormulation::NlpFormulation ()
 NlpFormulation::VariablePtrVec
 NlpFormulation::GetVariableSets (SplineHolder& spline_holder)
 {
-  params_ = std::make_shared<Parameters>(new Parameters());
+  params_ = std::make_shared<Parameters>();
 
   VariablePtrVec vars;
 
