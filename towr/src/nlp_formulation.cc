@@ -51,6 +51,12 @@ namespace towr {
 NlpFormulation::NlpFormulation ()
 {
   using namespace std;
+
+  params_ = make_shared<Parameters>();
+
+  if (params_ == nullptr)
+    throw runtime_error("Failed to allocate memory for params");
+
   cout << "\n";
   cout << "************************************************************\n";
   cout << " TOWR - Trajectory Optimization for Walking Robots (v1.4)\n";
@@ -63,8 +69,6 @@ NlpFormulation::NlpFormulation ()
 NlpFormulation::VariablePtrVec
 NlpFormulation::GetVariableSets (SplineHolder& spline_holder)
 {
-  params_ = std::make_shared<Parameters>();
-
   VariablePtrVec vars;
 
   auto base_motion = MakeBaseVariables();
