@@ -44,6 +44,10 @@ void ParametersExtended::AddJointVariables()
   variables_used_.push_back(JointVariables);
 }
 
+void ParametersExtended::AddEEMotionVariables(){
+  variables_used_.push_back(EEMotionVariables);
+}
+
 void ParametersExtended::ClearAllVariables()
 {
   variables_used_.clear();
@@ -51,7 +55,7 @@ void ParametersExtended::ClearAllVariables()
 
 // constraints
 
-void ParametersExtended::MakeTerrainConstraint()
+void ParametersExtended::SetTerrainConstraint()
 {
   constraints_.push_back(Terrain);
 }
@@ -105,7 +109,7 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
 
   std::vector<double> any_spline_timings_;
   double dt = polynomial_duration;
-  double t_left = GetTotalTime();  //todo check this
+  double t_left = GetTotalTime();
 
   double eps = 1e-10;  // since repeated subtraction causes inaccuracies
   while (t_left > eps) {
@@ -120,25 +124,18 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
 
 VecTimes ParametersExtended::GetBasePolyDurations() const
 {
-
   return GetAnyPolyDurations(duration_base_polynomial_);
 }
 
 VecTimes ParametersExtended::GetJointPolyDurations() const
 {
-
   return GetAnyPolyDurations(duration_joint_polynomials_);
-
 }
 
 int ParametersExtended::GetEECount() const
 {
   return n_ee_;
 }
-
-//bool ParametersExtended::IsOptimizeTimings() const {
-//  return Base::IsOptimizeTimings();
-//}
 
 } /* namespace*/
 

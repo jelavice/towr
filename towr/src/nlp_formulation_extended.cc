@@ -14,13 +14,11 @@ namespace towr {
 
 using VariablePtrVec = NlpFormulationExtended::VariablePtrVec;
 
-NlpFormulationExtended::NlpFormulationExtended()
-    : Base()
-{
-
-  // maybe I need craps here
-
-}
+//NlpFormulationExtended::NlpFormulationExtended()
+//    : Base()
+//{
+//
+//}
 
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
@@ -56,18 +54,25 @@ VariablePtrVec NlpFormulationExtended::GetVariableSets(SplineHolder& spline_hold
 
   auto params = params_->as<Params>();
 
-// contact schedule has to be added
+  for (auto name : params->variables_used_) {
 
-  for (auto name : params->variables_used_)
+    std::cout << "Name to be created: " << name << std::endl;
     CreateVariableSet(name, spline_holder, vars);
-
+    std::cout << "done \n =========================" << std::endl;
+  }
   return vars;
 
 }
 
 void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, SplineHolder &s,
-                                            VariablePtrVec &vars)
+                                               VariablePtrVec &vars)
 {
+
+  //ugly
+  auto casted_ptr = dynamic_cast<SplineContainer*>(s.as<SplineHolder>());
+  if (casted_ptr == nullptr)
+    throw std::runtime_error("the object passed inside is not the Spline container type");
+
 
   auto spline_holder = s.as<SplineContainer>();
   auto params = params_->as<Params>();
@@ -81,7 +86,7 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
       break;
     }
 
-    case Params::MotionEEVariables: {
+    case Params::EEMotionVariables: {
       auto ee_motion = MakeEndeffectorVariables();
       vars.insert(vars.end(), ee_motion.begin(), ee_motion.end());
       spline_holder->InitializeEEMotion(ee_motion, params->IsOptimizeTimings());
@@ -103,7 +108,6 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
         vars.insert(vars.end(), contact_schedule.begin(), contact_schedule.end());
       }
       spline_holder->InitializePhaseDurations(contact_schedule);
-
       break;
     }
 

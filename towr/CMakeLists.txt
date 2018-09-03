@@ -115,6 +115,18 @@ target_link_libraries(${PROJECT_NAME}-example
 )
 add_test(${PROJECT_NAME}-example ${PROJECT_NAME}-example)
 
+
+add_executable(${PROJECT_NAME}-test-extended-formulation
+  test/test_extended_formulation.cc
+)
+target_link_libraries(${PROJECT_NAME}-test-extended-formulation  
+  PRIVATE
+    ${PROJECT_NAME} 
+    ifopt::ifopt_ipopt
+)
+
+
+
 # unit tests of costs/constraints
 find_package(GTest QUIET)
 if (TARGET GTest::GTest) # only build when modern targets exists
@@ -140,7 +152,7 @@ endif()
 include(GNUInstallDirs) # for correct libraries locations across platforms
 set(config_package_location "share/${PROJECT_NAME}/cmake") # for .cmake find-scripts installs
 install(
-  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-example 
+  TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-example ${PROJECT_NAME}-test-extended-formulation 
   EXPORT ${PROJECT_NAME}-targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

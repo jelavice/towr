@@ -69,6 +69,8 @@ struct SplineHolder
    */
   SplineHolder() = default;
 
+  virtual ~SplineHolder() = default;
+
   NodeSpline::Ptr base_linear_;
   NodeSpline::Ptr base_angular_;
 

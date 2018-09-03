@@ -23,16 +23,16 @@ class NlpFormulationExtended : public NlpFormulation
   using Params = ParametersExtended;
   using SplineContainer = SplineHolderExtended;
 
-  NlpFormulationExtended();
+  NlpFormulationExtended() = default;
 
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
 
-  VariablePtrVec GetVariableSets(SplineHolder& spline_holder) final;
-
+  VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override final;
 
  private:
 
-  void CreateVariableSet(VariableSetName var_set, SplineHolder &spline_holder, VariablePtrVec &vars);
+  void CreateVariableSet(VariableSetName var_set, SplineHolder &spline_holder,
+                         VariablePtrVec &vars);
 
 };
 

@@ -21,7 +21,7 @@ class ParametersExtended : public Parameters
   enum VariableSetName
   {
     BaseVariables,
-    MotionEEVariables,
+    EEMotionVariables,
     ContactForceVariables,
     ContactScheduleVariables,  //added by default
     JointVariables
@@ -42,7 +42,7 @@ class ParametersExtended : public Parameters
   //variables
   void AddBaseVariables();
 
-  void AddMotinEEVariables();
+  void AddEEMotionVariables();
 
   void AddContactForceVariables();
 
@@ -55,7 +55,7 @@ class ParametersExtended : public Parameters
   void ClearAllVariables();
 
   //constraints
-  void MakeTerrainConstraint();
+  void SetTerrainConstraint();
 
   void DeleteAllConstraints();
 

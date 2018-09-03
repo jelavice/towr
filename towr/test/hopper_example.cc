@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <towr/terrain/examples/height_map_examples.h>
 #include <towr/nlp_formulation.h>
 #include <ifopt/ipopt_solver.h>
+#include <towr/nlp_formulation_extended.h>
+
 
 
 using namespace towr;
@@ -44,7 +46,9 @@ using namespace towr;
 // towr_ros/src/towr_ros_app.cc
 int main()
 {
+  //NlpFormulationExtended formulation;
   NlpFormulation formulation;
+
 
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
