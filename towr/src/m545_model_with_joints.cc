@@ -668,6 +668,10 @@ int M545KinematicModelWithJoints::GetNumDofTotal()
 
 }
 
+int M545KinematicModelWithJoints::GetNumDof(int limbId)
+{
+  return num_dof_limbs_.at(limbId);
 }
-/*namespace*/
+
+}/*namespace*/
 

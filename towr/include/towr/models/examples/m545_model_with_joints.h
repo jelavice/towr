@@ -79,34 +79,33 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   bool EEhasWheel(int limbId);
 
   //update base stuff and joints
-  void UpdateModel(VectorXd jointAngles, int limbId) final;
+  void UpdateModel(VectorXd jointAngles, int limbId) override final;
 
   /* base frame */
   // these are in the base frame
-  Eigen::Vector3d GetEEPositionsBase(int limbId) final;
+  Eigen::Vector3d GetEEPositionsBase(int limbId) override final;
 
-  SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) final;
+  SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) override final;
 
-  Eigen::Vector3d GetEEOrientationBase(int limbId) final;
-  Eigen::Vector3d GetEEOrientationVectorBase(int limbId, int dim) final;
-  SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) final;
-  SparseMatrix GetOrientationVectorJacobianBase(int limbId, int dim) final;
+  Eigen::Vector3d GetEEOrientationBase(int limbId) override final;
+  Eigen::Vector3d GetEEOrientationVectorBase(int limbId, int dim) override final;
+  SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) override final;
+  SparseMatrix GetOrientationVectorJacobianBase(int limbId, int dim) override final;
 
+  VectorXd GetLowerJointLimits(int limbId) override final;
+  VectorXd GetUpperJointLimits(int limbId) override final;
 
-  VectorXd GetLowerJointLimits(int limbId) final;
-  VectorXd GetUpperJointLimits(int limbId) final;
+  int GetNumDof(int limbId) override final;
 
-  int GetNumDof(int limbId) final;
+  int GetNumDofTotal() override final;
 
-  int GetNumDofTotal() final;
+  EEPos GetNominalStanceInBase() const override final;
 
-  EEPos GetNominalStanceInBase() const final;
-
-  Vector3d GetMaximumDeviationFromNominal() const final;
+  Vector3d GetMaximumDeviationFromNominal() const override final;
 
   void printCurrentJointPositions();
 
-  Vector3d GetBasePositionFromFeetPostions() final;
+  Vector3d GetBasePositionFromFeetPostions() override final;
 
  private:
 
@@ -124,7 +123,6 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
 
   void PrintJointLimits();
 
-
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof);
 
@@ -133,7 +131,6 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
                                    EEJac &jacArray);
 
   void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
-
 
   void CalculateRotationalJacobiansWRTjointsBase(int limbId);
 
@@ -145,10 +142,6 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
 
   SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
-
-
-
-
 
   std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
   Vector3d euler_ypr_;
@@ -163,15 +156,10 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
 
 };
 
-int M545KinematicModelWithJoints::GetNumDof(int limbId)
-{
-  return num_dof_limbs_.at(limbId);
-}
-
-class M545DynamicModelFull : public SingleRigidBodyDynamics
+class M545DynamicModel : public SingleRigidBodyDynamics
 {
  public:
-  M545DynamicModelFull()
+  M545DynamicModel()
       : SingleRigidBodyDynamics(3700.0, 2485.29, 1640.58, 1600.99, 0.0, 0.0, 0.0, 4)
   {
   }

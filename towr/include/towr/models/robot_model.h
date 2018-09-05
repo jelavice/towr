@@ -71,11 +71,13 @@ struct RobotModel {
                Biped,   ///< two-legged
                Hyq,     ///< four-legged robot from IIT
                Anymal,  ///< four-legged robot from Anybotics
+               m545WithJoints,
                ROBOT_COUNT };
 
 
   RobotModel() = default;
   RobotModel(Robot robot);
+  RobotModel(Robot robot, std::string urdf_description, double dt);
 
   KinematicModel::Ptr kinematic_model_;
   DynamicModel::Ptr   dynamic_model_;
@@ -87,7 +89,8 @@ const static std::map<RobotModel::Robot, std::string> robot_names =
   {RobotModel::Monoped, "Monoped"},
   {RobotModel::Biped,   "Biped"},
   {RobotModel::Hyq,     "Hyq"},
-  {RobotModel::Anymal,  "Anymal"}
+  {RobotModel::Anymal,  "Anymal"},
+  {RobotModel::m545WithJoints,  "m545WithJoints"}
 };
 
 } /* namespace towr */
