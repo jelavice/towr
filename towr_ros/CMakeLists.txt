@@ -127,6 +127,13 @@ target_link_libraries(m545_model_with_joints_jacobians_unit_test
   ${catkin_LIBRARIES}
 )
 
+add_executable(m545_joints_variables_test 
+  test/m545_joints_variables_test.cc
+)
+target_link_libraries(m545_joints_variables_test
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
