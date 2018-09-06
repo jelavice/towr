@@ -136,6 +136,10 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
 
   void CalculateRotationalJacobiansWRTjointsBase(int limbId);
 
+  loco_m545::RD::LimbEnum GetLimbEnum(int limbId) const;
+  loco_m545::RD::BodyEnum GetEEBodyEnum(int limbId) const;
+  loco_m545::RD::BodyNodeEnum GetEEBodyNodeEnum(int limbId) const;
+
   ExcavatorModel model_;
   JointLimitMap joint_limits_;
   VectorXd upper_joint_limits_;
