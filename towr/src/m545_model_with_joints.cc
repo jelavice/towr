@@ -429,45 +429,7 @@ Vector3d M545KinematicModelWithJoints::GetBasePositionFromFeetPostions()
 
 Matrix3d M545KinematicModelWithJoints::GetRotMat(int limbId)
 {
-
-  loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
-  Eigen::Matrix3d rotMat;
-
-  switch (limbId) {
-
-    case 0: {
-      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                               loco_m545::BodyEnum::LF_WHEEL);
-      break;
-    }
-
-    case 1: {
-      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                               loco_m545::BodyEnum::RF_WHEEL);
-      break;
-    }
-
-    case 2: {
-      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                               loco_m545::BodyEnum::LH_WHEEL);
-      break;
-    }
-
-    case 3: {
-      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                               loco_m545::BodyEnum::RH_WHEEL);
-      break;
-    }
-
-    case 4: {
-      rotMat = model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                               loco_m545::BodyEnum::ENDEFFECTOR);
-      break;
-    }
-
-  }
-
-  return rotMat;
+  return model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE, GetEEBodyEnum(limbId));
 }
 
 void M545KinematicModelWithJoints::CalculateAngularVelocityJacobian(int limbId)
@@ -478,63 +440,11 @@ void M545KinematicModelWithJoints::CalculateAngularVelocityJacobian(int limbId)
 
   MatrixXd jacobianBig(3, model_.getDofCount());
   jacobianBig.setZero();
+  model_.getJacobianRotationFloatingBaseToBody(jacobianBig, GetEEBranchEnum(limbId),
+                                               GetEEBodyNodeEnum(limbId), coordinate_system);
 
-  switch (limbId) {
-
-    case 0: {
-
-      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::LF,
-                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
-
-      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
-                                  legDof, ee_orientation_jac_base_);
-
-      break;
-    }
-
-    case 1: {
-
-      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::RF,
-                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
-
-      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF,
-                                  legDof, ee_orientation_jac_base_);
-      break;
-    }
-
-    case 2: {
-
-      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::LH,
-                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
-
-      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH,
-                                  legDof, ee_orientation_jac_base_);
-      break;
-    }
-
-    case 3: {
-
-      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::RH,
-                                                   RD::BodyNodeEnum::WHEEL, coordinate_system);
-
-      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH,
-                                  legDof, ee_orientation_jac_base_);
-      break;
-    }
-
-    case 4: {
-
-      model_.getJacobianRotationFloatingBaseToBody(jacobianBig, RD::BranchEnum::BOOM,
-                                                   RD::BodyNodeEnum::ENDEFFECTOR,
-                                                   coordinate_system);
-
-      ExtractJointJacobianEntries(jacobianBig, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
-                                  boomDof, ee_orientation_jac_base_);
-      break;
-    }
-
-  }
-
+  ExtractJointJacobianEntries(jacobianBig, GetLimbEnum(limbId), GetLimbStartIndex(limbId),
+                              GetNumDof(limbId), ee_orientation_jac_base_);
 }
 
 M545KinematicModelWithJoints::EEPos M545KinematicModelWithJoints::GetNominalStanceInBase() const
@@ -587,51 +497,9 @@ void M545KinematicModelWithJoints::UpdateModel(VectorXd jointAngles, int limbId,
 Eigen::Vector3d M545KinematicModelWithJoints::GetEEPositionsBase(int limbId,
                                                                  ExcavatorModel &model) const
 {
-
-  Eigen::Vector3d position;
-
-  switch (limbId) {
-    case 0: {
-      //LF
-      position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                             loco_m545::RD::BodyEnum::LF_WHEEL,
-                                             loco_m545::RD::CoordinateFrameEnum::BASE);
-      break;
-    }
-
-    case 1: {
-      //RF
-      position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                             loco_m545::RD::BodyEnum::RF_WHEEL,
-                                             loco_m545::RD::CoordinateFrameEnum::BASE);
-      break;
-    }
-
-    case 2: {
-      //LH
-      position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                             loco_m545::RD::BodyEnum::LH_WHEEL,
-                                             loco_m545::RD::CoordinateFrameEnum::BASE);
-      break;
-    }
-
-    case 3: {
-      //RH
-      position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                             loco_m545::RD::BodyEnum::RH_WHEEL,
-                                             loco_m545::RD::CoordinateFrameEnum::BASE);
-      break;
-    }
-
-    case 4: {
-      //BOOM
-      position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                             loco_m545::RD::BodyEnum::ENDEFFECTOR,
-                                             loco_m545::RD::CoordinateFrameEnum::BASE);
-      break;
-    }
-
-  }
+  Eigen::Vector3d position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
+                                                         GetEEBodyEnum(limbId),
+                                                         loco_m545::RD::CoordinateFrameEnum::BASE);
 
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
@@ -649,16 +517,12 @@ loco_m545::RD::LimbEnum M545KinematicModelWithJoints::GetLimbEnum(int limbId) co
   switch (limbId) {
     case 0:
       return loco_m545::RD::LimbEnum::LF;
-
     case 1:
       return loco_m545::RD::LimbEnum::RF;
-
     case 2:
       return loco_m545::RD::LimbEnum::LH;
-
     case 3:
       return loco_m545::RD::LimbEnum::RH;
-
     case 4:
       return loco_m545::RD::LimbEnum::BOOM;
     default:
@@ -688,7 +552,8 @@ loco_m545::RD::BodyEnum M545KinematicModelWithJoints::GetEEBodyEnum(int limbId) 
 
 }
 
-loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int limbId) const{
+loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int limbId) const
+{
 
   switch (limbId) {
     case 0:
@@ -703,8 +568,44 @@ loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int 
   }
 }
 
+loco_m545::RD::BranchEnum M545KinematicModelWithJoints::GetEEBranchEnum(int limbId) const
+{
 
+  switch (limbId) {
+    case 0:
+      return loco_m545::RD::BranchEnum::LF;
+    case 1:
+      return loco_m545::RD::BranchEnum::RF;
+    case 2:
+      return loco_m545::RD::BranchEnum::LH;
+    case 3:
+      return loco_m545::RD::BranchEnum::RH;
+    case 4:
+      return loco_m545::RD::BranchEnum::BOOM;
+    default:
+      throw std::runtime_error("Unknown limb id");
+  }
+}
 
+M545KinematicModelWithJoints::LimbStartIndex M545KinematicModelWithJoints::GetLimbStartIndex(
+    int limbId) const
+{
+
+  switch (limbId) {
+    case 0:
+      return LimbStartIndex::LF;
+    case 1:
+      return LimbStartIndex::RF;
+    case 2:
+      return LimbStartIndex::LH;
+    case 3:
+      return LimbStartIndex::RH;
+    case 4:
+      return LimbStartIndex::BOOM;
+    default:
+      throw std::runtime_error("Unknown limb id");
+  }
+}
 
 }/*namespace*/
 

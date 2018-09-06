@@ -139,6 +139,9 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   loco_m545::RD::LimbEnum GetLimbEnum(int limbId) const;
   loco_m545::RD::BodyEnum GetEEBodyEnum(int limbId) const;
   loco_m545::RD::BodyNodeEnum GetEEBodyNodeEnum(int limbId) const;
+  loco_m545::RD::BranchEnum GetEEBranchEnum(int limbId) const;
+  LimbStartIndex GetLimbStartIndex(int limbId) const;
+
 
   ExcavatorModel model_;
   JointLimitMap joint_limits_;
