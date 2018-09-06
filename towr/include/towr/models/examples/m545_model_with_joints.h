@@ -76,83 +76,67 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   M545KinematicModelWithJoints() = delete;
   M545KinematicModelWithJoints(const std::string &urdfDescription, double dt);
 
-  //todo remove this maybe
-  bool EEhasWheel(int limbId);
-
-  //update base stuff and joints
   void UpdateModel(VectorXd jointAngles, int limbId) override final;
 
-  /* base frame */
-  // these are in the base frame
   Eigen::Vector3d GetEEPositionsBase(int limbId) override final;
+  Eigen::Vector3d GetEEOrientationBase(int limbId) override final;
+  EEPos GetNominalStanceInBase() const override final;
+  Vector3d GetMaximumDeviationFromNominal() const override final;
+  Vector3d GetBasePositionFromFeetPostions() override final;
+
 
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) override final;
-
-  Eigen::Vector3d GetEEOrientationBase(int limbId) override final;
   SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) override final;
 
   VectorXd GetLowerJointLimits(int limbId) override final;
   VectorXd GetUpperJointLimits(int limbId) override final;
-
-  int GetNumDof(int limbId) const override final;
-
-  int GetNumDofTotal() const override final;
-
-  EEPos GetNominalStanceInBase() const override final;
-
-  Vector3d GetMaximumDeviationFromNominal() const override final;
-
   void printCurrentJointPositions();
 
-  Vector3d GetBasePositionFromFeetPostions() override final;
+  int GetNumDof(int limbId) const override final;
+  int GetNumDofTotal() const override final;
+  bool EEhasWheel(int limbId);
 
  private:
 
   Eigen::Vector3d GetEEPositionsBase(int limbId, ExcavatorModel &model) const;
 
-
-  void UpdateModel(VectorXd jointAngles, int limbId, ExcavatorModel &model) const;
-
-  void CalculateAngularVelocityJacobian(int limbId);
-
-  Eigen::Matrix3d GetRotMat(int limbId);
-
-  int getLimbStartingId(int LimbId);
-
+  void PrintJointLimits();
   void CalculateJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
                                            loco_m545::RD::LimbEnum limb, unsigned int dof);
 
-  void PrintJointLimits();
-
+  void UpdateModel(VectorXd jointAngles, int limbId, ExcavatorModel &model) const;
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof, ExcavatorModel &model) const;
 
+
+  void CalculateAngularVelocityJacobian(int limbId);
+  void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
+  void CalculateRotationalJacobiansWRTjointsBase(int limbId);
   void ExtractJointJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
                                    LimbStartIndex limbStartIndex, unsigned int dof,
                                    EEJac &jacArray);
-
-  void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
-
-  void CalculateRotationalJacobiansWRTjointsBase(int limbId);
 
   loco_m545::RD::LimbEnum GetLimbEnum(int limbId) const;
   loco_m545::RD::BodyEnum GetEEBodyEnum(int limbId) const;
   loco_m545::RD::BodyNodeEnum GetEEBodyNodeEnum(int limbId) const;
   loco_m545::RD::BranchEnum GetEEBranchEnum(int limbId) const;
   LimbStartIndex GetLimbStartIndex(int limbId) const;
+  int getLimbStartingId(int LimbId) const;
 
+  Eigen::Matrix3d GetRotMat(int limbId);
+  Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
+  SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
+
+
+
+  //attributes
+  const std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
 
   ExcavatorModel model_;
   JointLimitMap joint_limits_;
   VectorXd upper_joint_limits_;
   VectorXd lower_joint_limits_;
-
-  Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
-
-  SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
-
-  std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };
 
   //base frame
   EEPos ee_pos_base_;
@@ -160,7 +144,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   EEorientation ee_ypr_;
   EEJac ee_orientation_jac_base_;
 
-  std::string urdf_string_;
+  const std::string urdf_string_;
 
 };
 

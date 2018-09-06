@@ -23,6 +23,7 @@ namespace towr {
 M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &urdfDescription,
                                                            double dt)
     : KinematicModelWithJoints(numEE),
+      urdf_string_(urdfDescription),
       model_(dt)
 {
 
@@ -32,8 +33,6 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
 
   //get the excavator model
   model_.initModelFromUrdf(urdfDescription);
-
-  urdf_string_ = urdfDescription;
 
   //get the joint limits
   CalculateJointLimits();
@@ -163,7 +162,7 @@ void M545KinematicModelWithJoints::PrintJointLimits()
 
 }
 
-int M545KinematicModelWithJoints::getLimbStartingId(int LimbId)
+int M545KinematicModelWithJoints::getLimbStartingId(int LimbId) const
 {
   switch (LimbId) {
 
@@ -206,76 +205,13 @@ void M545KinematicModelWithJoints::CalculateTranslationalJacobiansWRTjointsBase(
 {
 
   loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
+  MatrixXd tempJacobian(3, model_.getDofCount());
+  tempJacobian.setZero();
+  model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, GetEEBranchEnum(limbId),
+                                                  GetEEBodyNodeEnum(limbId), coordinate_system);
 
-  switch (limbId) {
-
-    case 0: {
-      //LF
-      MatrixXd tempJacobian(3, model_.getDofCount());
-      tempJacobian.setZero();
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::LF,
-                                                      loco_m545::RD::BodyNodeEnum::WHEEL,
-                                                      coordinate_system);
-
-      //      std::cout << "Dof count: " << model_.getDofCount() << std::endl;
-      //      std::cout << "Jacobian LF \n" << tempJacobian.transpose() << std::endl << std::endl;
-      ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LF, LimbStartIndex::LF,
-                                  legDof, ee_trans_jac_joints_base_);
-      break;
-    }
-    case 1: {
-      //RF
-      MatrixXd tempJacobian(3, model_.getDofCount());
-      tempJacobian.setZero();
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RF,
-                                                      loco_m545::RD::BodyNodeEnum::WHEEL,
-                                                      coordinate_system);
-
-      //      std::cout << "Jacobian RF \n" << tempJacobian.transpose() << std::endl;
-      ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RF, LimbStartIndex::RF,
-                                  legDof, ee_trans_jac_joints_base_);
-      break;
-    }
-
-    case 2: {
-      //LH
-      MatrixXd tempJacobian(3, model_.getDofCount());
-      tempJacobian.setZero();
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::LH,
-                                                      loco_m545::RD::BodyNodeEnum::WHEEL,
-                                                      coordinate_system);
-
-      ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::LH, LimbStartIndex::LH,
-                                  legDof, ee_trans_jac_joints_base_);
-      break;
-    }
-
-    case 3: {
-      //RH
-      MatrixXd tempJacobian(3, model_.getDofCount());
-      tempJacobian.setZero();
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::RH,
-                                                      loco_m545::RD::BodyNodeEnum::WHEEL,
-                                                      coordinate_system);
-
-      ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::RH, LimbStartIndex::RH,
-                                  legDof, ee_trans_jac_joints_base_);
-      break;
-    }
-
-    case 4: {
-      //BOOM
-      MatrixXd tempJacobian(3, model_.getDofCount());
-      tempJacobian.setZero();
-      model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, loco_m545::RD::BranchEnum::BOOM,
-                                                      loco_m545::RD::BodyNodeEnum::ENDEFFECTOR,
-                                                      coordinate_system);
-
-      ExtractJointJacobianEntries(tempJacobian, loco_m545::RD::LimbEnum::BOOM, LimbStartIndex::BOOM,
-                                  boomDof, ee_trans_jac_joints_base_);
-      break;
-    }
-  }
+  ExtractJointJacobianEntries(tempJacobian, GetLimbEnum(limbId), GetLimbStartIndex(limbId),
+                              GetNumDof(limbId), ee_trans_jac_joints_base_);
 
 }
 

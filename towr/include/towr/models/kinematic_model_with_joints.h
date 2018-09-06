@@ -30,12 +30,12 @@ class KinematicModelWithJoints : public KinematicModel
 
   virtual ~KinematicModelWithJoints() = default;
 
-  virtual int GetNumDofTotal()
+  virtual int GetNumDofTotal() const
   {
     return -1;
   }
 
-  virtual int GetNumDof(int ee_id) = 0;
+  virtual int GetNumDof(int ee_id) const = 0;
 
   virtual VectorXd GetLowerJointLimits(int limbId) = 0;
   virtual VectorXd GetUpperJointLimits(int limbId) = 0;
