@@ -101,6 +101,15 @@ void setParameters(NlpFormulationExtended *formulation, double dt,
 
   formulation->model_ = RobotModel(RobotModel::m545WithJoints, urdfDescription, dt);
 
+  int n_ee = formulation->model_.kinematic_model_->GetNumberOfEndeffectors();
+  auto model = formulation->model_.kinematic_model_->as<KinematicModelWithJoints>();
+
+  //set initial position of the EE
+  KinematicModelWithJoints::EEPos ee_pos = model->GetNominalStanceInBase();
+
+
+
+
 }
 
 int main(int argc, char** argv)
@@ -121,6 +130,9 @@ int main(int argc, char** argv)
 
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
+
+  const double dt = 0.1;
+  setParameters(&formulation, dt, urdfDescription);
 
 
 

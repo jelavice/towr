@@ -387,18 +387,21 @@ M545KinematicModelWithJoints::EEPos M545KinematicModelWithJoints::GetNominalStan
 {
 
   EEPos ee_pos;
-
   const double dt = 0.1;
   ExcavatorModel model(dt);
   model.initModelFromUrdf(urdf_string_);
   for (int i = 0; i < numEE; ++i) {
     VectorXd joint_angles(GetNumDof(i));
-    joint_angles.setZero();
+    // don't stretch the boom far out
+    if (i == static_cast<int>(loco_m545::RD::LimbEnum::BOOM))
+      joint_angles << 0.0, -1.2, 2.0, 0.0, 2.2;
+    else
+      joint_angles.setZero();
     UpdateModel(joint_angles, i, model);
     ee_pos.push_back(GetEEPositionsBase(i, model));
   }
 
-  return ee_pos_base_;
+  return ee_pos;
 }
 
 Vector3d M545KinematicModelWithJoints::GetMaximumDeviationFromNominal() const
