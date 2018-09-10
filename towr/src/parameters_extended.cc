@@ -22,6 +22,9 @@ ParametersExtended::ParametersExtended(int n_ee)
   //we need those by default
   AddContactScheduleVariables();
 
+  for (int i = 0; i < n_ee; ++i)
+    use_bounds_initial_ee_pos.push_back(true); // add initial bounds_by default for the ee's
+
 }
 //variables
 

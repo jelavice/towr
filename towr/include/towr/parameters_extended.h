@@ -73,6 +73,8 @@ struct ParametersExtended : public Parameters
   std::vector<int> bounds_final_lin_pos, bounds_final_lin_vel, bounds_final_ang_pos,
       bounds_final_ang_vel;
 
+  std::vector<bool> use_bounds_initial_ee_pos;
+
  private:
 
   VecTimes GetAnyPolyDurations(double polynomial_duration) const;

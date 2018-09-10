@@ -401,6 +401,12 @@ M545KinematicModelWithJoints::EEPos M545KinematicModelWithJoints::GetNominalStan
     ee_pos.push_back(GetEEPositionsBase(i, model));
   }
 
+#ifdef  M545MODELDEBUG
+  std::cout << std::endl;
+  for (int i =0; i < ee_pos.size(); ++i)
+    std::cout << "limb id: " << i << " , position: " << ee_pos.at(i).transpose() << std::endl;
+#endif
+
   return ee_pos;
 }
 

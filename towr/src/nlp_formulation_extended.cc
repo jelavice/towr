@@ -47,11 +47,12 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
   return vars;
 }
 
-std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeBaseVariables() const {
+std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeBaseVariables() const
+{
 
-std::vector<NodesVariables::Ptr> vars;
+  std::vector<NodesVariables::Ptr> vars;
 
-auto extended_params = params_->as<Params>();
+  auto extended_params = params_->as<Params>();
 
   int n_nodes = extended_params->GetBasePolyDurations().size() + 1;
 
@@ -59,18 +60,21 @@ auto extended_params = params_->as<Params>();
 
   double x = final_base_.lin.p().x();
   double y = final_base_.lin.p().y();
-  double z = terrain_->GetHeight(x,y) - model_.kinematic_model_->GetNominalStanceInBase().front().z();
+  double z = terrain_->GetHeight(x, y)
+      - model_.kinematic_model_->GetNominalStanceInBase().front().z();
   Vector3d final_pos(x, y, z);
 
-  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, extended_params->GetTotalTime());
+  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
+                                       extended_params->GetTotalTime());
   spline_lin->AddStartBound(kPos, extended_params->bounds_initial_lin_pos, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, extended_params->bounds_initial_lin_vel, initial_base_.lin.v());
-  spline_lin->AddFinalBound(kPos, extended_params->bounds_final_lin_pos,   final_base_.lin.p());
+  spline_lin->AddFinalBound(kPos, extended_params->bounds_final_lin_pos, final_base_.lin.p());
   spline_lin->AddFinalBound(kVel, extended_params->bounds_final_lin_vel, final_base_.lin.v());
   vars.push_back(spline_lin);
 
   auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
-  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(), extended_params->GetTotalTime());
+  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(),
+                                       extended_params->GetTotalTime());
   spline_ang->AddStartBound(kPos, extended_params->bounds_initial_ang_pos, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, extended_params->bounds_initial_ang_vel, initial_base_.ang.v());
   spline_ang->AddFinalBound(kPos, extended_params->bounds_final_ang_pos, final_base_.ang.p());
@@ -80,8 +84,37 @@ auto extended_params = params_->as<Params>();
   return vars;
 }
 
+std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulationExtended::MakeEndeffectorVariables() const
+{
+  std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
+  auto extended_params = params_->as<Params>();
 
+  // Endeffector Motions
+  double T = extended_params->GetTotalTime();
+  for (int ee = 0; ee < extended_params->GetEECount(); ee++) {
+    auto nodes = std::make_shared<NodesVariablesEEMotion>(
+        extended_params->GetPhaseCount(ee), extended_params->ee_in_contact_at_start_.at(ee),
+        id::EEMotionNodes(ee), extended_params->ee_polynomials_per_swing_phase_);
+
+    // initialize towards final footholds
+    double yaw = final_base_.ang.p().z();
+    Eigen::Vector3d euler(0.0, 0.0, yaw);
+    Eigen::Matrix3d w_R_b = EulerConverter::GetRotationMatrixBaseToWorld(euler);
+    Vector3d final_ee_pos_W = final_base_.lin.p()
+        + w_R_b * model_.kinematic_model_->GetNominalStanceInBase().at(ee);
+    double x = final_ee_pos_W.x();
+    double y = final_ee_pos_W.y();
+    double z = terrain_->GetHeight(x, y);
+    nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
+
+    if (extended_params->use_bounds_initial_ee_pos.at(ee))
+      nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+    vars.push_back(nodes);
+  }
+
+  return vars;
+}
 
 VariablePtrVec NlpFormulationExtended::GetVariableSets(SplineHolder& spline_holder)
 {

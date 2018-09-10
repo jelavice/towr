@@ -31,11 +31,14 @@ class NlpFormulationExtended : public NlpFormulation
  protected:
 
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const override final;
+  std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const override final;
+
 
  private:
 
   void CreateVariableSet(VariableSetName var_set, SplineHolder &spline_holder,
                          VariablePtrVec &vars);
+
 
 };
 

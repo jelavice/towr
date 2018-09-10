@@ -9,7 +9,6 @@
 
 #include <string>
 
-
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 
@@ -24,7 +23,6 @@
 #include <towr/terrain/examples/height_map_examples.h>
 
 #include <towr/models/examples/m545_model_with_joints.h>
-
 
 using namespace towr;
 
@@ -107,8 +105,50 @@ void setParameters(NlpFormulationExtended *formulation, double dt,
   //set initial position of the EE
   KinematicModelWithJoints::EEPos ee_pos = model->GetNominalStanceInBase();
 
+  //set the z coordinate to be zero (simple transformation from base to world)
+  for (auto &x : ee_pos)
+    x.z() = 0.0;
 
+  formulation->initial_ee_W_ = ee_pos;
 
+  auto params = formulation->params_->as<ParametersExtended>();
+
+  int boom_limb_id = static_cast<int>(loco_m545::RD::LimbEnum::BOOM);
+  for (int i = 0; i < n_ee; ++i) {
+    params->ee_phase_durations_.push_back( { 1.0 });
+    if (i == boom_limb_id)
+      params->ee_in_contact_at_start_.push_back(false);
+    else
+      params->ee_in_contact_at_start_.push_back(true);
+  }
+
+  params->use_bounds_initial_ee_pos.at(boom_limb_id) = false;
+
+  double base_height = model->GetBasePositionFromFeetPostions().z();
+  formulation->initial_base_.lin.at(towr::kPos) << 0.0, 0.0, base_height;
+  formulation->final_base_.lin.at(towr::kPos) << 0.0, 0.0, base_height;
+
+  //base stuff
+  params->bounds_final_ang_pos = {};
+  params->bounds_final_ang_vel = {X,Y,Z};
+  params->bounds_final_lin_pos = {X,Y};
+  params->bounds_final_lin_vel = {X,Y,Z};
+
+  params->bounds_initial_ang_pos = {};
+  params->bounds_initial_ang_vel = {X,Y,Z};
+  params->bounds_initial_lin_pos = {};
+  params->bounds_initial_lin_vel = {X,Y,Z};
+
+  params->AddBaseVariables();
+  params->AddEEMotionVariables();
+  params->AddContactForceVariables();
+  params->AddJointVariables();
+
+  params->SetTerrainConstraint();
+  params->SetDynamicConstraint();
+  params->SetKinematicConstraint();
+  params->SetForceConstraint();
+  //params->SetSwingConstraint(); //do not set this one or it will segfault
 
 }
 
@@ -123,9 +163,8 @@ int main(int argc, char** argv)
   nh.getParam("romo_mm_description", urdfDescription);
 
   NlpFormulationExtended formulation;
-  const int n_ee = 5;  //num end effectors
-  formulation.params_ = nullptr;
-  formulation.params_ = std::make_shared<ParametersExtended>(n_ee);
+  formulation.params_ = nullptr;  // reset the default params
+  formulation.params_ = std::make_shared<ParametersExtended>(M545KinematicModelWithJoints::numEE);
   ParametersExtended *params = formulation.params_->as<ParametersExtended>();
 
   // terrain
@@ -134,37 +173,32 @@ int main(int argc, char** argv)
   const double dt = 0.1;
   setParameters(&formulation, dt, urdfDescription);
 
-
-
-
-
-
   // Pass this information to the actual solver
-//  ifopt::Problem nlp;
-//  SplineHolderExtended solution;
-//
-//  for (auto c : formulation.GetVariableSets(solution))
-//    nlp.AddVariableSet(c);
-//
-//  for (auto c : formulation.GetConstraints(solution))
-//    nlp.AddConstraintSet(c);
-//
-//  for (auto c : formulation.GetCosts())
-//    nlp.AddCostSet(c);
-//
-//  auto solver = std::make_shared<ifopt::IpoptSolver>();
-//  solver->SetOption("linear_solver", "ma57");
-//  solver->SetOption("ma57_pre_alloc", 10.0);
-//  solver->SetOption("max_cpu_time", 80.0);
-//  //solver->SetOption("jacobian_approximation", "finite-difference-values");
-//
-////  solver->SetOption("max_iter", 0);
-////  solver->SetOption("derivative_test", "first-order");
-////  solver->SetOption("print_level", 4);
-////  solver->SetOption("derivative_test_perturbation", 1e-5);
-////  solver->SetOption("derivative_test_tol", 1e-3);
-//
-//  solver->Solve(nlp);
+  ifopt::Problem nlp;
+  SplineHolderExtended solution;
+
+  for (auto c : formulation.GetVariableSets(solution))
+    nlp.AddVariableSet(c);
+
+  for (auto c : formulation.GetConstraints(solution))
+    nlp.AddConstraintSet(c);
+
+  for (auto c : formulation.GetCosts())
+    nlp.AddCostSet(c);
+
+  auto solver = std::make_shared<ifopt::IpoptSolver>();
+  solver->SetOption("linear_solver", "ma57");
+  solver->SetOption("ma57_pre_alloc", 10.0);
+  solver->SetOption("max_cpu_time", 80.0);
+  //solver->SetOption("jacobian_approximation", "finite-difference-values");
+
+//  solver->SetOption("max_iter", 0);
+//  solver->SetOption("derivative_test", "first-order");
+//  solver->SetOption("print_level", 4);
+//  solver->SetOption("derivative_test_perturbation", 1e-5);
+//  solver->SetOption("derivative_test_tol", 1e-3);
+
+  solver->Solve(nlp);
 //
 //  //printTrajectory(solution);
 //  {
