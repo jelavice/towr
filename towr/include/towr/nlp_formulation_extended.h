@@ -28,6 +28,9 @@ class NlpFormulationExtended : public NlpFormulation
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
 
   VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override final;
+ protected:
+
+  std::vector<NodesVariables::Ptr> MakeBaseVariables() const override final;
 
  private:
 

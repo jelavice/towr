@@ -107,7 +107,7 @@ public:
 protected:
 
   // variables
-  std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
+  virtual std::vector<NodesVariables::Ptr> MakeBaseVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeForceVariables() const;
   std::vector<PhaseDurations::Ptr> MakeContactScheduleVariables() const;

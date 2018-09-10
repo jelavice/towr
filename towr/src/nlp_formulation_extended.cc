@@ -47,19 +47,56 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
   return vars;
 }
 
+std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeBaseVariables() const {
+
+std::vector<NodesVariables::Ptr> vars;
+
+auto extended_params = params_->as<Params>();
+
+  int n_nodes = extended_params->GetBasePolyDurations().size() + 1;
+
+  auto spline_lin = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_lin_nodes);
+
+  double x = final_base_.lin.p().x();
+  double y = final_base_.lin.p().y();
+  double z = terrain_->GetHeight(x,y) - model_.kinematic_model_->GetNominalStanceInBase().front().z();
+  Vector3d final_pos(x, y, z);
+
+  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, extended_params->GetTotalTime());
+  spline_lin->AddStartBound(kPos, extended_params->bounds_initial_lin_pos, initial_base_.lin.p());
+  spline_lin->AddStartBound(kVel, extended_params->bounds_initial_lin_vel, initial_base_.lin.v());
+  spline_lin->AddFinalBound(kPos, extended_params->bounds_final_lin_pos,   final_base_.lin.p());
+  spline_lin->AddFinalBound(kVel, extended_params->bounds_final_lin_vel, final_base_.lin.v());
+  vars.push_back(spline_lin);
+
+  auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
+  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(), extended_params->GetTotalTime());
+  spline_ang->AddStartBound(kPos, extended_params->bounds_initial_ang_pos, initial_base_.ang.p());
+  spline_ang->AddStartBound(kVel, extended_params->bounds_initial_ang_vel, initial_base_.ang.v());
+  spline_ang->AddFinalBound(kPos, extended_params->bounds_final_ang_pos, final_base_.ang.p());
+  spline_ang->AddFinalBound(kVel, extended_params->bounds_final_ang_vel, final_base_.ang.v());
+  vars.push_back(spline_ang);
+
+  return vars;
+}
+
+
+
+
 VariablePtrVec NlpFormulationExtended::GetVariableSets(SplineHolder& spline_holder)
 {
+  //ugly
+  auto casted_ptr = dynamic_cast<SplineContainer*>(spline_holder.as<SplineHolder>());
+  if (casted_ptr == nullptr)
+    throw std::runtime_error("the object passed inside is not the Spline container type");
 
   VariablePtrVec vars;
 
   auto params = params_->as<Params>();
 
-  for (auto name : params->variables_used_) {
-
-    std::cout << "Name to be created: " << name << std::endl;
+  for (auto name : params->variables_used_)
     CreateVariableSet(name, spline_holder, vars);
-    std::cout << "done \n =========================" << std::endl;
-  }
+
   return vars;
 
 }
@@ -67,12 +104,6 @@ VariablePtrVec NlpFormulationExtended::GetVariableSets(SplineHolder& spline_hold
 void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, SplineHolder &s,
                                                VariablePtrVec &vars)
 {
-
-  //ugly
-  auto casted_ptr = dynamic_cast<SplineContainer*>(s.as<SplineHolder>());
-  if (casted_ptr == nullptr)
-    throw std::runtime_error("the object passed inside is not the Spline container type");
-
 
   auto spline_holder = s.as<SplineContainer>();
   auto params = params_->as<Params>();
