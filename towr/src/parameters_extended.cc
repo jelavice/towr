@@ -6,6 +6,7 @@
  */
 
 #include "towr/parameters_extended.h"
+#include <iostream>
 
 using VecTimes = towr::ParametersExtended::Base::VecTimes;
 
@@ -70,6 +71,16 @@ void ParametersExtended::SetJointVelocityAndPositionLimitConstraint()
   constraints_.push_back(JointVelocityAndPositionLimits);
 }
 
+void ParametersExtended::SetSwingConstraint() {
+
+  std::cout << "\n====== WARNING ==============" << std::endl;
+  std::cout << "=============================" << std::endl;
+  std::cout <<  "If you have an end-effector that is not in contact at the beginning, swing constraint might segfault in the ipopt" << std::endl;
+
+  constraints_.push_back(Swing);
+
+}
+
 //parameters
 
 void ParametersExtended::SetJointPolynomialDuration(double dt)
@@ -120,11 +131,6 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
   }
 
   return any_spline_timings_;
-}
-
-VecTimes ParametersExtended::GetBasePolyDurations() const
-{
-  return GetAnyPolyDurations(duration_base_polynomial_);
 }
 
 VecTimes ParametersExtended::GetJointPolyDurations() const

@@ -204,7 +204,7 @@ struct Parameters
   /**
    * @brief Ensures smooth endeffector motion during swing-phase (recommended)
    */
-  void SetSwingConstraint();
+  virtual void SetSwingConstraint();
 
   /**
    * @brief Ensures that the dynamic model is fullfilled at discrete times.
@@ -214,7 +214,7 @@ struct Parameters
   /**
    * @brief Ensures that the range of motion is respected at discrete times.
    */
-  virtual void SetKinematicConstraint();
+  void SetKinematicConstraint();
 
   /**
    * @brief Ensures unilateral forces and inside the friction cone.

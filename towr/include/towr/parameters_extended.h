@@ -11,10 +11,8 @@
 
 namespace towr {
 
-class ParametersExtended : public Parameters
+struct ParametersExtended : public Parameters
 {
- public:
-
   using Ptr = std::shared_ptr<ParametersExtended>;
   using Base = Parameters;
 
@@ -41,9 +39,7 @@ class ParametersExtended : public Parameters
 
   //variables
   void AddBaseVariables();
-
   void AddEEMotionVariables();
-
   void AddContactForceVariables();
 
  private:
@@ -51,35 +47,31 @@ class ParametersExtended : public Parameters
 
  public:
   void AddJointVariables();
-
   void ClearAllVariables();
 
   //constraints
   void SetTerrainConstraint();
-
   void DeleteAllConstraints();
-
   void SetJointVelocityAndPositionLimitConstraint();
+  void SetSwingConstraint() override final;
 
 //set all the params
   void SetJointPolynomialDuration(double dt);
-
   void SetJointVelocityAndPositionLimitConstraintDt(double dt);
-
   void SetNormalFoceLimit(double fmax);
-
   void SetDynamicConstraintDt(double dt);
-
   void SetBasePolynomialDuration(double dt);
-
   void SetRangeOfMotionConstraintDt(double dt);
 
   //other useful or not so useful shit
   VecTimes GetJointPolyDurations() const;
-
-  VecTimes GetBasePolyDurations() const;
-
   int GetEECount() const override final;
+
+  std::vector<int> bounds_initial_lin_pos, bounds_initial_lin_vel, bounds_initial_ang_pos,
+      bounds_initial_ang_vel;
+
+  std::vector<int> bounds_final_lin_pos, bounds_final_lin_vel, bounds_final_ang_pos,
+      bounds_final_ang_vel;
 
  private:
 
