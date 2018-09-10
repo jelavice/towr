@@ -7,6 +7,7 @@
 
 #include "towr/parameters_extended.h"
 #include <iostream>
+#include "towr/variables/cartesian_dimensions.h"
 
 using VecTimes = towr::ParametersExtended::Base::VecTimes;
 
@@ -24,6 +25,12 @@ ParametersExtended::ParametersExtended(int n_ee)
 
   for (int i = 0; i < n_ee; ++i)
     use_bounds_initial_ee_pos.push_back(true); // add initial bounds_by default for the ee's
+
+  //set by default all bounds to be active
+  bounds_initial_ang_pos = {X,Y,Z};
+  bounds_initial_ang_vel = {X,Y,Z};
+  bounds_initial_lin_pos = {X,Y,Z};
+  bounds_initial_lin_vel = {X,Y,Z};
 
 }
 //variables
