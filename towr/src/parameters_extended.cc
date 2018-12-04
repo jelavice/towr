@@ -7,6 +7,7 @@
 
 #include "towr/parameters_extended.h"
 #include <iostream>
+#include <cmath>
 #include "towr/variables/cartesian_dimensions.h"
 
 using VecTimes = towr::ParametersExtended::Base::VecTimes;
@@ -132,8 +133,10 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
   double dt = polynomial_duration;
   double t_left = GetTotalTime();
 
+
+
   double eps = 1e-10;  // since repeated subtraction causes inaccuracies
-  while (t_left > eps) {
+  while (t_left > eps && t_left >= 0.0) {
     double duration = t_left > dt ? dt : t_left;
     any_spline_timings_.push_back(duration);
 
@@ -145,6 +148,10 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
 
 VecTimes ParametersExtended::GetJointPolyDurations() const
 {
+  const double eps = 1e-6;
+  if (std::fabs(duration_joint_polynomials_) <= eps)
+    std::cerr << "Joint polynomial dt not set" << std::endl;
+
   return GetAnyPolyDurations(duration_joint_polynomials_);
 }
 

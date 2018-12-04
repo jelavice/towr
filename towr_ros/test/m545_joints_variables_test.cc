@@ -24,6 +24,7 @@
 
 #include <towr/models/examples/m545_model_with_joints.h>
 
+
 using namespace towr;
 
 void printTrajectory(const SplineHolder &x)
@@ -93,11 +94,9 @@ void printTrajectory(const SplineHolder &x)
   }
 }
 
-void setParameters(NlpFormulationExtended *formulation, double dt,
+void setParameters(NlpFormulationExtended *formulation,
                    const std::string &urdfDescription)
 {
-
-  formulation->model_ = RobotModel(RobotModel::m545WithJoints, urdfDescription, dt);
 
   int n_ee = formulation->model_.kinematic_model_->GetNumberOfEndeffectors();
   auto model = formulation->model_.kinematic_model_->as<KinematicModelWithJoints>();
@@ -148,7 +147,8 @@ void setParameters(NlpFormulationExtended *formulation, double dt,
   params->SetDynamicConstraint();
   params->SetKinematicConstraint();
   params->SetForceConstraint();
-  //params->SetSwingConstraint(); //do not set this one or it will segfault
+
+  params->SetJointPolynomialDuration(0.02);
 
 }
 
@@ -162,16 +162,19 @@ int main(int argc, char** argv)
   std::string urdfDescription;
   nh.getParam("romo_mm_description", urdfDescription);
 
+  const double dt = 0.1;
   NlpFormulationExtended formulation;
+  formulation.model_ = RobotModel(RobotModel::m545WithJoints, urdfDescription, dt);
+  int n_ee = formulation.model_.kinematic_model_->GetNumberOfEndeffectors();
   formulation.params_ = nullptr;  // reset the default params
-  formulation.params_ = std::make_shared<ParametersExtended>(M545KinematicModelWithJoints::numEE);
+  formulation.params_ = std::make_shared<ParametersExtended>(n_ee);
   ParametersExtended *params = formulation.params_->as<ParametersExtended>();
 
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
-  const double dt = 0.1;
-  setParameters(&formulation, dt, urdfDescription);
+
+  setParameters(&formulation, urdfDescription);
 
   // Pass this information to the actual solver
   ifopt::Problem nlp;
@@ -179,17 +182,17 @@ int main(int argc, char** argv)
 
   for (auto c : formulation.GetVariableSets(solution))
     nlp.AddVariableSet(c);
-
-  for (auto c : formulation.GetConstraints(solution))
-    nlp.AddConstraintSet(c);
-
-  for (auto c : formulation.GetCosts())
-    nlp.AddCostSet(c);
-
-  auto solver = std::make_shared<ifopt::IpoptSolver>();
-  solver->SetOption("linear_solver", "ma57");
-  solver->SetOption("ma57_pre_alloc", 10.0);
-  solver->SetOption("max_cpu_time", 80.0);
+//
+//  for (auto c : formulation.GetConstraints(solution))
+//    nlp.AddConstraintSet(c);
+//
+//  for (auto c : formulation.GetCosts())
+//    nlp.AddCostSet(c);
+//
+//  auto solver = std::make_shared<ifopt::IpoptSolver>();
+//  solver->SetOption("linear_solver", "ma57");
+//  solver->SetOption("ma57_pre_alloc", 10.0);
+//  solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
 //  solver->SetOption("max_iter", 0);
@@ -198,7 +201,7 @@ int main(int argc, char** argv)
 //  solver->SetOption("derivative_test_perturbation", 1e-5);
 //  solver->SetOption("derivative_test_tol", 1e-3);
 
-  solver->Solve(nlp);
+//  solver->Solve(nlp);
 //
 //  //printTrajectory(solution);
 //  {
@@ -229,5 +232,8 @@ int main(int argc, char** argv)
 //    bag.close();
 //  }
 
+  std::cout << "Exititng" << std::endl;
+
+  return 0;
 }
 
