@@ -182,26 +182,26 @@ int main(int argc, char** argv)
 
   for (auto c : formulation.GetVariableSets(solution))
     nlp.AddVariableSet(c);
-//
-//  for (auto c : formulation.GetConstraints(solution))
-//    nlp.AddConstraintSet(c);
-//
-//  for (auto c : formulation.GetCosts())
-//    nlp.AddCostSet(c);
-//
-//  auto solver = std::make_shared<ifopt::IpoptSolver>();
-//  solver->SetOption("linear_solver", "ma57");
-//  solver->SetOption("ma57_pre_alloc", 10.0);
-//  solver->SetOption("max_cpu_time", 80.0);
+
+  for (auto c : formulation.GetConstraints(solution))
+    nlp.AddConstraintSet(c);
+
+  for (auto c : formulation.GetCosts())
+    nlp.AddCostSet(c);
+
+  auto solver = std::make_shared<ifopt::IpoptSolver>();
+  solver->SetOption("linear_solver", "ma57");
+  solver->SetOption("ma57_pre_alloc", 10.0);
+  solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-//  solver->SetOption("max_iter", 0);
-//  solver->SetOption("derivative_test", "first-order");
-//  solver->SetOption("print_level", 4);
-//  solver->SetOption("derivative_test_perturbation", 1e-5);
-//  solver->SetOption("derivative_test_tol", 1e-3);
+  solver->SetOption("max_iter", 0);
+  solver->SetOption("derivative_test", "first-order");
+  solver->SetOption("print_level", 4);
+  solver->SetOption("derivative_test_perturbation", 1e-5);
+  solver->SetOption("derivative_test_tol", 1e-3);
 
-//  solver->Solve(nlp);
+  solver->Solve(nlp);
 //
 //  //printTrajectory(solution);
 //  {

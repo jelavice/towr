@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+	<!-- robot description loading parameters -->
+	<arg name="excavator_name" default="m545" />
+	<arg name="description_name" default="/romo_mm_description" />
+	<arg name="perfect_sensors" default="false" />
+	<arg name="fixed" default="false" />
+	<arg name="using_velodyne" default="false" />
+	<arg name="using_gps" default="true" />
+	<arg name="using_cabin_imu" default="true" />
+	<arg name="parse_xacro" default="false" />
+
+	<node pkg="towr_test" type="m545_joints_variables_test"
+		name="m545_joints_variables_test" output="screen">
+		<param name="description_name" type="string"
+			value="$(arg description_name)" />
+	</node>
+
+
+	<!-- Load robot description -->
+	<include file="$(find m545_description_ros)/launch/load.launch">
+		<arg name="excavator_name" value="$(arg excavator_name)" />
+		<arg name="simulation" value="true" />
+		<arg name="perfect_sensors" value="$(arg perfect_sensors)" />
+		<arg name="fixed" value="$(arg fixed)" />
+		<arg name="using_velodyne" value="$(arg using_velodyne)" />
+		<arg name="using_gps" value="$(arg using_gps)" />
+		<arg name="using_cabin_imu" value="$(arg using_cabin_imu)" />
+		<arg name="description_name" value="$(arg description_name)" />
+		<arg name="parse_xacro" value="$(arg parse_xacro)" />
+	</include>
+	<!-- <arg name="rviz_config" default="visualizer_node" /> <node name="rviz" 
+		pkg="rviz" type="rviz" args="-d $(find m545_path_vis)/rviz/$(arg rviz_config).rviz" 
+		required="true" /> -->
+
+</launch>
