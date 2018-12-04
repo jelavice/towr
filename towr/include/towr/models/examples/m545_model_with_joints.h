@@ -103,7 +103,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   void PrintJointLimits();
   void CalculateJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
-                                           loco_m545::RD::LimbEnum limb, unsigned int dof);
+                                           loco_m545::RD::LimbEnum limb, unsigned int dof, int *globalJointId);
 
   void UpdateModel(VectorXd jointAngles, int limbId, ExcavatorModel &model) const;
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,

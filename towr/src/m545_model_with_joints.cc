@@ -100,16 +100,15 @@ void M545KinematicModelWithJoints::CalculateJointLimits()
   excavator_model::Limits limits;
   limits.init();
 
+  int jointId = 0;
   for (int i = 0; i < numEE; ++i)
-    CalculateJointLimitsforSpecificLimb(limits, GetLimbEnum(i), GetNumDof(i));
+    CalculateJointLimitsforSpecificLimb(limits, GetLimbEnum(i), GetNumDof(i), &jointId);
 
 }
 
 void M545KinematicModelWithJoints::CalculateJointLimitsforSpecificLimb(
-    const excavator_model::Limits &limits, loco_m545::RD::LimbEnum limb, unsigned int dof)
+    const excavator_model::Limits &limits, loco_m545::RD::LimbEnum limb, unsigned int dof, int *globalJointId)
 {
-
-  static unsigned int id = 0;
 
   unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(limb));
   unsigned int idEnd = idStart + dof;
@@ -122,9 +121,9 @@ void M545KinematicModelWithJoints::CalculateJointLimitsforSpecificLimb(
     std::string currJoint = loco_m545::RD::mapKeyEnumToKeyName(jointEnum);
     joint_limits_["lowerLimit"][currJoint] = std::min<double>(lowerLimit, upperLimit);
     joint_limits_["upperLimit"][currJoint] = std::max<double>(lowerLimit, upperLimit);
-    upper_joint_limits_(id) = joint_limits_["upperLimit"][currJoint];
-    lower_joint_limits_(id) = joint_limits_["lowerLimit"][currJoint];
-    ++id;
+    upper_joint_limits_(*globalJointId) = joint_limits_["upperLimit"][currJoint];
+    lower_joint_limits_(*globalJointId) = joint_limits_["lowerLimit"][currJoint];
+    *globalJointId = *globalJointId + 1;
   }
 
   upper_joint_limits_(LimbStartIndex::BOOM) = 1.0e20;
