@@ -11,9 +11,6 @@
 	<arg name="using_cabin_imu" default="true" />
 	<arg name="parse_xacro" default="false" />
 
-	<param name="which_test" type="string" value="trans_test" /> <!-- rot_test or trans_test-->
-	<param name="num_tests" type="int" value="10000" />
-
 	<node pkg="towr_ros" type="m545_model_with_joints_jacobians_unit_test"
 		name="jacobians_unit_test" output="screen">
 		<param name="description_name" type="string"
