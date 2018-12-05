@@ -16,7 +16,6 @@ namespace towr {
 using VariablePtrVec = NlpFormulationExtended::VariablePtrVec;
 using ConstraintPtrVec = NlpFormulationExtended::ConstraintPtrVec;
 
-
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
 
@@ -37,10 +36,11 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
       initial_joint_pos(j) = position;
       final_joint_pos(j) = position;
     }
-    joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos,
-                                           extended_params->GetTotalTime());
+    double totalTime = extended_params->GetTotalTime();
+    joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos, totalTime);
     vars.push_back(joint_spline);
   }
+
   return vars;
 }
 
@@ -61,8 +61,8 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeBaseVariables() con
       - model_.kinematic_model_->GetNominalStanceInBase().front().z();
   Vector3d final_pos(x, y, z);
 
-  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos,
-                                       extended_params->GetTotalTime());
+  double totalTime = extended_params->GetTotalTime();
+  spline_lin->SetByLinearInterpolation(initial_base_.lin.p(), final_pos, totalTime);
   spline_lin->AddStartBound(kPos, extended_params->bounds_initial_lin_pos, initial_base_.lin.p());
   spline_lin->AddStartBound(kVel, extended_params->bounds_initial_lin_vel, initial_base_.lin.v());
   spline_lin->AddFinalBound(kPos, extended_params->bounds_final_lin_pos, final_base_.lin.p());
@@ -70,8 +70,7 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeBaseVariables() con
   vars.push_back(spline_lin);
 
   auto spline_ang = std::make_shared<NodesVariablesAll>(n_nodes, k3D, id::base_ang_nodes);
-  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(),
-                                       extended_params->GetTotalTime());
+  spline_ang->SetByLinearInterpolation(initial_base_.ang.p(), final_base_.ang.p(), totalTime);
   spline_ang->AddStartBound(kPos, extended_params->bounds_initial_ang_pos, initial_base_.ang.p());
   spline_ang->AddStartBound(kVel, extended_params->bounds_initial_ang_vel, initial_base_.ang.v());
   spline_ang->AddFinalBound(kPos, extended_params->bounds_final_ang_pos, final_base_.ang.p());
@@ -122,7 +121,7 @@ VariablePtrVec NlpFormulationExtended::GetVariableSets(SplineHolder& spline_hold
 
   VariablePtrVec vars;
 
-  auto params = params_->as<Params>();
+  auto params = params_->as<ParametersExtended>();
 
   for (auto name : params->variables_used_)
     CreateVariableSet(name, spline_holder, vars);
@@ -201,8 +200,8 @@ NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMoti
   return c;
 }
 
-ConstraintPtrVec NlpFormulationExtended::GetConstraint(
-    Parameters::ConstraintName name, const SplineHolder& s) const
+ConstraintPtrVec NlpFormulationExtended::GetConstraint(Parameters::ConstraintName name,
+                                                       const SplineHolder& s) const
 {
 
   //okay first checkt the stuff that I have newly added
@@ -210,37 +209,37 @@ ConstraintPtrVec NlpFormulationExtended::GetConstraint(
   switch (name) {
     case Parameters::JointLimits:
       return MakeJointLimitsConstraint(s);
-    default:
-      Base::GetConstraint(name, s);
   }
 
-  return ConstraintPtrVec();  // just here sot that eclipse don't complain. Should never be reached
+  //now check the stuff that has been there from before
+  return Base::GetConstraint(name, s);
 
 }
 
-ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineHolder &s) const{
+ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineHolder &s) const
+{
 
   ConstraintPtrVec c;
 
   //hack
-    auto model = std::dynamic_pointer_cast<KinematicModelWithJoints>(model_.kinematic_model_);
+  auto model = std::dynamic_pointer_cast<KinematicModelWithJoints>(model_.kinematic_model_);
 
-    if (model == nullptr)
-      throw std::runtime_error("Could not cast kinematicModelPtr to KinematicModelWithJoints");
+  if (model == nullptr)
+    throw std::runtime_error("Could not cast kinematicModelPtr to KinematicModelWithJoints");
 
-    auto params = std::dynamic_pointer_cast<ParametersExtended>(params_);
+  auto params = std::dynamic_pointer_cast<ParametersExtended>(params_);
 
-    if (params == nullptr)
-      throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
+  if (params == nullptr)
+    throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
 
+  for (int ee = 0; ee < params->GetEECount(); ee++) {
+    auto joint_con = std::make_shared<EEjointLimitsConstraint>(model, params->GetTotalTime(),
+                                                               params->dt_joint_limit_constraint_,
+                                                               ee, s);
+    c.push_back(joint_con);
+  }
 
-    for (int ee = 0; ee < params->GetEECount(); ee++) {
-      auto joint_con = std::make_shared<EEjointLimitsConstraint>(
-          model, params->GetTotalTime(), params->dt_joint_limit_constraint_, ee, s);
-      c.push_back(joint_con);
-    }
-
-    return c;
+  return c;
 }
 
 } /* namespace */

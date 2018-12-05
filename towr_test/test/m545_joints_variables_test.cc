@@ -201,11 +201,11 @@ int main(int argc, char** argv)
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-//  solver->SetOption("max_iter", 0);
-//  solver->SetOption("derivative_test", "first-order");
-//  solver->SetOption("print_level", 4);
-//  solver->SetOption("derivative_test_perturbation", 1e-5);
-//  solver->SetOption("derivative_test_tol", 1e-3);
+  solver->SetOption("max_iter", 0);
+  solver->SetOption("derivative_test", "first-order");
+  solver->SetOption("print_level", 4);
+  solver->SetOption("derivative_test_perturbation", 1e-5);
+  solver->SetOption("derivative_test_tol", 1e-3);
 
   solver->Solve(nlp);
 //
