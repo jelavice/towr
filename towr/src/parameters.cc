@@ -74,7 +74,7 @@ Parameters::SetDynamicConstraint ()
 void
 Parameters::SetKinematicConstraint ()
 {
-  constraints_.push_back(EndeffectorRom);
+  constraints_.push_back(EndeffectorRomBox);
 }
 
 void

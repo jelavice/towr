@@ -27,12 +27,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include <towr/constraints/range_of_motion_constraint.h>
+#include <towr/constraints/range_of_motion_box_constraint.h>
 #include <towr/variables/variable_names.h>
 
 namespace towr {
 
-RangeOfMotionConstraint::RangeOfMotionConstraint (const KinematicModel::Ptr& model,
+RangeOfMotionBoxConstraint::RangeOfMotionBoxConstraint (const KinematicModel::Ptr& model,
                                                   double T, double dt,
                                                   const EE& ee,
                                                   const SplineHolder& spline_holder)
@@ -50,13 +50,13 @@ RangeOfMotionConstraint::RangeOfMotionConstraint (const KinematicModel::Ptr& mod
 }
 
 int
-RangeOfMotionConstraint::GetRow (int node, int dim) const
+RangeOfMotionBoxConstraint::GetRow (int node, int dim) const
 {
   return node*k3D + dim;
 }
 
 void
-RangeOfMotionConstraint::UpdateConstraintAtInstance (double t, int k, VectorXd& g) const
+RangeOfMotionBoxConstraint::UpdateConstraintAtInstance (double t, int k, VectorXd& g) const
 {
   Vector3d base_W  = base_linear_->GetPoint(t).p();
   Vector3d pos_ee_W = ee_motion_->GetPoint(t).p();
@@ -69,7 +69,7 @@ RangeOfMotionConstraint::UpdateConstraintAtInstance (double t, int k, VectorXd& 
 }
 
 void
-RangeOfMotionConstraint::UpdateBoundsAtInstance (double t, int k, VecBound& bounds) const
+RangeOfMotionBoxConstraint::UpdateBoundsAtInstance (double t, int k, VecBound& bounds) const
 {
   for (int dim=0; dim<k3D; ++dim) {
     ifopt::Bounds b;
@@ -81,7 +81,7 @@ RangeOfMotionConstraint::UpdateBoundsAtInstance (double t, int k, VecBound& boun
 }
 
 void
-RangeOfMotionConstraint::UpdateJacobianAtInstance (double t, int k,
+RangeOfMotionBoxConstraint::UpdateJacobianAtInstance (double t, int k,
                                                    std::string var_set,
                                                    Jacobian& jac) const
 {

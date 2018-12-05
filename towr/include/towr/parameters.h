@@ -143,14 +143,15 @@ struct Parameters
   enum ConstraintName
   {
     Dynamic,        ///< sets DynamicConstraint
-    EndeffectorRom,  ///< sets RangeOfMotionConstraint
+    EndeffectorRomBox,  ///< sets RangeOfMotionConstraint
     TotalTime,      ///< sets TotalDurationConstraint
     Terrain,        ///< sets TerrainConstraint
     Force,          ///< sets ForceConstraint
     Swing,          ///< sets SwingConstraint
     BaseRom,        ///< sets BaseMotionConstraint
     BaseAcc,         ///< sets SplineAccConstraint
-    JointVelocityAndPositionLimits
+    JointVelocityAndPositionLimits,
+    EndeffectorRom
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization
@@ -214,7 +215,7 @@ struct Parameters
   /**
    * @brief Ensures that the range of motion is respected at discrete times.
    */
-  void SetKinematicConstraint();
+  virtual void SetKinematicConstraint();
 
   /**
    * @brief Ensures unilateral forces and inside the friction cone.

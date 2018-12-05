@@ -52,7 +52,7 @@ namespace towr {
   *
   * @ingroup Constraints
   */
-class RangeOfMotionConstraint : public TimeDiscretizationConstraint {
+class RangeOfMotionBoxConstraint : public TimeDiscretizationConstraint {
 public:
   using EE = uint;
   using Vector3d = Eigen::Vector3d;
@@ -65,11 +65,11 @@ public:
    * @param ee            The endeffector for which to constrain the range.
    * @param spline_holder Pointer to the current variables.
    */
-  RangeOfMotionConstraint(const KinematicModel::Ptr& robot_model,
+  RangeOfMotionBoxConstraint(const KinematicModel::Ptr& robot_model,
                           double T, double dt,
                           const EE& ee,
                           const SplineHolder& spline_holder);
-  virtual ~RangeOfMotionConstraint() = default;
+  virtual ~RangeOfMotionBoxConstraint() = default;
 
 private:
   NodeSpline::Ptr base_linear_;     ///< the linear position of the base.
