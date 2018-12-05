@@ -121,7 +121,8 @@ void setParameters(NlpFormulationExtended *formulation,
       params->ee_in_contact_at_start_.push_back(true);
   }
 
-  params->use_bounds_initial_ee_pos.at(boom_limb_id) = false;
+  for (int i=0; i < n_ee; ++i)
+    params->use_bounds_initial_ee_pos.at(i) = false;
 
   double base_height = model->GetBasePositionFromFeetPostions().z();
   formulation->initial_base_.lin.at(towr::kPos) << 0.0, 0.0, base_height;
@@ -135,18 +136,20 @@ void setParameters(NlpFormulationExtended *formulation,
 
   params->bounds_initial_ang_pos = {};
   params->bounds_initial_ang_vel = {X,Y,Z};
-  params->bounds_initial_lin_pos = {};
+  params->bounds_initial_lin_pos = {X,Y};
   params->bounds_initial_lin_vel = {X,Y,Z};
 
   params->AddBaseVariables();
   params->AddEEMotionVariables();
-  params->AddContactForceVariables();
   params->AddJointVariables();
 
   params->SetTerrainConstraint();
-  params->SetDynamicConstraint();
   params->SetKinematicConstraint();
-  params->SetForceConstraint();
+
+  //remowe this since we only want to have a kinematic model
+  //params->AddContactForceVariables();
+  //params->SetDynamicConstraint();
+  //params->SetForceConstraint();
 
   params->SetJointPolynomialDuration(0.02);
   params->SetJointVelocityAndPositionLimitConstraintDt(0.1);
@@ -174,7 +177,6 @@ int main(int argc, char** argv)
   // terrain
   formulation.terrain_ = std::make_shared<FlatGround>(0.0);
 
-
   setParameters(&formulation, urdfDescription);
 
   // Pass this information to the actual solver
@@ -199,11 +201,11 @@ int main(int argc, char** argv)
   solver->SetOption("max_cpu_time", 80.0);
   //solver->SetOption("jacobian_approximation", "finite-difference-values");
 
-  solver->SetOption("max_iter", 0);
-  solver->SetOption("derivative_test", "first-order");
-  solver->SetOption("print_level", 4);
-  solver->SetOption("derivative_test_perturbation", 1e-5);
-  solver->SetOption("derivative_test_tol", 1e-3);
+//  solver->SetOption("max_iter", 0);
+//  solver->SetOption("derivative_test", "first-order");
+//  solver->SetOption("print_level", 4);
+//  solver->SetOption("derivative_test_perturbation", 1e-5);
+//  solver->SetOption("derivative_test_tol", 1e-3);
 
   solver->Solve(nlp);
 //

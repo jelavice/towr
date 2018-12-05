@@ -185,5 +185,23 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
 
 }
 
+NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMotionNonBoxConstraint(const SplineHolder& s) const{
+
+  ConstraintPtrVec c;
+
+  //todo implement this
+//  for (int ee=0; ee<params_->GetEECount(); ee++) {
+//    auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
+//                                                         params_->GetTotalTime(),
+//                                                         params_->dt_constraint_range_of_motion_,
+//                                                         ee,
+//                                                         s);
+//    c.push_back(rom);
+//  }
+
+  return c;
+}
+
+
 } /* namespace */
 

@@ -136,8 +136,6 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
   double dt = polynomial_duration;
   double t_left = GetTotalTime();
 
-
-
   double eps = 1e-10;  // since repeated subtraction causes inaccuracies
   while (t_left > eps && t_left >= 0.0) {
     double duration = t_left > dt ? dt : t_left;
