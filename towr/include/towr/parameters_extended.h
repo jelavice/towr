@@ -57,7 +57,9 @@ struct ParametersExtended : public Parameters
   void SetTerrainConstraint();
   void DeleteAllConstraints();
   void SetJointLimitsconstraint();
-  void SetSwingConstraint() override final;
+  void SetSwingConstraint() override;
+  void SetKinematicConstraint() override;
+
 
 //set all the params
   void SetJointPolynomialDuration(double dt);
@@ -66,6 +68,7 @@ struct ParametersExtended : public Parameters
   void SetDynamicConstraintDt(double dt);
   void SetBasePolynomialDuration(double dt);
   void SetRangeOfMotionConstraintDt(double dt);
+  void SetForwardKinematicsConstraint(double dt);
 
   //other useful or not so useful shit
   VecTimes GetJointPolyDurations() const;
@@ -83,6 +86,7 @@ struct ParametersExtended : public Parameters
   int n_ee_;
 
   double dt_joint_limit_constraint_;
+  double dt_forward_kinematics_constraint_;
   double duration_joint_polynomials_;
 
   std::vector<VariableSetName> variables_used_;

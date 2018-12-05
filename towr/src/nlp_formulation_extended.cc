@@ -6,15 +6,30 @@
  */
 
 #include "towr/nlp_formulation_extended.h"
-#include "towr/models/kinematic_model_with_joints.h"
 #include "towr/variables/nodes_variables_ee_joints.h"
 #include "towr/variables/variable_names.h"
 #include "towr/constraints/ee_joint_limits_constraint.h"
+#include "towr/constraints/ee_forward_kinematics_constraint.h"
 
 namespace towr {
 
 using VariablePtrVec = NlpFormulationExtended::VariablePtrVec;
 using ConstraintPtrVec = NlpFormulationExtended::ConstraintPtrVec;
+
+void NlpFormulationExtended::CastPointers(KinematicModelWithJoints::Ptr *model,
+                                          ParametersExtended::Ptr *params) const
+{
+  //hack
+  *model = std::dynamic_pointer_cast<KinematicModelWithJoints>(model_.kinematic_model_);
+
+  if (model == nullptr)
+    throw std::runtime_error("Could not cast kinematicModelPtr to KinematicModelWithJoints");
+
+  *params = std::dynamic_pointer_cast<ParametersExtended>(params_);
+
+  if (params == nullptr)
+    throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
+}
 
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
@@ -209,6 +224,8 @@ ConstraintPtrVec NlpFormulationExtended::GetConstraint(Parameters::ConstraintNam
   switch (name) {
     case Parameters::JointLimits:
       return MakeJointLimitsConstraint(s);
+    case Parameters::ForwardKinematics:
+      return MakeForwardKinematicsConstraint(s);
   }
 
   //now check the stuff that has been there from before
@@ -221,22 +238,36 @@ ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineH
 
   ConstraintPtrVec c;
 
-  //hack
-  auto model = std::dynamic_pointer_cast<KinematicModelWithJoints>(model_.kinematic_model_);
-
-  if (model == nullptr)
-    throw std::runtime_error("Could not cast kinematicModelPtr to KinematicModelWithJoints");
-
-  auto params = std::dynamic_pointer_cast<ParametersExtended>(params_);
-
-  if (params == nullptr)
-    throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
 
   for (int ee = 0; ee < params->GetEECount(); ee++) {
     auto joint_con = std::make_shared<EEjointLimitsConstraint>(model, params->GetTotalTime(),
                                                                params->dt_joint_limit_constraint_,
                                                                ee, s);
     c.push_back(joint_con);
+  }
+
+  return c;
+}
+
+ConstraintPtrVec NlpFormulationExtended::MakeForwardKinematicsConstraint(
+    const SplineHolder &s) const
+{
+  ConstraintPtrVec c;
+
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
+
+  for (int ee = 0; ee < params->GetEECount(); ee++) {
+
+    double totalTime = params->GetTotalTime();
+    auto fwdKinematicsCon = std::make_shared<EEforwardKinematicsConstraint>(
+        model, totalTime, params->dt_forward_kinematics_constraint_, ee, s);
+    c.push_back(fwdKinematicsCon);
+
   }
 
   return c;

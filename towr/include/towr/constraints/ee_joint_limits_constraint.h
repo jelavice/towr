@@ -31,7 +31,7 @@ class EEjointLimitsConstraint : public TimeDiscretizationConstraint
 
  private:
 
-  //to do remove this
+  //todo remove this
   const double max_joint_vel_ = 0.5; /* rad/s */
 
   int num_dof_;

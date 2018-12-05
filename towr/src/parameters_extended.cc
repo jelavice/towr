@@ -33,8 +33,9 @@ ParametersExtended::ParametersExtended(int n_ee)
   bounds_initial_lin_pos = {X,Y,Z};
   bounds_initial_lin_vel = {X,Y,Z};
 
-  SetJointPolynomialDuration(0.02);
+  SetJointPolynomialDuration(0.04);
   SetJointLimitsConstraintDt(0.1);
+  SetForwardKinematicsConstraint(0.1);
 
 }
 //variables
@@ -80,12 +81,12 @@ void ParametersExtended::DeleteAllConstraints()
   constraints_.clear();
 }
 
-//todo rename this bullshit
 void ParametersExtended::SetJointLimitsconstraint()
 {
   constraints_.push_back(JointLimits);
 }
 
+//todo get rid of this
 void ParametersExtended::SetSwingConstraint() {
 
   std::cout << "\n====== WARNING ==============" << std::endl;
@@ -96,13 +97,17 @@ void ParametersExtended::SetSwingConstraint() {
 
 }
 
+void ParametersExtended::SetKinematicConstraint() {
+  constraints_.push_back(ForwardKinematics);
+}
+
 //parameters
 
 void ParametersExtended::SetJointPolynomialDuration(double dt)
 {
   duration_joint_polynomials_ = dt;
 }
-//todo rename this bullshit
+
 void ParametersExtended::SetJointLimitsConstraintDt(double dt)
 {
   dt_joint_limit_constraint_ = dt;
@@ -127,6 +132,11 @@ void ParametersExtended::SetRangeOfMotionConstraintDt(double dt)
 {
   dt_constraint_range_of_motion_ = dt;
 }
+
+void ParametersExtended::SetForwardKinematicsConstraint(double dt){
+  dt_forward_kinematics_constraint_ = dt;
+}
+
 
 // other methods
 
@@ -184,6 +194,7 @@ void ParametersExtended::PrintAllParams(){
   std::cout << "Num endeffectors: " << n_ee_ << std::endl;
   std::cout << "Duration of joint polynomials: " << duration_joint_polynomials_ << std::endl;
   std::cout << "Joint limits constraint dt: " << dt_joint_limit_constraint_ << std::endl;
+  std::cout << "forward kinematics constraint dt: " << dt_forward_kinematics_constraint_ << std::endl;
   PrintVectors<VariableSetName>(variables_used_, "variables used");
   PrintVectors<int>(bounds_initial_lin_pos, "bounds_initial_lin_pos");
   PrintVectors<int>(bounds_initial_lin_vel, "bounds_initial_lin_vel");

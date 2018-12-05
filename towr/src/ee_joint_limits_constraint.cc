@@ -14,12 +14,10 @@ namespace towr {
 EEjointLimitsConstraint::EEjointLimitsConstraint(KinematicModelWithJoints::Ptr model,
                                                            double T, double dt, EE ee,
                                                            const SplineHolder& spline_holder)
-    : TimeDiscretizationConstraint(T, dt, "eejointlimits-" + std::to_string(ee))
+    : TimeDiscretizationConstraint(T, dt, "jointlimits-" + std::to_string(ee))
 {
 
   ee_ = ee;
-
-  //todo fix this
 
   const SplineHolderExtended *spline_holder_ptr = spline_holder.as<SplineHolderExtended>();
 
@@ -53,12 +51,12 @@ void EEjointLimitsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& 
 {
 
   int row_start = GetRow(k);
-  //hack for the boom
+  //todo remove the hack for the boom,
   if (ee_ == 4) { // if this is boom then do
 
     Eigen::VectorXd boom_bounds;
 
-    // fix the joints
+    // clamp the joint angles for the boom
     // order [TURN, BOOM, DIPPER, TELE, EE_PITCH]
     if (num_dof_ == 4) {
       boom_bounds.resize(num_dof_);
