@@ -150,8 +150,7 @@ struct Parameters
     Swing,          ///< sets SwingConstraint
     BaseRom,        ///< sets BaseMotionConstraint
     BaseAcc,         ///< sets SplineAccConstraint
-    JointVelocityAndPositionLimits,
-    EndeffectorRom
+    JointLimits
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization

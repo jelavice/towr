@@ -80,9 +80,10 @@ void ParametersExtended::DeleteAllConstraints()
   constraints_.clear();
 }
 
+//todo rename this bullshit
 void ParametersExtended::SetJointVelocityAndPositionLimitConstraint()
 {
-  constraints_.push_back(JointVelocityAndPositionLimits);
+  constraints_.push_back(JointLimits);
 }
 
 void ParametersExtended::SetSwingConstraint() {
@@ -101,7 +102,7 @@ void ParametersExtended::SetJointPolynomialDuration(double dt)
 {
   duration_joint_polynomials_ = dt;
 }
-
+//todo rename this bullshit
 void ParametersExtended::SetJointVelocityAndPositionLimitConstraintDt(double dt)
 {
   dt_joint_velocity_and_position_limit_constraint_ = dt;

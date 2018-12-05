@@ -13,12 +13,8 @@
 namespace towr {
 
 using VariablePtrVec = NlpFormulationExtended::VariablePtrVec;
+using ConstraintPtrVec = NlpFormulationExtended::ConstraintPtrVec;
 
-//NlpFormulationExtended::NlpFormulationExtended()
-//    : Base()
-//{
-//
-//}
 
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
@@ -185,7 +181,9 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
 
 }
 
-NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMotionNonBoxConstraint(const SplineHolder& s) const{
+NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMotionNonBoxConstraint(
+    const SplineHolder& s) const
+{
 
   ConstraintPtrVec c;
 
@@ -202,6 +200,26 @@ NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMoti
   return c;
 }
 
+ConstraintPtrVec NlpFormulationExtended::GetConstraint(
+    Parameters::ConstraintName name, const SplineHolder& s) const
+{
+
+  //okay first checkt the stuff that I have newly added
+
+  switch (name) {
+    case Parameters::JointLimits:
+      return MakeJointLimitsConstraint(s);
+    default:
+      Base::GetConstraint(name, s);
+  }
+
+  return ConstraintPtrVec();  // just here sot that eclipse don't complain. Should never be reached
+
+}
+
+ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineHolder &s) const{
+//todo implement this
+}
 
 } /* namespace */
 

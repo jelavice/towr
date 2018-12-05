@@ -28,8 +28,13 @@ class NlpFormulationExtended : public NlpFormulation
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
 
   VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override final;
-  ConstraintPtrVec MakeRangeOfMotionNonBoxConstraint(const SplineHolder& s) const;
+  ConstraintPtrVec GetConstraint (Parameters::ConstraintName name,
+                             const SplineHolder& s) const override final;
 
+  ConstraintPtrVec MakeRangeOfMotionNonBoxConstraint(const SplineHolder& s) const;
+  ConstraintPtrVec MakeJointLimitsConstraint(const SplineHolder &s) const;
+
+ //
  protected:
 
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const override final;

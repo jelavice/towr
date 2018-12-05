@@ -56,6 +56,7 @@ add_library(${PROJECT_NAME} SHARED
   src/range_of_motion_box_constraint.cc
   src/spline_acc_constraint.cc
   src/linear_constraint.cc
+  src/ee_joint_limits_constraint.cc
   # costs
   src/node_cost.cc
   src/soft_constraint.cc
