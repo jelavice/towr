@@ -34,7 +34,7 @@ ParametersExtended::ParametersExtended(int n_ee)
   bounds_initial_lin_vel = {X,Y,Z};
 
   SetJointPolynomialDuration(0.02);
-  SetJointVelocityAndPositionLimitConstraintDt(0.1);
+  SetJointLimitsConstraintDt(0.1);
 
 }
 //variables
@@ -81,7 +81,7 @@ void ParametersExtended::DeleteAllConstraints()
 }
 
 //todo rename this bullshit
-void ParametersExtended::SetJointVelocityAndPositionLimitConstraint()
+void ParametersExtended::SetJointLimitsconstraint()
 {
   constraints_.push_back(JointLimits);
 }
@@ -103,9 +103,9 @@ void ParametersExtended::SetJointPolynomialDuration(double dt)
   duration_joint_polynomials_ = dt;
 }
 //todo rename this bullshit
-void ParametersExtended::SetJointVelocityAndPositionLimitConstraintDt(double dt)
+void ParametersExtended::SetJointLimitsConstraintDt(double dt)
 {
-  dt_joint_velocity_and_position_limit_constraint_ = dt;
+  dt_joint_limit_constraint_ = dt;
 }
 
 void ParametersExtended::SetDynamicConstraintDt(double dt)
@@ -183,7 +183,7 @@ void ParametersExtended::PrintAllParams(){
   std::cout << "STUFF FROM EXTENDED PARAMS: " << std::endl;
   std::cout << "Num endeffectors: " << n_ee_ << std::endl;
   std::cout << "Duration of joint polynomials: " << duration_joint_polynomials_ << std::endl;
-  std::cout << "Joint velocity and position limit constraint dt: " << dt_joint_velocity_and_position_limit_constraint_ << std::endl;
+  std::cout << "Joint limits constraint dt: " << dt_joint_limit_constraint_ << std::endl;
   PrintVectors<VariableSetName>(variables_used_, "variables used");
   PrintVectors<int>(bounds_initial_lin_pos, "bounds_initial_lin_pos");
   PrintVectors<int>(bounds_initial_lin_vel, "bounds_initial_lin_vel");

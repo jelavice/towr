@@ -152,7 +152,7 @@ void setParameters(NlpFormulationExtended *formulation,
   //params->SetForceConstraint();
 
   params->SetJointPolynomialDuration(0.02);
-  params->SetJointVelocityAndPositionLimitConstraintDt(0.1);
+  params->SetJointLimitsConstraintDt(0.1);
 
 }
 

@@ -9,6 +9,7 @@
 #include "towr/models/kinematic_model_with_joints.h"
 #include "towr/variables/nodes_variables_ee_joints.h"
 #include "towr/variables/variable_names.h"
+#include "towr/constraints/ee_joint_limits_constraint.h"
 
 namespace towr {
 
@@ -218,7 +219,28 @@ ConstraintPtrVec NlpFormulationExtended::GetConstraint(
 }
 
 ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineHolder &s) const{
-//todo implement this
+
+  ConstraintPtrVec c;
+
+  //hack
+    auto model = std::dynamic_pointer_cast<KinematicModelWithJoints>(model_.kinematic_model_);
+
+    if (model == nullptr)
+      throw std::runtime_error("Could not cast kinematicModelPtr to KinematicModelWithJoints");
+
+    auto params = std::dynamic_pointer_cast<ParametersExtended>(params_);
+
+    if (params == nullptr)
+      throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
+
+
+    for (int ee = 0; ee < params->GetEECount(); ee++) {
+      auto joint_con = std::make_shared<EEjointLimitsConstraint>(
+          model, params->GetTotalTime(), params->dt_joint_limit_constraint_, ee, s);
+      c.push_back(joint_con);
+    }
+
+    return c;
 }
 
 } /* namespace */

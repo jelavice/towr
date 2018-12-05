@@ -54,7 +54,7 @@ void EEjointLimitsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& 
 
   int row_start = GetRow(k);
   //hack for the boom
-  if (ee_ == 4) {
+  if (ee_ == 4) { // if this is boom then do
 
     Eigen::VectorXd boom_bounds;
 
@@ -73,7 +73,7 @@ void EEjointLimitsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& 
       bounds.at(row_start + i) = ifopt::Bounds(boom_bounds(i), boom_bounds(i));  //update joint position bounds
     }
 
-  } else {
+  } else { //if these are legs then do
 
     for (int i = 0; i < num_dof_; ++i) {
       bounds.at(row_start + i) = ifopt::Bounds(lower_bounds_(i), upper_bounds_(i));  //update joint position bounds

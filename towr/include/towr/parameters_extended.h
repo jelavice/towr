@@ -56,12 +56,12 @@ struct ParametersExtended : public Parameters
   //constraints
   void SetTerrainConstraint();
   void DeleteAllConstraints();
-  void SetJointVelocityAndPositionLimitConstraint();
+  void SetJointLimitsconstraint();
   void SetSwingConstraint() override final;
 
 //set all the params
   void SetJointPolynomialDuration(double dt);
-  void SetJointVelocityAndPositionLimitConstraintDt(double dt);
+  void SetJointLimitsConstraintDt(double dt);
   void SetNormalFoceLimit(double fmax);
   void SetDynamicConstraintDt(double dt);
   void SetBasePolynomialDuration(double dt);
@@ -82,7 +82,7 @@ struct ParametersExtended : public Parameters
 
   int n_ee_;
 
-  double dt_joint_velocity_and_position_limit_constraint_;
+  double dt_joint_limit_constraint_;
   double duration_joint_polynomials_;
 
   std::vector<VariableSetName> variables_used_;
