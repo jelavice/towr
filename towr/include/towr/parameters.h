@@ -285,6 +285,7 @@ struct Parameters
   /// The maximum allowable force [N] in normal direction
   double force_limit_in_normal_direction_;
 
+ public:
   /// which dimensions (x,y,z) of the final base state should be bounded
   std::vector<int> bounds_final_lin_pos, bounds_final_lin_vel, bounds_final_ang_pos,
       bounds_final_ang_vel;

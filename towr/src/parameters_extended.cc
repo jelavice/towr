@@ -33,6 +33,9 @@ ParametersExtended::ParametersExtended(int n_ee)
   bounds_initial_lin_pos = {X,Y,Z};
   bounds_initial_lin_vel = {X,Y,Z};
 
+  SetJointPolynomialDuration(0.02);
+  SetJointVelocityAndPositionLimitConstraintDt(0.1);
+
 }
 //variables
 
@@ -159,6 +162,54 @@ int ParametersExtended::GetEECount() const
 {
   return n_ee_;
 }
+
+
+template<typename BasicType>
+void PrintVectors(const std::vector<BasicType> &vec, const std::string &name)
+{
+
+  std::cout << "Printing " << name << " , elements: ";
+
+  for (int i = 0; i < vec.size(); ++i) {
+    std::cout << vec.at(i) << ", ";
+  }
+
+  std::cout << std::endl;
+
+}
+
+
+void ParametersExtended::PrintAllParams(){
+
+  std::cout << "STUFF FROM EXTENDED PARAMS: " << std::endl;
+  std::cout << "Num endeffectors: " << n_ee_ << std::endl;
+  std::cout << "Duration of joint polynomials: " << duration_joint_polynomials_ << std::endl;
+  std::cout << "Joint velocity and position limit constraint dt: " << dt_joint_velocity_and_position_limit_constraint_ << std::endl;
+  PrintVectors<VariableSetName>(variables_used_, "variables used");
+  PrintVectors<int>(bounds_initial_lin_pos, "bounds_initial_lin_pos");
+  PrintVectors<int>(bounds_initial_lin_vel, "bounds_initial_lin_vel");
+  PrintVectors<int>(bounds_initial_ang_pos, "bounds_initial_ang_pos");
+  PrintVectors<int>(bounds_initial_ang_vel, "bounds_initial_ang_vel");
+  PrintVectors<bool>(use_bounds_initial_ee_pos, "use_bounds_initial_ee_pos");
+
+  std::cout << "STUFF FROM NORMAL PARAMS: " << std::endl;
+  std::cout << "dt constraint dynamic: " << dt_constraint_dynamic_ << std::endl;
+  std::cout <<  "dt constraint range of motion: " << dt_constraint_range_of_motion_ << std::endl;
+  std::cout << "dt constraint base motion: " << dt_constraint_base_motion_ << std::endl;
+  std::cout << "Duration base polynomial: " << duration_base_polynomial_ << std::endl;
+  std::cout << "ee polynomials per swing phase: " << ee_polynomials_per_swing_phase_ << std::endl;
+  std::cout << "force polynomials per stance phase: " << force_polynomials_per_stance_phase_
+            << std::endl;
+  std::cout << "force limit in normal direction: " << force_limit_in_normal_direction_ << std::endl;
+  PrintVectors<int>(bounds_final_lin_pos, "bounds_final_lin_pos");
+  PrintVectors<int>(bounds_final_lin_vel, "bounds_final_lin_vel");
+  PrintVectors<int>(bounds_final_ang_pos, "bounds_final_ang_pos");
+  PrintVectors<int>(bounds_final_ang_vel, "bounds_final_ang_vel");
+  PrintVectors<ConstraintName>(constraints_, "used constraints");
+  std::cout << "Total time: " << GetTotalTime() << std::endl;
+
+}
+
 
 } /* namespace*/
 

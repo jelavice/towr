@@ -8,6 +8,7 @@
 #pragma once
 
 #include "towr/parameters.h"
+#include <iostream>
 
 namespace towr {
 
@@ -46,6 +47,9 @@ struct ParametersExtended : public Parameters
   void AddContactScheduleVariables();
 
  public:
+
+  void PrintAllParams();
+
   void AddJointVariables();
   void ClearAllVariables();
 
@@ -70,9 +74,6 @@ struct ParametersExtended : public Parameters
   std::vector<int> bounds_initial_lin_pos, bounds_initial_lin_vel, bounds_initial_ang_pos,
       bounds_initial_ang_vel;
 
-  std::vector<int> bounds_final_lin_pos, bounds_final_lin_vel, bounds_final_ang_pos,
-      bounds_final_ang_vel;
-
   std::vector<bool> use_bounds_initial_ee_pos;
 
  private:
@@ -87,5 +88,7 @@ struct ParametersExtended : public Parameters
   std::vector<VariableSetName> variables_used_;
 
 };
+
+
 
 } /* namespace */

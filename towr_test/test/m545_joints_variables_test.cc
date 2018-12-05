@@ -149,6 +149,7 @@ void setParameters(NlpFormulationExtended *formulation,
   params->SetForceConstraint();
 
   params->SetJointPolynomialDuration(0.02);
+  params->SetJointVelocityAndPositionLimitConstraintDt(0.1);
 
 }
 
@@ -188,6 +189,9 @@ int main(int argc, char** argv)
 
   for (auto c : formulation.GetCosts())
     nlp.AddCostSet(c);
+
+
+  params->PrintAllParams();
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");
