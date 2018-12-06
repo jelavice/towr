@@ -583,12 +583,6 @@ SparseMatrix PartialDerivativeOfWheelAxis(const Eigen::Vector3d &ypr)
   mat.row(1) << cos(x)*sin(y)*sin(z) - cos(z)*sin(x), cos(y)*sin(x)*sin(z),   cos(z)*sin(x)*sin(y) - cos(x)*sin(z);
   mat.row(2) <<                        cos(x)*cos(y),       -sin(x)*sin(y),                                      0;
 
-//  mat.row(0) << 0, sin(y) * sin(z), -cos(y) * cos(z);
-//  mat.row(1) << -cos(z) * sin(x) - cos(x) * sin(y) * sin(z), -cos(y) * sin(x) * sin(z), -cos(x)
-//      * sin(z) - cos(z) * sin(x) * sin(y);
-//  mat.row(2) << cos(x) * cos(z) - sin(x) * sin(y) * sin(z), cos(x) * cos(y) * sin(z), cos(x)
-//      * cos(z) * sin(y) - sin(x) * sin(z);
-
   return mat.sparseView();
 
 }

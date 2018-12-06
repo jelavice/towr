@@ -166,9 +166,9 @@ int main(int argc, char** argv)
   srand((unsigned int) time(nullptr));
   ros::NodeHandle nh;
 
-  runTest(nh, "wheel_axis_test", 10);
-//  runTest(nh, "trans_test", 10000);
-//  runTest(nh, "rot_test", 10000);
+  runTest(nh, "wheel_axis_test", 10000);
+  runTest(nh, "trans_test", 10000);
+  runTest(nh, "rot_test", 10000);
 
   return 0;
 
