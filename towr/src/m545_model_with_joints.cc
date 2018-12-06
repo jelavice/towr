@@ -58,12 +58,11 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
     ee_orientation_jac_base_.at(i).resize(3, numDof);
 
     if (EEhasWheel(i))
-      ee_wheel_axis_jac_base_.at(i).resize(3,numDof);
+      ee_wheel_axis_jac_base_.at(i).resize(3, numDof);
   }
 
   // initialize with zero
 
-  //todo udpate model
   for (int i = 0; i < numEE; ++i) {
     Eigen::VectorXd jointAngles(num_dof_limbs_.at(i));
     jointAngles.setZero();
@@ -76,7 +75,7 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
     CalculateRotationalJacobiansWRTjointsBase(i);
     CalculateTranslationalJacobiansWRTjointsBase(i);
 
-    if (EEhasWheel(i)){
+    if (EEhasWheel(i)) {
       GetWheelAxisBase(i);
       GetWheelAxisJacobianBase(i);
     }
@@ -145,12 +144,9 @@ Vector3d M545KinematicModelWithJoints::rotMat2ypr(const Eigen::Matrix3d &mat)
 {
 
   // rotation convention for this is yaw pitch roll in that order
-
   kindr::RotationMatrixD rotMat(mat(0, 0), mat(0, 1), mat(0, 2), mat(1, 0), mat(1, 1), mat(1, 2),
                                 mat(2, 0), mat(2, 1), mat(2, 2));
-
   kindr::EulerAnglesYprD euler(rotMat);
-
   euler.setUnique();
 
   return Eigen::Vector3d(euler.x(), euler.y(), euler.z());
@@ -203,11 +199,8 @@ VectorXd M545KinematicModelWithJoints::GetUpperJointLimits(int ee_id)
 
 Vector3d M545KinematicModelWithJoints::GetEEPositionBase(int ee_id)
 {
-
   ee_pos_base_.at(ee_id) = GetEEPositionsBase(ee_id, model_);
-
   return ee_pos_base_.at(ee_id);
-
 }
 
 void M545KinematicModelWithJoints::CalculateTranslationalJacobiansWRTjointsBase(int ee_id)
@@ -325,7 +318,6 @@ void M545KinematicModelWithJoints::CalculateRotationalJacobiansWRTjointsBase(int
 
   ee_orientation_jac_base_.at(ee_id) = angularVelocity2eulerDerivativesMat(
       GetEEOrientationBase(ee_id)) * ee_orientation_jac_base_.at(ee_id);
-
 }
 
 M545KinematicModelWithJoints::SparseMatrix M545KinematicModelWithJoints::angularVelocity2eulerDerivativesMat(
@@ -334,23 +326,22 @@ M545KinematicModelWithJoints::SparseMatrix M545KinematicModelWithJoints::angular
 
   using namespace std;
   Eigen::Matrix3d mat;
-  double x = ypr.x();
-  double y = ypr.y();
-  double z = ypr.z();
 
   double cosX = cos(ypr.x());
   double cosY = cos(ypr.y());
   double sinX = sin(ypr.x());
   double sinY = sin(ypr.y());
 
-  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY,
-      0, cosX, -sinX,
-      0, sinX / cosY, cosX / cosY;
+  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
 
   //todo investigate this
   // I have no idea why this like that but it passes the unit test
   // I may have forgotten the skew symmetric matrix in between
   mat = -mat;
+
+//  double x = ypr.x();
+//  double y = ypr.y();
+//  double z = ypr.z();
 //    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
 //        -sin(z), cos(z), 0.0,
 //        cos(z) * sin(y) / cos(y), sin(y) * sin(z)/ cos(y), 1.0;
@@ -575,10 +566,11 @@ Eigen::Vector3d M545KinematicModelWithJoints::GetWheelAxisBase(int ee_id)
 
   ee_wheel_axis_.at(ee_id) = GetOrientationBase(ee_id) * Eigen::Vector3d(0.0, 1.0, 0.0);
 
-  return ee_ypr_.at(ee_id);
+  return ee_wheel_axis_.at(ee_id);
 }
 
-SparseMatrix PartialDerivativeOfWheelAxis(const Eigen::Vector3d &ypr){
+SparseMatrix PartialDerivativeOfWheelAxis(const Eigen::Vector3d &ypr)
+{
 
   Eigen::Matrix3d mat;
 
@@ -586,29 +578,36 @@ SparseMatrix PartialDerivativeOfWheelAxis(const Eigen::Vector3d &ypr){
   double y = ypr.y();
   double z = ypr.z();
 
+
   mat.row(0) << sin(x)*sin(z) + cos(x)*cos(z)*sin(y), cos(y)*cos(z)*sin(x), - cos(x)*cos(z) - sin(x)*sin(y)*sin(z);
   mat.row(1) << cos(x)*sin(y)*sin(z) - cos(z)*sin(x), cos(y)*sin(x)*sin(z),   cos(z)*sin(x)*sin(y) - cos(x)*sin(z);
-  mat.row(2) << cos(x)*cos(y),       -sin(x)*sin(y),                                      0;
+  mat.row(2) <<                        cos(x)*cos(y),       -sin(x)*sin(y),                                      0;
 
+//  mat.row(0) << 0, sin(y) * sin(z), -cos(y) * cos(z);
+//  mat.row(1) << -cos(z) * sin(x) - cos(x) * sin(y) * sin(z), -cos(y) * sin(x) * sin(z), -cos(x)
+//      * sin(z) - cos(z) * sin(x) * sin(y);
+//  mat.row(2) << cos(x) * cos(z) - sin(x) * sin(y) * sin(z), cos(x) * cos(y) * sin(z), cos(x)
+//      * cos(z) * sin(y) - sin(x) * sin(z);
 
-      return mat.sparseView();
+  return mat.sparseView();
 
 }
 
-SparseMatrix M545KinematicModelWithJoints::GetWheelAxisJacobianBase(int ee_id) {
+SparseMatrix M545KinematicModelWithJoints::GetWheelAxisJacobianBase(int ee_id)
+{
 
   if (ee_id > GetNumWheels())
     throw std::runtime_error("Bomm has no wheels. can't calculate the wheel axis jacobian");
 
   CalculateRotationalJacobiansWRTjointsBase(ee_id);
 
-  ee_wheel_axis_jac_base_.at(ee_id) = PartialDerivativeOfWheelAxis(GetEEOrientationBase(ee_id)) * ee_orientation_jac_base_.at(ee_id);
+  ee_wheel_axis_jac_base_.at(ee_id) = PartialDerivativeOfWheelAxis(GetEEOrientationBase(ee_id))
+      * ee_orientation_jac_base_.at(ee_id);
 
   return ee_wheel_axis_jac_base_.at(ee_id);
 
-};
-
-
+}
+;
 
 }/*namespace*/
 
