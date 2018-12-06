@@ -90,6 +90,9 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int ee_id) override final;
   SparseMatrix GetOrientationJacobiansWRTjointsBase(int ee_id) override final;
 
+  Eigen::Vector3d GetWheelAxisBase(int ee_id) override final;
+  SparseMatrix GetWheelAxisJacobianBase(int ee_id) override final;
+
   //from the kinematic_model.h
   EEPos GetNominalStanceInBase() const override final;
   Vector3d GetMaximumDeviationFromNominal() const override final;
@@ -97,6 +100,8 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   void printCurrentJointPositions();
 
  private:
+
+  int GetNumWheels() {return 4;}
 
   Eigen::Vector3d GetEEPositionsBase(int ee_id, ExcavatorModel &model) const;
 
@@ -125,7 +130,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   LimbStartIndex GetLimbStartIndex(int ee_id) const;
   int getLimbStartingId(int ee_id) const;
 
-  Eigen::Matrix3d GetRotMat(int ee_id);
+  Eigen::Matrix3d GetOrientationBase(int ee_id);
   Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
   SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
 
@@ -142,6 +147,8 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   EEJac ee_trans_jac_joints_base_;
   EEorientation ee_ypr_;
   EEJac ee_orientation_jac_base_;
+  EEPos ee_wheel_axis_;
+  EEJac ee_wheel_axis_jac_base_;
 
   const std::string urdf_string_;
 

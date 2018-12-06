@@ -41,10 +41,12 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
   //resize arrays
   ee_pos_base_.resize(numEE);
   ee_ypr_.resize(numEE);
+  ee_wheel_axis_.resize(GetNumWheels());
 
   /*base coordinate frame */
   ee_trans_jac_joints_base_.resize(numEE);
   ee_orientation_jac_base_.resize(numEE);
+  ee_wheel_axis_jac_base_.resize(GetNumWheels());
 
   //create sparse matrices
   for (int i = 0; i < numEE; ++i) {
@@ -54,6 +56,9 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
     /* jacobian in base frame */
     ee_trans_jac_joints_base_.at(i).resize(3, numDof);
     ee_orientation_jac_base_.at(i).resize(3, numDof);
+
+    if (EEhasWheel(i))
+      ee_wheel_axis_jac_base_.at(i).resize(3,numDof);
   }
 
   // initialize with zero
@@ -71,6 +76,10 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
     CalculateRotationalJacobiansWRTjointsBase(i);
     CalculateTranslationalJacobiansWRTjointsBase(i);
 
+    if (EEhasWheel(i)){
+      GetWheelAxisBase(i);
+      GetWheelAxisJacobianBase(i);
+    }
   }
 
   max_dev_from_nominal_.setZero();
@@ -305,7 +314,7 @@ bool M545KinematicModelWithJoints::EEhasWheel(int ee_id) const
 
 Vector3d M545KinematicModelWithJoints::GetEEOrientationBase(int ee_id)
 {
-  ee_ypr_.at(ee_id) = rotMat2ypr(GetRotMat(ee_id));
+  ee_ypr_.at(ee_id) = rotMat2ypr(GetOrientationBase(ee_id));
 
   return ee_ypr_.at(ee_id);
 }
@@ -334,9 +343,13 @@ M545KinematicModelWithJoints::SparseMatrix M545KinematicModelWithJoints::angular
   double sinX = sin(ypr.x());
   double sinY = sin(ypr.y());
 
-  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
+  mat << 1, sinX * sinY / cosY, cosX * sinY / cosY,
+      0, cosX, -sinX,
+      0, sinX / cosY, cosX / cosY;
 
+  //todo investigate this
   // I have no idea why this like that but it passes the unit test
+  // I may have forgotten the skew symmetric matrix in between
   mat = -mat;
 //    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
 //        -sin(z), cos(z), 0.0,
@@ -365,7 +378,7 @@ Vector3d M545KinematicModelWithJoints::GetBasePositionFromFeetPostions()
 
 }
 
-Matrix3d M545KinematicModelWithJoints::GetRotMat(int ee_id)
+Matrix3d M545KinematicModelWithJoints::GetOrientationBase(int ee_id)
 {
   return model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE, GetEEBodyEnum(ee_id));
 }
@@ -553,6 +566,49 @@ M545KinematicModelWithJoints::LimbStartIndex M545KinematicModelWithJoints::GetLi
       throw std::runtime_error("Unknown limb id");
   }
 }
+
+Eigen::Vector3d M545KinematicModelWithJoints::GetWheelAxisBase(int ee_id)
+{
+
+  if (ee_id > GetNumWheels())
+    throw std::runtime_error("Bomm has no wheels. can't calculate teh wheel axis");
+
+  ee_wheel_axis_.at(ee_id) = GetOrientationBase(ee_id) * Eigen::Vector3d(0.0, 1.0, 0.0);
+
+  return ee_ypr_.at(ee_id);
+}
+
+SparseMatrix PartialDerivativeOfWheelAxis(const Eigen::Vector3d &ypr){
+
+  Eigen::Matrix3d mat;
+
+  double x = ypr.x();
+  double y = ypr.y();
+  double z = ypr.z();
+
+  mat.row(0) << sin(x)*sin(z) + cos(x)*cos(z)*sin(y), cos(y)*cos(z)*sin(x), - cos(x)*cos(z) - sin(x)*sin(y)*sin(z);
+  mat.row(1) << cos(x)*sin(y)*sin(z) - cos(z)*sin(x), cos(y)*sin(x)*sin(z),   cos(z)*sin(x)*sin(y) - cos(x)*sin(z);
+  mat.row(2) << cos(x)*cos(y),       -sin(x)*sin(y),                                      0;
+
+
+      return mat.sparseView();
+
+}
+
+SparseMatrix M545KinematicModelWithJoints::GetWheelAxisJacobianBase(int ee_id) {
+
+  if (ee_id > GetNumWheels())
+    throw std::runtime_error("Bomm has no wheels. can't calculate the wheel axis jacobian");
+
+  CalculateRotationalJacobiansWRTjointsBase(ee_id);
+
+  ee_wheel_axis_jac_base_.at(ee_id) = PartialDerivativeOfWheelAxis(GetEEOrientationBase(ee_id)) * ee_orientation_jac_base_.at(ee_id);
+
+  return ee_wheel_axis_jac_base_.at(ee_id);
+
+};
+
+
 
 }/*namespace*/
 

@@ -57,12 +57,12 @@ class KinematicModelWithJoints : public KinematicModel
 
 
   //todo rename this into get wheel axis
-  virtual Eigen::Vector3d GetWheelAxisBase(int eeId)
+  virtual Eigen::Vector3d GetWheelAxisBase(int ee_id)
   {
     throw std::runtime_error("Not implemented the get wheel axis base");
   }
 
-  virtual SparseMatrix GetWheelAxisJacobianBase(int limbId, int dim)
+  virtual SparseMatrix GetWheelAxisJacobianBase(int ee_id)
   {
     throw std::runtime_error("Not implemented the get wheel axis jacobian base");
   }
