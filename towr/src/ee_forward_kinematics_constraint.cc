@@ -58,7 +58,7 @@ void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, 
   VectorXd joint_positions = joints_motion_->GetPoint(t).p();
   kinematic_model_->UpdateModel(joint_positions, ee_);
 
-  Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionsBase(ee_);
+  Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionBase(ee_);
 
   //endeffector position
   g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;

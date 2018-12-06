@@ -98,7 +98,7 @@ void runTest(const ros::NodeHandle &nh, const std::string &which_test, int numTe
 
         if (which_test == "trans_test") {
           func_to_evaluate = [=](int limbId) {
-            return kinematic_model->GetEEPositionsBase(limbId);
+            return kinematic_model->GetEEPositionBase(limbId);
           };
 
           ee_jac_base.at(i) = kinematic_model->GetTranslationalJacobiansWRTjointsBase(i);

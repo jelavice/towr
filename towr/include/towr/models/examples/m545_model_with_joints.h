@@ -76,59 +76,58 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   M545KinematicModelWithJoints() = delete;
   M545KinematicModelWithJoints(const std::string &urdfDescription, double dt);
 
-  void UpdateModel(VectorXd jointAngles, int limbId) override final;
+  int GetNumDof(int ee_id) const override final;
+  int GetNumDofTotal() const override final;
+  bool EEhasWheel(int ee_id) const override final;
+  void UpdateModel(VectorXd jointAngles, int ee_id) override final;
+  VectorXd GetLowerJointLimits(int ee_id) override final;
+  VectorXd GetUpperJointLimits(int ee_id) override final;
 
-  Eigen::Vector3d GetEEPositionsBase(int limbId) override final;
-  Eigen::Vector3d GetEEOrientationBase(int limbId) override final;
+  // methods that operate w.r.t. to the base
+  Eigen::Vector3d GetEEPositionBase(int ee_id) override final;
+  Eigen::Vector3d GetEEOrientationBase(int ee_id) override final;
+  Vector3d GetBasePositionFromFeetPostions() override final;
+  SparseMatrix GetTranslationalJacobiansWRTjointsBase(int ee_id) override final;
+  SparseMatrix GetOrientationJacobiansWRTjointsBase(int ee_id) override final;
+
+  //from the kinematic_model.h
   EEPos GetNominalStanceInBase() const override final;
   Vector3d GetMaximumDeviationFromNominal() const override final;
-  Vector3d GetBasePositionFromFeetPostions() override final;
 
-
-  SparseMatrix GetTranslationalJacobiansWRTjointsBase(int limbId) override final;
-  SparseMatrix GetOrientationJacobiansWRTjointsBase(int limbId) override final;
-
-  VectorXd GetLowerJointLimits(int limbId) override final;
-  VectorXd GetUpperJointLimits(int limbId) override final;
   void printCurrentJointPositions();
-
-  int GetNumDof(int limbId) const override final;
-  int GetNumDofTotal() const override final;
-  bool EEhasWheel(int limbId);
 
  private:
 
-  Eigen::Vector3d GetEEPositionsBase(int limbId, ExcavatorModel &model) const;
+  Eigen::Vector3d GetEEPositionsBase(int ee_id, ExcavatorModel &model) const;
 
   void PrintJointLimits();
   void CalculateJointLimits();
   void CalculateJointLimitsforSpecificLimb(const excavator_model::Limits &limtis,
-                                           loco_m545::RD::LimbEnum limb, unsigned int dof, int *globalJointId);
+                                           loco_m545::RD::LimbEnum limb, unsigned int dof,
+                                           int *globalJointId);
 
-  void UpdateModel(VectorXd jointAngles, int limbId, ExcavatorModel &model) const;
+  void UpdateModel(VectorXd jointAngles, int ee_id, ExcavatorModel &model) const;
   void UpdateSpecificLimb(loco_m545::RD::LimbEnum limb, const VectorXd &jointAngles,
                           unsigned int dof, ExcavatorModel &model) const;
 
+  void CalculateAngularVelocityJacobian(int ee_id);
+  void CalculateTranslationalJacobiansWRTjointsBase(int ee_id);
+  void CalculateRotationalJacobiansWRTjointsBase(int ee_id);
+  void ExtractJointElementsFromRbdlJacobian(const MatrixXd &bigJacobian,
+                                            loco_m545::RD::LimbEnum limb,
+                                            LimbStartIndex limbStartIndex, unsigned int dof,
+                                            EEJac &jacArray);
 
-  void CalculateAngularVelocityJacobian(int limbId);
-  void CalculateTranslationalJacobiansWRTjointsBase(int limbId);
-  void CalculateRotationalJacobiansWRTjointsBase(int limbId);
-  void ExtractJointJacobianEntries(const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb,
-                                   LimbStartIndex limbStartIndex, unsigned int dof,
-                                   EEJac &jacArray);
+  loco_m545::RD::LimbEnum GetLimbEnum(int ee_id) const;
+  loco_m545::RD::BodyEnum GetEEBodyEnum(int ee_id) const;
+  loco_m545::RD::BodyNodeEnum GetEEBodyNodeEnum(int ee_id) const;
+  loco_m545::RD::BranchEnum GetEEBranchEnum(int ee_id) const;
+  LimbStartIndex GetLimbStartIndex(int ee_id) const;
+  int getLimbStartingId(int ee_id) const;
 
-  loco_m545::RD::LimbEnum GetLimbEnum(int limbId) const;
-  loco_m545::RD::BodyEnum GetEEBodyEnum(int limbId) const;
-  loco_m545::RD::BodyNodeEnum GetEEBodyNodeEnum(int limbId) const;
-  loco_m545::RD::BranchEnum GetEEBranchEnum(int limbId) const;
-  LimbStartIndex GetLimbStartIndex(int limbId) const;
-  int getLimbStartingId(int LimbId) const;
-
-  Eigen::Matrix3d GetRotMat(int limbId);
+  Eigen::Matrix3d GetRotMat(int ee_id);
   Eigen::Vector3d rotMat2ypr(const Eigen::Matrix3d &mat);
   SparseMatrix angularVelocity2eulerDerivativesMat(const Vector3d &ypr);
-
-
 
   //attributes
   const std::vector<int> num_dof_limbs_ { legDof, legDof, legDof, legDof, boomDof };

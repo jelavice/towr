@@ -66,7 +66,7 @@ M545KinematicModelWithJoints::M545KinematicModelWithJoints(const std::string &ur
 
     //here also calcualte all the shit
 
-    GetEEPositionsBase(i);
+    GetEEPositionBase(i);
     GetEEOrientationBase(i);
     CalculateRotationalJacobiansWRTjointsBase(i);
     CalculateTranslationalJacobiansWRTjointsBase(i);
@@ -107,7 +107,8 @@ void M545KinematicModelWithJoints::CalculateJointLimits()
 }
 
 void M545KinematicModelWithJoints::CalculateJointLimitsforSpecificLimb(
-    const excavator_model::Limits &limits, loco_m545::RD::LimbEnum limb, unsigned int dof, int *globalJointId)
+    const excavator_model::Limits &limits, loco_m545::RD::LimbEnum limb, unsigned int dof,
+    int *globalJointId)
 {
 
   unsigned int idStart = loco_m545::RD::mapKeyEnumToKeyId(loco_m545::RD::getLimbStartJoint(limb));
@@ -161,9 +162,9 @@ void M545KinematicModelWithJoints::PrintJointLimits()
 
 }
 
-int M545KinematicModelWithJoints::getLimbStartingId(int LimbId) const
+int M545KinematicModelWithJoints::getLimbStartingId(int ee_id) const
 {
-  switch (LimbId) {
+  switch (ee_id) {
 
     case (0):
       return static_cast<int>(LimbStartIndex::LF);
@@ -181,44 +182,44 @@ int M545KinematicModelWithJoints::getLimbStartingId(int LimbId) const
   }
 }
 
-VectorXd M545KinematicModelWithJoints::GetLowerJointLimits(int limbId)
+VectorXd M545KinematicModelWithJoints::GetLowerJointLimits(int ee_id)
 {
-  return lower_joint_limits_.segment(getLimbStartingId(limbId), num_dof_limbs_.at(limbId));
+  return lower_joint_limits_.segment(getLimbStartingId(ee_id), num_dof_limbs_.at(ee_id));
 }
 
-VectorXd M545KinematicModelWithJoints::GetUpperJointLimits(int limbId)
+VectorXd M545KinematicModelWithJoints::GetUpperJointLimits(int ee_id)
 {
-  return upper_joint_limits_.segment(getLimbStartingId(limbId), num_dof_limbs_.at(limbId));
+  return upper_joint_limits_.segment(getLimbStartingId(ee_id), num_dof_limbs_.at(ee_id));
 }
 
-Vector3d M545KinematicModelWithJoints::GetEEPositionsBase(int limbId)
+Vector3d M545KinematicModelWithJoints::GetEEPositionBase(int ee_id)
 {
 
-  ee_pos_base_.at(limbId) = GetEEPositionsBase(limbId, model_);
+  ee_pos_base_.at(ee_id) = GetEEPositionsBase(ee_id, model_);
 
-  return ee_pos_base_.at(limbId);
+  return ee_pos_base_.at(ee_id);
 
 }
 
-void M545KinematicModelWithJoints::CalculateTranslationalJacobiansWRTjointsBase(int limbId)
+void M545KinematicModelWithJoints::CalculateTranslationalJacobiansWRTjointsBase(int ee_id)
 {
 
   loco_m545::RD::CoordinateFrameEnum coordinate_system = loco_m545::RD::CoordinateFrameEnum::BASE;
   MatrixXd tempJacobian(3, model_.getDofCount());
   tempJacobian.setZero();
-  model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, GetEEBranchEnum(limbId),
-                                                  GetEEBodyNodeEnum(limbId), coordinate_system);
+  model_.getJacobianTranslationFloatingBaseToBody(tempJacobian, GetEEBranchEnum(ee_id),
+                                                  GetEEBodyNodeEnum(ee_id), coordinate_system);
 
-  ExtractJointJacobianEntries(tempJacobian, GetLimbEnum(limbId), GetLimbStartIndex(limbId),
-                              GetNumDof(limbId), ee_trans_jac_joints_base_);
+  ExtractJointElementsFromRbdlJacobian(tempJacobian, GetLimbEnum(ee_id), GetLimbStartIndex(ee_id),
+                                       GetNumDof(ee_id), ee_trans_jac_joints_base_);
 
 }
 
-void M545KinematicModelWithJoints::UpdateModel(VectorXd jointAngles, int limbId)
+void M545KinematicModelWithJoints::UpdateModel(VectorXd jointAngles, int ee_id)
 {
-  UpdateModel(jointAngles, limbId, model_);
-  CalculateTranslationalJacobiansWRTjointsBase(limbId);
-  CalculateRotationalJacobiansWRTjointsBase(limbId);
+  UpdateModel(jointAngles, ee_id, model_);
+  CalculateTranslationalJacobiansWRTjointsBase(ee_id);
+  CalculateRotationalJacobiansWRTjointsBase(ee_id);
 
 }
 
@@ -239,10 +240,9 @@ void M545KinematicModelWithJoints::UpdateSpecificLimb(loco_m545::RD::LimbEnum li
   model.setState(state, true, false, false);
 }
 
-void M545KinematicModelWithJoints::ExtractJointJacobianEntries(const MatrixXd &bigJacobian,
-                                                               loco_m545::RD::LimbEnum limb,
-                                                               LimbStartIndex limbStartIndex,
-                                                               unsigned int dof, EEJac &jacArray)
+void M545KinematicModelWithJoints::ExtractJointElementsFromRbdlJacobian(
+    const MatrixXd &bigJacobian, loco_m545::RD::LimbEnum limb, LimbStartIndex limbStartIndex,
+    unsigned int dof, EEJac &jacArray)
 {
 
   constexpr unsigned int dim3 = 3;
@@ -275,14 +275,14 @@ void M545KinematicModelWithJoints::ExtractJointJacobianEntries(const MatrixXd &b
 
 }
 
-SparseMatrix M545KinematicModelWithJoints::GetTranslationalJacobiansWRTjointsBase(int limbId)
+SparseMatrix M545KinematicModelWithJoints::GetTranslationalJacobiansWRTjointsBase(int ee_id)
 {
-  return ee_trans_jac_joints_base_.at(limbId);
+  return ee_trans_jac_joints_base_.at(ee_id);
 }
 
-SparseMatrix M545KinematicModelWithJoints::GetOrientationJacobiansWRTjointsBase(int limbId)
+SparseMatrix M545KinematicModelWithJoints::GetOrientationJacobiansWRTjointsBase(int ee_id)
 {
-  return ee_orientation_jac_base_.at(limbId);
+  return ee_orientation_jac_base_.at(ee_id);
 }
 
 void M545KinematicModelWithJoints::printCurrentJointPositions()
@@ -293,29 +293,29 @@ void M545KinematicModelWithJoints::printCurrentJointPositions()
 
 }
 
-bool M545KinematicModelWithJoints::EEhasWheel(int limbId)
+bool M545KinematicModelWithJoints::EEhasWheel(int ee_id) const
 {
 
-  if (static_cast<int>(LimbEnum::BOOM) == limbId)
+  if (static_cast<int>(LimbEnum::BOOM) == ee_id)
     return false;
   else
     return true;
 
 }
 
-Vector3d M545KinematicModelWithJoints::GetEEOrientationBase(int limbId)
+Vector3d M545KinematicModelWithJoints::GetEEOrientationBase(int ee_id)
 {
-  ee_ypr_.at(limbId) = rotMat2ypr(GetRotMat(limbId));
+  ee_ypr_.at(ee_id) = rotMat2ypr(GetRotMat(ee_id));
 
-  return ee_ypr_.at(limbId);
+  return ee_ypr_.at(ee_id);
 }
 
-void M545KinematicModelWithJoints::CalculateRotationalJacobiansWRTjointsBase(int limbId)
+void M545KinematicModelWithJoints::CalculateRotationalJacobiansWRTjointsBase(int ee_id)
 {
-  CalculateAngularVelocityJacobian(limbId);
+  CalculateAngularVelocityJacobian(ee_id);
 
-  ee_orientation_jac_base_.at(limbId) = angularVelocity2eulerDerivativesMat(
-      GetEEOrientationBase(limbId)) * ee_orientation_jac_base_.at(limbId);
+  ee_orientation_jac_base_.at(ee_id) = angularVelocity2eulerDerivativesMat(
+      GetEEOrientationBase(ee_id)) * ee_orientation_jac_base_.at(ee_id);
 
 }
 
@@ -336,7 +336,7 @@ M545KinematicModelWithJoints::SparseMatrix M545KinematicModelWithJoints::angular
 
   mat << 1, sinX * sinY / cosY, cosX * sinY / cosY, 0, cosX, -sinX, 0, sinX / cosY, cosX / cosY;
 
-  // I have no idea why this like that but it pases the unit test
+  // I have no idea why this like that but it passes the unit test
   mat = -mat;
 //    mat << cos(z) / cos(y), sin(z) / cos(y), 0.0,
 //        -sin(z), cos(z), 0.0,
@@ -350,24 +350,27 @@ Vector3d M545KinematicModelWithJoints::GetBasePositionFromFeetPostions()
 {
 
   double z = 0;
-
-  for (int i = 0; i < 4; ++i) {
-    z += ee_pos_base_.at(i).z();
+  int wheelCount = 0;
+  for (int ee_id = 0; ee_id < GetNumberOfEndeffectors(); ++ee_id) {
+    if (EEhasWheel(ee_id)) {
+      z += ee_pos_base_.at(ee_id).z();
+      ++wheelCount;
+    }
     //std::cout << ee_pos_base_.at(i).z() << std::endl;
   }
 
-  z = z / 4.0;
+  z = z / wheelCount;
 
   return Eigen::Vector3d(0.0, 0.0, std::abs(z));
 
 }
 
-Matrix3d M545KinematicModelWithJoints::GetRotMat(int limbId)
+Matrix3d M545KinematicModelWithJoints::GetRotMat(int ee_id)
 {
-  return model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE, GetEEBodyEnum(limbId));
+  return model_.getOrientationBodyToBody(loco_m545::RD::BodyEnum::BASE, GetEEBodyEnum(ee_id));
 }
 
-void M545KinematicModelWithJoints::CalculateAngularVelocityJacobian(int limbId)
+void M545KinematicModelWithJoints::CalculateAngularVelocityJacobian(int ee_id)
 {
   using namespace loco_m545;
 
@@ -375,11 +378,11 @@ void M545KinematicModelWithJoints::CalculateAngularVelocityJacobian(int limbId)
 
   MatrixXd jacobianBig(3, model_.getDofCount());
   jacobianBig.setZero();
-  model_.getJacobianRotationFloatingBaseToBody(jacobianBig, GetEEBranchEnum(limbId),
-                                               GetEEBodyNodeEnum(limbId), coordinate_system);
+  model_.getJacobianRotationFloatingBaseToBody(jacobianBig, GetEEBranchEnum(ee_id),
+                                               GetEEBodyNodeEnum(ee_id), coordinate_system);
 
-  ExtractJointJacobianEntries(jacobianBig, GetLimbEnum(limbId), GetLimbStartIndex(limbId),
-                              GetNumDof(limbId), ee_orientation_jac_base_);
+  ExtractJointElementsFromRbdlJacobian(jacobianBig, GetLimbEnum(ee_id), GetLimbStartIndex(ee_id),
+                                       GetNumDof(ee_id), ee_orientation_jac_base_);
 }
 
 M545KinematicModelWithJoints::EEPos M545KinematicModelWithJoints::GetNominalStanceInBase() const
@@ -403,7 +406,7 @@ M545KinematicModelWithJoints::EEPos M545KinematicModelWithJoints::GetNominalStan
 #ifdef  M545MODELDEBUG
   std::cout << std::endl;
   for (int i =0; i < ee_pos.size(); ++i)
-    std::cout << "limb id: " << i << " , position: " << ee_pos.at(i).transpose() << std::endl;
+  std::cout << "limb id: " << i << " , position: " << ee_pos.at(i).transpose() << std::endl;
 #endif
 
   return ee_pos;
@@ -425,40 +428,40 @@ int M545KinematicModelWithJoints::GetNumDofTotal() const
 
 }
 
-int M545KinematicModelWithJoints::GetNumDof(int limbId) const
+int M545KinematicModelWithJoints::GetNumDof(int ee_id) const
 {
-  return num_dof_limbs_.at(limbId);
+  return num_dof_limbs_.at(ee_id);
 }
 
-void M545KinematicModelWithJoints::UpdateModel(VectorXd jointAngles, int limbId,
+void M545KinematicModelWithJoints::UpdateModel(VectorXd jointAngles, int ee_id,
                                                ExcavatorModel &model) const
 {
 
-  UpdateSpecificLimb(GetLimbEnum(limbId), jointAngles, GetNumDof(limbId), model);
+  UpdateSpecificLimb(GetLimbEnum(ee_id), jointAngles, GetNumDof(ee_id), model);
 
 }
 
-Eigen::Vector3d M545KinematicModelWithJoints::GetEEPositionsBase(int limbId,
+Eigen::Vector3d M545KinematicModelWithJoints::GetEEPositionsBase(int ee_id,
                                                                  ExcavatorModel &model) const
 {
   Eigen::Vector3d position = model.getPositionBodyToBody(loco_m545::RD::BodyEnum::BASE,
-                                                         GetEEBodyEnum(limbId),
+                                                         GetEEBodyEnum(ee_id),
                                                          loco_m545::RD::CoordinateFrameEnum::BASE);
 
   // subtract the radius of the wheel to get the contact point
   // this assumes of course that the ground is always in a plane
   // spanned by x and y axis, below the base frame
-  if (limbId != 4)  //skip boom
+  if (ee_id != 4)  //skip boom
     position.z() -= model.getWheelRadius();
 
   return position;
 
 }
 
-loco_m545::RD::LimbEnum M545KinematicModelWithJoints::GetLimbEnum(int limbId) const
+loco_m545::RD::LimbEnum M545KinematicModelWithJoints::GetLimbEnum(int ee_id) const
 {
 
-  switch (limbId) {
+  switch (ee_id) {
     case 0:
       return loco_m545::RD::LimbEnum::LF;
     case 1:
@@ -476,10 +479,10 @@ loco_m545::RD::LimbEnum M545KinematicModelWithJoints::GetLimbEnum(int limbId) co
 
 }
 
-loco_m545::RD::BodyEnum M545KinematicModelWithJoints::GetEEBodyEnum(int limbId) const
+loco_m545::RD::BodyEnum M545KinematicModelWithJoints::GetEEBodyEnum(int ee_id) const
 {
 
-  switch (limbId) {
+  switch (ee_id) {
     case 0:
       return loco_m545::RD::BodyEnum::LF_WHEEL;
     case 1:
@@ -496,10 +499,10 @@ loco_m545::RD::BodyEnum M545KinematicModelWithJoints::GetEEBodyEnum(int limbId) 
 
 }
 
-loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int limbId) const
+loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int ee_id) const
 {
 
-  switch (limbId) {
+  switch (ee_id) {
     case 0:
     case 1:
     case 2:
@@ -512,10 +515,10 @@ loco_m545::RD::BodyNodeEnum M545KinematicModelWithJoints::GetEEBodyNodeEnum(int 
   }
 }
 
-loco_m545::RD::BranchEnum M545KinematicModelWithJoints::GetEEBranchEnum(int limbId) const
+loco_m545::RD::BranchEnum M545KinematicModelWithJoints::GetEEBranchEnum(int ee_id) const
 {
 
-  switch (limbId) {
+  switch (ee_id) {
     case 0:
       return loco_m545::RD::BranchEnum::LF;
     case 1:
@@ -532,10 +535,10 @@ loco_m545::RD::BranchEnum M545KinematicModelWithJoints::GetEEBranchEnum(int limb
 }
 
 M545KinematicModelWithJoints::LimbStartIndex M545KinematicModelWithJoints::GetLimbStartIndex(
-    int limbId) const
+    int ee_id) const
 {
 
-  switch (limbId) {
+  switch (ee_id) {
     case 0:
       return LimbStartIndex::LF;
     case 1:
