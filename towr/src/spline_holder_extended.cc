@@ -24,12 +24,12 @@ SplineHolderExtended::SplineHolderExtended(NodesVariables::Ptr base_lin,
 
 }
 
-void SplineHolderExtended::InitializePhaseBasedDurations(std::vector<NodesVariablesPhaseBased::Ptr> nodes_phase_based,
-                                   bool durations_change, std::vector<NodeSpline::Ptr> &node_spline)
+void SplineHolderExtended::InitializePhaseBasedDurations(
+    std::vector<NodesVariablesPhaseBased::Ptr> nodes_phase_based, bool durations_change,
+    std::vector<NodeSpline::Ptr> &node_spline)
 {
 
-
-  if (phase_durations_initialized_ == false){
+  if (phase_durations_initialized_ == false) {
     throw std::runtime_error("Phase durations need to be initialized first");
   }
 
@@ -60,6 +60,17 @@ void SplineHolderExtended::InitializeJointMotion(std::vector<NodesVariables::Ptr
                                      joint_poly_durations));  //base poly durations are the same as the one for the EE
 }
 
+void SplineHolderExtended::InitializeEEMotionWithWheels(
+    std::vector<NodesVariables::Ptr> ee_with_wheels_motion,
+    const std::vector<double>& ee_with_wheels_motion_poly_durations)
+{
+
+  for (int i = 0; i < ee_with_wheels_motion.size(); ++i)
+    ee_with_wheels_motion_.push_back(
+        std::make_shared<NodeSpline>(ee_with_wheels_motion.at(i).get(),
+                                     ee_with_wheels_motion_poly_durations));
+}
+
 void SplineHolderExtended::InitializeBaseAngMotion(NodesVariables::Ptr base_ang,
                                                    const std::vector<double>& base_poly_durations)
 {
@@ -72,12 +83,14 @@ void SplineHolderExtended::InitializeBaseLinMotion(NodesVariables::Ptr base_lin,
   base_linear_ = std::make_shared<NodeSpline>(base_lin.get(), base_poly_durations);
 }
 
-void SplineHolderExtended::InitializeEEMotion(std::vector<NodesVariablesPhaseBased::Ptr> ee_motion_nodes, bool durations_change)
+void SplineHolderExtended::InitializeEEMotion(
+    std::vector<NodesVariablesPhaseBased::Ptr> ee_motion_nodes, bool durations_change)
 {
   InitializePhaseBasedDurations(ee_motion_nodes, durations_change, ee_motion_);
 }
 
-void SplineHolderExtended::InitializeEEForce(std::vector<NodesVariablesPhaseBased::Ptr> ee_force_nodes, bool durations_change)
+void SplineHolderExtended::InitializeEEForce(
+    std::vector<NodesVariablesPhaseBased::Ptr> ee_force_nodes, bool durations_change)
 {
   InitializePhaseBasedDurations(ee_force_nodes, durations_change, ee_force_);
 }
@@ -88,8 +101,6 @@ void SplineHolderExtended::InitializePhaseDurations(
   phase_durations_ = phase_durations;
   phase_durations_initialized_ = true;
 }
-
-
 
 } /* namespace */
 

@@ -40,10 +40,14 @@ struct SplineHolderExtended : public SplineHolder {
 
   void InitializePhaseDurations(std::vector<PhaseDurations::Ptr> phase_durations);
 
+  void InitializeEEMotionWithWheels(std::vector<NodesVariables::Ptr> ee_motion_with_wheels,
+                                    const std::vector<double>& ee_motion_poly_durations);
+
 
 
 
   std::vector<NodeSpline::Ptr> joint_motion_; // for each ee there is one node spline class
+  std::vector<NodeSpline::Ptr> ee_with_wheels_motion_; // for each ee there is one node spline class
 
 
  private:

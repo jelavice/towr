@@ -23,7 +23,8 @@ struct ParametersExtended : public Parameters
     EEMotionVariables,
     ContactForceVariables,
     ContactScheduleVariables,  //added by default
-    JointVariables
+    JointVariables,
+    EEMotionWithWheelsVariables
   };
 
   enum ExtendedConstraintSet

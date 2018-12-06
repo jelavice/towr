@@ -28,12 +28,13 @@ class NlpFormulationExtended : public NlpFormulation
   NlpFormulationExtended() = default;
 
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
+  std::vector<NodesVariables::Ptr> MakeEEMotionWithWheelsVariables() const;
+
 
   VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override;
   ConstraintPtrVec GetConstraint (Parameters::ConstraintName name,
                              const SplineHolder& s) const override;
 
-  ConstraintPtrVec MakeRangeOfMotionNonBoxConstraint(const SplineHolder& s) const;
   ConstraintPtrVec MakeJointLimitsConstraint(const SplineHolder &s) const;
   ConstraintPtrVec MakeForwardKinematicsConstraint(const SplineHolder &s) const;
 
@@ -43,6 +44,7 @@ class NlpFormulationExtended : public NlpFormulation
 
   std::vector<NodesVariables::Ptr> MakeBaseVariables() const override;
   std::vector<NodesVariablesPhaseBased::Ptr> MakeEndeffectorVariables() const override;
+
 
 
  private:

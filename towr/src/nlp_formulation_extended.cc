@@ -7,6 +7,8 @@
 
 #include "towr/nlp_formulation_extended.h"
 #include "towr/variables/nodes_variables_ee_joints.h"
+#include "towr/variables/nodes_variables_ee_motion_with_wheels.h"
+
 #include "towr/variables/variable_names.h"
 #include "towr/constraints/ee_joint_limits_constraint.h"
 #include "towr/constraints/ee_forward_kinematics_constraint.h"
@@ -29,6 +31,38 @@ void NlpFormulationExtended::CastPointers(KinematicModelWithJoints::Ptr *model,
 
   if (params == nullptr)
     throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
+}
+
+std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsVariables() const
+{
+
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
+
+  std::vector<NodesVariables::Ptr> vars;
+
+  //todo implement getEEmotion with wheel duration
+  int n_nodes = params->GetJointPolyDurations().size() + 1;
+
+  for (int ee = 0; ee < params->GetEECount(); ++ee) {
+
+    if (model->EEhasWheel(ee) == false)
+      continue;
+
+    auto ee_motion_with_wheels = std::make_shared<NodesVariablesEEMotionWithWheels>(
+        n_nodes, k3D, id::EEMotionWithWheelsNodes(ee), ee);
+
+    Eigen::VectorXd initialPosition(k3D);
+    Eigen::VectorXd finalPosition(k3D);
+
+    //todo make better initialization
+    double totalTime = params->GetTotalTime();
+    ee_motion_with_wheels->SetByLinearInterpolation(initialPosition, finalPosition, totalTime);
+    vars.push_back(ee_motion_with_wheels);
+  }
+
+  return vars;
 }
 
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
@@ -192,27 +226,15 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
       spline_holder->InitializeJointMotion(ee_joint_motion, params->GetJointPolyDurations());
       break;
     }
+
+    case Params::EEMotionWithWheelsVariables: {
+      auto ee_wheel_motion = MakeEEMotionWithWheelsVariables();
+      vars.insert(vars.end(), ee_wheel_motion.begin(), ee_wheel_motion.end());
+      spline_holder->InitializeEEMotionWithWheels(ee_wheel_motion, params->GetJointPolyDurations());
+      break;
+    }
   }
 
-}
-
-NlpFormulationExtended::ConstraintPtrVec NlpFormulationExtended::MakeRangeOfMotionNonBoxConstraint(
-    const SplineHolder& s) const
-{
-
-  ConstraintPtrVec c;
-
-  //todo implement this
-//  for (int ee=0; ee<params_->GetEECount(); ee++) {
-//    auto rom = std::make_shared<RangeOfMotionConstraint>(model_.kinematic_model_,
-//                                                         params_->GetTotalTime(),
-//                                                         params_->dt_constraint_range_of_motion_,
-//                                                         ee,
-//                                                         s);
-//    c.push_back(rom);
-//  }
-
-  return c;
 }
 
 ConstraintPtrVec NlpFormulationExtended::GetConstraint(Parameters::ConstraintName name,
