@@ -151,7 +151,8 @@ struct Parameters
     BaseRom,        ///< sets BaseMotionConstraint
     BaseAcc,         ///< sets SplineAccConstraint
     JointLimits,
-    ForwardKinematics
+    ForwardKinematics,
+    EEMotionWithWheels
   };
   /**
    *  @brief Indentifiers to be used to add certain costs to the optimization

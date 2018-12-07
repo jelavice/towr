@@ -249,6 +249,8 @@ ConstraintPtrVec NlpFormulationExtended::GetConstraint(Parameters::ConstraintNam
       return MakeJointLimitsConstraint(s);
     case Parameters::ForwardKinematics:
       return MakeForwardKinematicsConstraint(s);
+    case Parameters::EEMotionWithWheels:
+      return MakeEEMotionWithWheelsConstraint(s);
   }
 
   //now check the stuff that has been there from before
@@ -296,7 +298,9 @@ ConstraintPtrVec NlpFormulationExtended::MakeForwardKinematicsConstraint(
   return c;
 }
 
-ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(const SplineHolder &s) const {
+ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(
+    const SplineHolder &s) const
+{
 
   ConstraintPtrVec c;
 
@@ -304,13 +308,12 @@ ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(const 
   ParametersExtended::Ptr params;
   CastPointers(&model, &params);
 
-  for(int ee = 0; ee < params->GetEECount(); ++ee){
+  for (int ee = 0; ee < params->GetEECount(); ++ee) {
     auto con = std::make_shared<EEMotionWithWheelsConstraint>(model, params->GetTotalTime(),
-                                                                   params->dt_joint_limit_constraint_,
-                                                                   ee, s);
-        c.push_back(con);
+                                                              params->dt_joint_limit_constraint_,
+                                                              ee, s);
+    c.push_back(con);
   }
-
 
   return c;
 }

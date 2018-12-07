@@ -60,6 +60,7 @@ struct ParametersExtended : public Parameters
   void SetJointLimitsconstraint();
   void SetSwingConstraint() override;
   void SetKinematicConstraint() override;
+  void SetEEMotionWithWheelsConstraint();
 
 
 //set all the params
@@ -86,8 +87,10 @@ struct ParametersExtended : public Parameters
 
   int n_ee_;
 
+  //todo make this timing one for all the joint related stuff
   double dt_joint_limit_constraint_;
   double dt_forward_kinematics_constraint_;
+  double dt_ee_motion_with_wheels_constraint_;
   double duration_joint_polynomials_;
 
   std::vector<VariableSetName> variables_used_;

@@ -86,6 +86,10 @@ void ParametersExtended::SetJointLimitsconstraint()
   constraints_.push_back(JointLimits);
 }
 
+void ParametersExtended::SetEEMotionWithWheelsConstraint(){
+  constraints_.push_back(EEMotionWithWheels);
+}
+
 //todo get rid of this
 void ParametersExtended::SetSwingConstraint() {
 
