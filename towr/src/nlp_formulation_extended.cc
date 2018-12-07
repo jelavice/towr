@@ -12,6 +12,7 @@
 #include "towr/variables/variable_names.h"
 #include "towr/constraints/ee_joint_limits_constraint.h"
 #include "towr/constraints/ee_forward_kinematics_constraint.h"
+#include "towr/constraints/ee_motion_with_wheels_constraint.h"
 
 namespace towr {
 
@@ -264,7 +265,7 @@ ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineH
   ParametersExtended::Ptr params;
   CastPointers(&model, &params);
 
-  for (int ee = 0; ee < params->GetEECount(); ee++) {
+  for (int ee = 0; ee < params->GetEECount(); ++ee) {
     auto joint_con = std::make_shared<EEjointLimitsConstraint>(model, params->GetTotalTime(),
                                                                params->dt_joint_limit_constraint_,
                                                                ee, s);
@@ -283,7 +284,7 @@ ConstraintPtrVec NlpFormulationExtended::MakeForwardKinematicsConstraint(
   ParametersExtended::Ptr params;
   CastPointers(&model, &params);
 
-  for (int ee = 0; ee < params->GetEECount(); ee++) {
+  for (int ee = 0; ee < params->GetEECount(); ++ee) {
 
     double totalTime = params->GetTotalTime();
     auto fwdKinematicsCon = std::make_shared<EEforwardKinematicsConstraint>(
@@ -291,6 +292,25 @@ ConstraintPtrVec NlpFormulationExtended::MakeForwardKinematicsConstraint(
     c.push_back(fwdKinematicsCon);
 
   }
+
+  return c;
+}
+
+ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(const SplineHolder &s) const {
+
+  ConstraintPtrVec c;
+
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
+
+  for(int ee = 0; ee < params->GetEECount(); ++ee){
+    auto con = std::make_shared<EEMotionWithWheelsConstraint>(model, params->GetTotalTime(),
+                                                                   params->dt_joint_limit_constraint_,
+                                                                   ee, s);
+        c.push_back(con);
+  }
+
 
   return c;
 }

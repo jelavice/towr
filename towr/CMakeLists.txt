@@ -59,6 +59,7 @@ add_library(${PROJECT_NAME} SHARED
   src/linear_constraint.cc
   src/ee_joint_limits_constraint.cc
   src/ee_forward_kinematics_constraint.cc
+  src/ee_motion_with_wheels_constraint.cc
   # costs
   src/node_cost.cc
   src/soft_constraint.cc

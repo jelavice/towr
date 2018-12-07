@@ -37,7 +37,7 @@ class NlpFormulationExtended : public NlpFormulation
 
   ConstraintPtrVec MakeJointLimitsConstraint(const SplineHolder &s) const;
   ConstraintPtrVec MakeForwardKinematicsConstraint(const SplineHolder &s) const;
-
+  ConstraintPtrVec MakeEEMotionWithWheelsConstraint(const SplineHolder &s) const;
 
  //
  protected:
