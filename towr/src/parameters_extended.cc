@@ -64,6 +64,10 @@ void ParametersExtended::AddEEMotionVariables(){
   variables_used_.push_back(EEMotionVariables);
 }
 
+void ParametersExtended::AddEEMotionWithWheelsVariables(){
+  variables_used_.push_back(EEMotionWithWheelsVariables);
+}
+
 void ParametersExtended::ClearAllVariables()
 {
   variables_used_.clear();

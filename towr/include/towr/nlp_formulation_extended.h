@@ -34,6 +34,7 @@ class NlpFormulationExtended : public NlpFormulation
   VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override;
   ConstraintPtrVec GetConstraint (Parameters::ConstraintName name,
                              const SplineHolder& s) const override;
+  ConstraintPtrVec MakeTerrainConstraint() const override;
 
   ConstraintPtrVec MakeJointLimitsConstraint(const SplineHolder &s) const;
   ConstraintPtrVec MakeForwardKinematicsConstraint(const SplineHolder &s) const;

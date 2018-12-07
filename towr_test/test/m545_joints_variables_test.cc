@@ -140,12 +140,13 @@ void setParameters(NlpFormulationExtended *formulation,
   params->bounds_initial_lin_vel = {X,Y,Z};
 
   params->AddBaseVariables();
-  params->AddEEMotionVariables();
+  params->AddEEMotionVariables(); //add stuff w/o wheels
+  params->AddEEMotionWithWheelsVariables(); //add stuff with wheels
   params->AddJointVariables();
 
   params->SetTerrainConstraint();
   params->SetKinematicConstraint();
-  params->SetEEMotionWithWheelsConstraint();
+  //params->SetEEMotionWithWheelsConstraint();
 
   //remowe this since we only want to have a kinematic model
   //params->AddContactForceVariables();

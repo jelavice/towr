@@ -13,6 +13,7 @@
 #include "towr/constraints/ee_joint_limits_constraint.h"
 #include "towr/constraints/ee_forward_kinematics_constraint.h"
 #include "towr/constraints/ee_motion_with_wheels_constraint.h"
+#include "towr/constraints/terrain_constraint.h"
 
 namespace towr {
 
@@ -134,14 +135,22 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulationExtended::MakeEndeffect
 {
   std::vector<NodesVariablesPhaseBased::Ptr> vars;
 
-  auto extended_params = params_->as<Params>();
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
+  ;
 
   // Endeffector Motions
-  double T = extended_params->GetTotalTime();
-  for (int ee = 0; ee < extended_params->GetEECount(); ee++) {
-    auto nodes = std::make_shared<NodesVariablesEEMotion>(
-        extended_params->GetPhaseCount(ee), extended_params->ee_in_contact_at_start_.at(ee),
-        id::EEMotionNodes(ee), extended_params->ee_polynomials_per_swing_phase_);
+  double T = params->GetTotalTime();
+  for (int ee = 0; ee < params->GetEECount(); ee++) {
+
+    if (model->EEhasWheel(ee))  //this is only for non wheels
+      continue;
+
+    auto nodes = std::make_shared<NodesVariablesEEMotion>(params->GetPhaseCount(ee),
+                                                          params->ee_in_contact_at_start_.at(ee),
+                                                          id::EEMotionNodes(ee),
+                                                          params->ee_polynomials_per_swing_phase_);
 
     // initialize towards final footholds
     double yaw = final_base_.ang.p().z();
@@ -154,7 +163,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulationExtended::MakeEndeffect
     double z = terrain_->GetHeight(x, y);
     nodes->SetByLinearInterpolation(initial_ee_W_.at(ee), Vector3d(x, y, z), T);
 
-    if (extended_params->use_bounds_initial_ee_pos.at(ee))
+    if (params->use_bounds_initial_ee_pos.at(ee))
       nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
     vars.push_back(nodes);
   }
@@ -316,6 +325,30 @@ ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(
   }
 
   return c;
+}
+
+ConstraintPtrVec NlpFormulationExtended::MakeTerrainConstraint() const
+{
+  ConstraintPtrVec constraints;
+
+  KinematicModelWithJoints::Ptr model;
+  ParametersExtended::Ptr params;
+  CastPointers(&model, &params);
+
+  for (int ee = 0; ee < params->GetEECount(); ee++) {
+
+    std::string constraintName;
+    if (model->EEhasWheel(ee))
+      constraintName = id::EEMotionWithWheelsNodes(ee);
+    else
+      constraintName = id::EEMotionNodes(ee);
+
+    auto c = std::make_shared<TerrainConstraint>(terrain_, constraintName);
+    constraints.push_back(c);
+
+  }
+
+  return constraints;
 }
 
 } /* namespace */

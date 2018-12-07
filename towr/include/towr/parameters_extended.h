@@ -43,6 +43,9 @@ struct ParametersExtended : public Parameters
   void AddBaseVariables();
   void AddEEMotionVariables();
   void AddContactForceVariables();
+  void AddJointVariables();
+  void AddEEMotionWithWheelsVariables();
+  void ClearAllVariables();
 
  private:
   void AddContactScheduleVariables();
@@ -51,8 +54,7 @@ struct ParametersExtended : public Parameters
 
   void PrintAllParams();
 
-  void AddJointVariables();
-  void ClearAllVariables();
+
 
   //constraints
   void SetTerrainConstraint();

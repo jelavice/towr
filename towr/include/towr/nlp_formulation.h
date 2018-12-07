@@ -119,7 +119,7 @@ protected:
   ConstraintPtrVec MakeDynamicConstraint(const SplineHolder& s) const;
   ConstraintPtrVec MakeRangeOfMotionBoxConstraint(const SplineHolder& s) const;
   ConstraintPtrVec MakeTotalTimeConstraint() const;
-  ConstraintPtrVec MakeTerrainConstraint() const;
+  virtual ConstraintPtrVec MakeTerrainConstraint() const;
   ConstraintPtrVec MakeForceConstraint() const;
   ConstraintPtrVec MakeSwingConstraint() const;
   ConstraintPtrVec MakeBaseRangeOfMotionConstraint(const SplineHolder& s) const;
