@@ -52,6 +52,8 @@ public:
   NodesVariablesAll (int n_nodes, int n_dim, std::string variable_id);
   virtual ~NodesVariablesAll () = default;
 
+  using Ptr = std::shared_ptr<NodesVariablesAll>;
+
   std::vector<NodeValueInfo> GetNodeValuesInfo(int idx) const override;
 };
 

@@ -28,7 +28,7 @@ class NlpFormulationExtended : public NlpFormulation
   NlpFormulationExtended() = default;
 
   std::vector<NodesVariables::Ptr> MakeJointVariables() const;
-  std::vector<NodesVariables::Ptr> MakeEEMotionWithWheelsVariables() const;
+  std::vector<NodesVariables::Ptr> MakeEEMotionWithWheelsVariables(const SplineHolder &spline_holder) const;
 
 
   VariablePtrVec GetVariableSets(SplineHolder& spline_holder) override;
