@@ -31,16 +31,22 @@ EEforwardKinematicsConstraint::EEforwardKinematicsConstraint(KinematicModelWithJ
 
   kinematic_model_ = model;
 
+  ee_has_wheel_ = model->EEhasWheel(ee);
+
   if (model->EEhasWheel(ee))
-    ee_with_wheels_motion_ = spline_holder.as<SplineHolderExtended>()->ee_with_wheels_motion_.at(
+    ee_with_wheels_motion_ = spline_holder_ptr->ee_with_wheels_motion_.at(
         mapToSplineHolderEEId(ee));
   else
-    ee_motion_ = spline_holder.ee_motion_.at(mapToSplineHolderEEId(ee));
+    ee_motion_ = spline_holder_ptr->ee_motion_.at(mapToSplineHolderEEId(ee));
 
   //need to include the constraints for all the joint bounds as well
   num_constraints_per_node_ = dim3;  // position (3 position constraints)
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
+
+//  std::cout << "Number of nodes: " << GetNumberOfNodes() << std::endl;
+//  std::cout << "Total duration: " << T << std::endl;
+//  std::cout << "dt: " << dt << std::endl;
 }
 
 //this one is called first it seems
@@ -67,7 +73,10 @@ void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, 
   Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionBase(ee_);
 
   //endeffector position
-  g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
+  //g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
+
+  g.middleRows(rowStart, dim3) = -ee_pos_W;
+
 
 }
 void EEforwardKinematicsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
@@ -75,8 +84,6 @@ void EEforwardKinematicsConstraint::UpdateBoundsAtInstance(double t, int k, VecB
 
   int rowStart = GetRow(k, 0);
 
-//now workout the endeffector constraint bounds
-//equality constarints
   for (int dim = 0; dim < dim3; ++dim) {
     bounds.at(rowStart++) = ifopt::BoundZero;
   }
@@ -87,50 +94,64 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
                                                              Jacobian& jac) const
 {
 
-  EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
   int row_start = GetRow(k, 0);
 
-  if (var_set == id::EEJointNodes(ee_)) {
+  //std::cout << "time: " << t << ", k: " << k << std::endl;
 
-    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
-    kinematic_model_->UpdateModel(joint_positions, ee_);
+//  if (var_set == id::EEJointNodes(ee_)) {
+//
+//    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
+//    kinematic_model_->UpdateModel(joint_positions, ee_);
+//
+//    jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
+//        * joints_motion_->GetJacobianWrtNodes(t, kPos);
+//
+//  }
+//
+//  if (var_set == id::base_lin_nodes) {
+//  EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+//    //work out the end-effector constraint
+//    jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
+//
+//  }
+//
+//  if (var_set == id::base_ang_nodes) {
+//
+//    //work out the end-effector constraint
+//    Vector3d base_W = base_linear_->GetPoint(t).p();
+//    Vector3d ee_pos_W;
+//    ComputeEEpositionWorld(t, &ee_pos_W);
+//    Vector3d r_W = -1 * (ee_pos_W - base_W);
+//    jac.middleRows(row_start, dim3) = base_angular_.DerivOfRotVecMult(t, r_W, true);
+//
+//  }
 
-    jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-        * joints_motion_->GetJacobianWrtNodes(t, kPos);
+  if (ee_has_wheel_) {
+    if (var_set == id::EEMotionWithWheelsNodes(ee_)) {
+      EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
+//      jac.middleRows(row_start, dim3) = -1 * b_R_w
+//          * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
+
+      jac.middleRows(row_start, dim3) = -1
+                * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
+
+      //std::cout << "Jacobian at row: " << row_start << " \n " << ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos) << std::endl;
+
+    }
+  } else {
+
+    if (var_set == id::EEMotionNodes(ee_)) {
+      EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+
+//      jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
+      jac.middleRows(row_start, dim3) = -1  * ee_motion_->GetJacobianWrtNodes(t, kPos);
+
+    }
   }
 
-  if (var_set == id::base_lin_nodes) {
 
-    //work out the end-effector constraint
-    jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
-
-  }
-
-  if (var_set == id::base_ang_nodes) {
-
-    //work out the end-effector constraint
-    Vector3d base_W = base_linear_->GetPoint(t).p();
-    Vector3d ee_pos_W;
-    ComputeEEpositionWorld(t, &ee_pos_W);
-    Vector3d r_W = -1 * (ee_pos_W - base_W);
-    jac.middleRows(row_start, dim3) = base_angular_.DerivOfRotVecMult(t, r_W, true);
-
-  }
-
-  if (var_set == id::EEMotionWithWheelsNodes(ee_)) {
-
-    jac.middleRows(row_start, dim3) = -1 * b_R_w
-        * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
-
-  }
-
-  if (var_set == id::EEMotionNodes(ee_)) {
-
-    jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
-
-  }
 
 }
 
@@ -143,7 +164,7 @@ int EEforwardKinematicsConstraint::GetRow(int node, int dimension) const
 void EEforwardKinematicsConstraint::ComputeEEpositionWorld(double t, Vector3d *pos_ee_W) const
 {
 
-  if (kinematic_model_->EEhasWheel(ee_))
+  if (ee_has_wheel_)
     *pos_ee_W = ee_with_wheels_motion_->GetPoint(t).p();
   else
     *pos_ee_W = ee_motion_->GetPoint(t).p();
@@ -152,11 +173,8 @@ void EEforwardKinematicsConstraint::ComputeEEpositionWorld(double t, Vector3d *p
 int EEforwardKinematicsConstraint::mapToSplineHolderEEId(int absolute_ee_id) const
 {
 
-  if (kinematic_model_ == nullptr)
-    throw std::runtime_error("Modle ptr not initialized");
-
   //todo establish a convention, document it and remove the magic number
-  if (kinematic_model_->EEhasWheel(absolute_ee_id))
+  if (ee_has_wheel_)
     return absolute_ee_id;
   else
     return absolute_ee_id - 4;

@@ -41,6 +41,7 @@ class EEforwardKinematicsConstraint : public TimeDiscretizationConstraint
   Eigen::Vector3d max_deviation_from_nominal_;
   Eigen::Vector3d nominal_ee_pos_B_;
   EE ee_;
+  bool ee_has_wheel_;
 
   NodeSpline::Ptr joints_motion_;
 
