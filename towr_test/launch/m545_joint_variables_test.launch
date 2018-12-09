@@ -12,7 +12,7 @@
 	<arg name="parse_xacro" default="false" />
 
 	<node pkg="towr_test" type="m545_joints_variables_test"
-		name="m545_joints_variables_test" output="screen" launch-prefix="terminator -x gdb --args">
+		name="m545_joints_variables_test" output="screen">
 		<param name="description_name" type="string"
 			value="$(arg description_name)" />
 	</node>

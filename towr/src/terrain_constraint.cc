@@ -44,7 +44,6 @@ TerrainConstraint::TerrainConstraint (const HeightMap::Ptr& terrain,
 void
 TerrainConstraint::InitVariableDependedQuantities (const VariablesPtr& x)
 {
-  //todo change thissuch that we get components of the motion and wheel
   ee_motion_ = x->GetComponent<NodesVariablesPhaseBased>(ee_motion_id_);
 
   // skip first node, b/c already constrained by initial stance

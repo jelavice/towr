@@ -14,6 +14,7 @@
 #include "towr/constraints/ee_forward_kinematics_constraint.h"
 #include "towr/constraints/ee_motion_with_wheels_constraint.h"
 #include "towr/constraints/terrain_constraint.h"
+#include "towr/constraints/terrain_constraint_extended.h"
 
 namespace towr {
 
@@ -345,7 +346,7 @@ ConstraintPtrVec NlpFormulationExtended::MakeTerrainConstraint() const
     else
       constraintName = id::EEMotionNodes(ee);
 
-    auto c = std::make_shared<TerrainConstraint>(terrain_, constraintName);
+    auto c = std::make_shared<TerrainConstraintExtended>(terrain_, constraintName, ee, model->EEhasWheel(ee));
     constraints.push_back(c);
 
   }

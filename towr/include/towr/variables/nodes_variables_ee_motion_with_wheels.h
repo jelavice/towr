@@ -31,12 +31,16 @@ class NodesVariablesEEMotionWithWheels : public NodesVariablesAll
 {
  public:
 
+  using Ptr = std::shared_ptr<NodesVariablesEEMotionWithWheels>;
   using Base = NodesVariablesAll;
   using VecTimes = ParametersExtended::VecTimes;
 
   //todo add here the book keeping
   NodesVariablesEEMotionWithWheels(const SplineHolder &s, const VecTimes &poly_duratinos,
                                    int n_nodes, int n_dim, const std::string &variable_id, int ee);
+
+
+  const NonPhaseNodeInfo &GetNonPhaseNodeInfoAt(int id);
 
  private:
 

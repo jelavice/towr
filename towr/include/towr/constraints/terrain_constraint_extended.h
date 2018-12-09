@@ -12,6 +12,7 @@
 #include <towr/variables/nodes_variables_phase_based.h>
 #include <towr/terrain/height_map.h>
 #include <towr/variables/nodes_variables_all.h>
+#include <towr/variables/nodes_variables_ee_motion_with_wheels.h>
 
 namespace towr {
 
@@ -39,7 +40,7 @@ private:
   void GetNodes(std::vector<Node> *nodes) const;
 
   NodesVariablesPhaseBased::Ptr ee_motion_; ///< the position of the endeffector.
-  NodesVariablesAll::Ptr ee_with_wheel_motion_; // position of the endeffector with wheel
+  NodesVariablesEEMotionWithWheels::Ptr ee_with_wheel_motion_; // position of the endeffector with wheel
   HeightMap::Ptr terrain_;    ///< the height map of the current terrain.
   bool ee_has_wheel_;
 

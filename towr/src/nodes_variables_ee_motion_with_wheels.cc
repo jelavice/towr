@@ -44,6 +44,12 @@ void NodesVariablesEEMotionWithWheels::CalculateContactSchedule(int n_nodes) {
 
 }
 
+const NonPhaseNodeInfo &NodesVariablesEEMotionWithWheels::GetNonPhaseNodeInfoAt(int id){
+
+  return nodes_info_.at(id);
+
+}
+
 
 } /* namespace */
 
