@@ -85,7 +85,7 @@ void ParametersExtended::DeleteAllConstraints()
   constraints_.clear();
 }
 
-void ParametersExtended::SetJointLimitsconstraint()
+void ParametersExtended::SetJointLimitsConstraint()
 {
   constraints_.push_back(JointLimits);
 }

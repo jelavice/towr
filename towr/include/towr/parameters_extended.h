@@ -59,7 +59,7 @@ struct ParametersExtended : public Parameters
   //constraints
   void SetTerrainConstraint();
   void DeleteAllConstraints();
-  void SetJointLimitsconstraint();
+  void SetJointLimitsConstraint();
   void SetSwingConstraint() override;
   void SetKinematicConstraint() override;
   void SetEEMotionWithWheelsConstraint();
