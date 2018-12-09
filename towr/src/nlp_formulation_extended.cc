@@ -141,7 +141,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulationExtended::MakeEndeffect
   KinematicModelWithJoints::Ptr model;
   ParametersExtended::Ptr params;
   CastPointers(&model, &params);
-  ;
+
 
   // Endeffector Motions
   double T = params->GetTotalTime();
@@ -168,6 +168,7 @@ std::vector<NodesVariablesPhaseBased::Ptr> NlpFormulationExtended::MakeEndeffect
 
     if (params->use_bounds_initial_ee_pos.at(ee))
       nodes->AddStartBound(kPos, { X, Y, Z }, initial_ee_W_.at(ee));
+
     vars.push_back(nodes);
   }
 
@@ -321,6 +322,10 @@ ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(
   CastPointers(&model, &params);
 
   for (int ee = 0; ee < params->GetEECount(); ++ee) {
+
+    if (model->EEhasWheel(ee) == false)
+      continue;
+
     auto con = std::make_shared<EEMotionWithWheelsConstraint>(model, params->GetTotalTime(),
                                                               params->dt_joint_limit_constraint_,
                                                               ee, s);
