@@ -25,6 +25,8 @@ EEMotionWithWheelsConstraint::EEMotionWithWheelsConstraint(KinematicModelWithJoi
     throw std::runtime_error("Couldn't convert from spline_holder to spline_holder_extended");
 
   joints_motion_ = spline_holder_ptr->joint_motion_.at(ee_);
+  ee_with_wheels_motion_ = spline_holder_ptr->ee_with_wheels_motion_.at(ee_);
+
 
   base_angular_ = EulerConverter(spline_holder.base_angular_);
   EulerConverter base_angular_;  ///< the orientation of the base.
@@ -55,7 +57,7 @@ void EEMotionWithWheelsConstraint::UpdateConstraintAtInstance(double t, int k, V
 
   //get orientation of the wheels axis in the world frame
 
-  Eigen::Vector3d wheel_axis_base = kinematic_model_->GetWheelAxisBase(ee_);
+  EulerConverter::JacobianRow wheel_axis_base = kinematic_model_->GetWheelAxisBase(ee_).sparseView();
 
   //get rotation matrix world to base from base_angular spline
 
@@ -69,9 +71,7 @@ void EEMotionWithWheelsConstraint::UpdateConstraintAtInstance(double t, int k, V
 
   // take the dot product
 
-  g.middleRows(row_start, 1) = b_R_w * ee_velocity_world.sparseView()
-      * wheel_axis_base.sparseView();
-
+  g.middleRows(row_start, 1) = wheel_axis_base *b_R_w * ee_velocity_world.sparseView();
 }
 void EEMotionWithWheelsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
@@ -99,7 +99,7 @@ void EEMotionWithWheelsConstraint::UpdateJacobianAtInstance(double t, int k, std
     kinematic_model_->UpdateModel(joint_angles, ee_);
     EulerConverter::JacobianRow wheel_axis_base = kinematic_model_->GetWheelAxisBase(ee_).sparseView();
     Eigen::Vector3d ee_motion_vel = ee_with_wheels_motion_->GetPoint(t).v();
-    jac.middleRows(row_start, 1) = wheel_axis_base.transpose()
+    jac.middleRows(row_start, 1) = wheel_axis_base
         * base_angular_.DerivOfRotVecMult(t, ee_motion_vel, true);
   }
 
@@ -110,7 +110,7 @@ void EEMotionWithWheelsConstraint::UpdateJacobianAtInstance(double t, int k, std
     kinematic_model_->UpdateModel(joint_angles, ee_);
     EulerConverter::JacobianRow ee_motion_vel = ee_with_wheels_motion_->GetPoint(t).v().sparseView();
     EulerConverter::MatrixSXd w_R_b = base_angular_.GetRotationMatrixBaseToWorld(t);
-    jac.middleRows(row_start, 1) = ee_motion_vel.transpose() * w_R_b
+    jac.middleRows(row_start, 1) = ee_motion_vel * w_R_b
         * kinematic_model_->GetWheelAxisJacobianBase(ee_)
         * joints_motion_->GetJacobianWrtNodes(t, kPos);
   }
@@ -125,7 +125,7 @@ void EEMotionWithWheelsConstraint::UpdateJacobianAtInstance(double t, int k, std
     kinematic_model_->UpdateModel(joint_angles, ee_);
     EulerConverter::JacobianRow wheel_axis_base = kinematic_model_->GetWheelAxisBase(ee_).sparseView();
     EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-    jac.middleRows(row_start, 1) = wheel_axis_base.transpose() * b_R_w;
+    jac.middleRows(row_start, 1) = wheel_axis_base * b_R_w;
   }
 
 }
