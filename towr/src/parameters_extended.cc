@@ -209,6 +209,9 @@ void ParametersExtended::PrintAllParams(){
   PrintVectors<int>(bounds_initial_ang_pos, "bounds_initial_ang_pos");
   PrintVectors<int>(bounds_initial_ang_vel, "bounds_initial_ang_vel");
   PrintVectors<bool>(use_bounds_initial_ee_pos, "use_bounds_initial_ee_pos");
+  PrintVectors<double>(GetBasePolyDurations(), "base_poly_durations");
+  PrintVectors<double>(GetJointPolyDurations(), "joint_poly_durations");
+
 
   std::cout << "STUFF FROM NORMAL PARAMS: " << std::endl;
   std::cout << "dt constraint dynamic: " << dt_constraint_dynamic_ << std::endl;
@@ -226,6 +229,10 @@ void ParametersExtended::PrintAllParams(){
   PrintVectors<ConstraintName>(constraints_, "used constraints");
   std::cout << "Total time: " << GetTotalTime() << std::endl;
 
+}
+
+VecTimes ParametersExtended::GetEEwithWheelsPolyDurations() const {
+  return GetJointPolyDurations();
 }
 
 

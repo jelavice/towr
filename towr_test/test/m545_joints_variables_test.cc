@@ -156,6 +156,7 @@ void setParameters(NlpFormulationExtended *formulation,
   params->SetJointPolynomialDuration(0.04);
   params->SetJointLimitsConstraintDt(0.1);
   params->SetForwardKinematicsConstraint(0.1);
+
 }
 
 int main(int argc, char** argv)

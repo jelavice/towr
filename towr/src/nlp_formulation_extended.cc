@@ -35,7 +35,8 @@ void NlpFormulationExtended::CastPointers(KinematicModelWithJoints::Ptr *model,
     throw std::runtime_error("Could not cast ParametersPtr to ExtendedParametersPtr");
 }
 
-std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsVariables(const SplineHolder &spline_holder) const
+std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsVariables(
+    const SplineHolder &spline_holder) const
 {
 
   KinematicModelWithJoints::Ptr model;
@@ -44,7 +45,7 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
 
   std::vector<NodesVariables::Ptr> vars;
 
-  //todo implement getEEmotion with wheel duration
+  //todo abstract this away, implement a method in the parameters that returns the nodes
   int n_nodes = params->GetJointPolyDurations().size() + 1;
 
   for (int ee = 0; ee < params->GetEECount(); ++ee) {
@@ -52,8 +53,9 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
     if (model->EEhasWheel(ee) == false)
       continue;
 
-    auto ee_motion_with_wheels = std::make_shared<NodesVariablesEEMotionWithWheels>(spline_holder,
-        n_nodes, k3D, id::EEMotionWithWheelsNodes(ee), ee);
+    auto ee_motion_with_wheels = std::make_shared<NodesVariablesEEMotionWithWheels>(
+        spline_holder, params->GetEEwithWheelsPolyDurations(), n_nodes, k3D,
+        id::EEMotionWithWheelsNodes(ee), ee);
 
     Eigen::VectorXd initialPosition(k3D);
     Eigen::VectorXd finalPosition(k3D);

@@ -76,6 +76,7 @@ struct ParametersExtended : public Parameters
 
   //other useful or not so useful shit
   VecTimes GetJointPolyDurations() const;
+  VecTimes GetEEwithWheelsPolyDurations() const;
   int GetEECount() const override final;
 
   std::vector<int> bounds_initial_lin_pos, bounds_initial_lin_vel, bounds_initial_ang_pos,
@@ -94,6 +95,7 @@ struct ParametersExtended : public Parameters
   double dt_forward_kinematics_constraint_;
   double dt_ee_motion_with_wheels_constraint_;
   double duration_joint_polynomials_;
+
 
   std::vector<VariableSetName> variables_used_;
 
