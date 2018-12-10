@@ -73,9 +73,8 @@ void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, 
   Vector3d pos_ee_joints_B = kinematic_model_->GetEEPositionBase(ee_);
 
   //endeffector position
-  //g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
+  g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
 
-  g.middleRows(rowStart, dim3) = -ee_pos_W;
 
 
 }
@@ -99,43 +98,43 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
 
   //std::cout << "time: " << t << ", k: " << k << std::endl;
 
-//  if (var_set == id::EEJointNodes(ee_)) {
-//
-//    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
-//    kinematic_model_->UpdateModel(joint_positions, ee_);
-//
-//    jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
-//        * joints_motion_->GetJacobianWrtNodes(t, kPos);
-//
-//  }
-//
-//  if (var_set == id::base_lin_nodes) {
-//  EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
-//    //work out the end-effector constraint
-//    jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
-//
-//  }
-//
-//  if (var_set == id::base_ang_nodes) {
-//
-//    //work out the end-effector constraint
-//    Vector3d base_W = base_linear_->GetPoint(t).p();
-//    Vector3d ee_pos_W;
-//    ComputeEEpositionWorld(t, &ee_pos_W);
-//    Vector3d r_W = -1 * (ee_pos_W - base_W);
-//    jac.middleRows(row_start, dim3) = base_angular_.DerivOfRotVecMult(t, r_W, true);
-//
-//  }
+  if (var_set == id::EEJointNodes(ee_)) {
+
+    VectorXd joint_positions = joints_motion_->GetPoint(t).p();
+    kinematic_model_->UpdateModel(joint_positions, ee_);
+
+    jac.middleRows(row_start, dim3) = kinematic_model_->GetTranslationalJacobiansWRTjointsBase(ee_)
+        * joints_motion_->GetJacobianWrtNodes(t, kPos);
+
+  }
+
+  if (var_set == id::base_lin_nodes) {
+  EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+    //work out the end-effector constraint
+    jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
+
+  }
+
+  if (var_set == id::base_ang_nodes) {
+
+    //work out the end-effector constraint
+    Vector3d base_W = base_linear_->GetPoint(t).p();
+    Vector3d ee_pos_W;
+    ComputeEEpositionWorld(t, &ee_pos_W);
+    Vector3d r_W = -1 * (ee_pos_W - base_W);
+    jac.middleRows(row_start, dim3) = base_angular_.DerivOfRotVecMult(t, r_W, true);
+
+  }
 
   if (ee_has_wheel_) {
     if (var_set == id::EEMotionWithWheelsNodes(ee_)) {
       EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
-//      jac.middleRows(row_start, dim3) = -1 * b_R_w
-//          * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
+      jac.middleRows(row_start, dim3) = -1 * b_R_w
+          * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
 
-      jac.middleRows(row_start, dim3) = -1
-                * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
+//      jac.middleRows(row_start, dim3) = -1
+//                * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
 
       //std::cout << "Jacobian at row: " << row_start << " \n " << ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos) << std::endl;
 
@@ -145,8 +144,8 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
     if (var_set == id::EEMotionNodes(ee_)) {
       EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
-//      jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
-      jac.middleRows(row_start, dim3) = -1  * ee_motion_->GetJacobianWrtNodes(t, kPos);
+      jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
+//      jac.middleRows(row_start, dim3) = -1  * ee_motion_->GetJacobianWrtNodes(t, kPos);
 
     }
   }
