@@ -65,18 +65,19 @@ struct ParametersExtended : public Parameters
   void SetEEMotionWithWheelsConstraint();
 
 
-//set all the params
-  void SetJointPolynomialDuration(double dt);
+//set all the variables
+  void SetPolynomialDuration(double dt);
+
+
+//set all the constraints
   void SetJointLimitsConstraintDt(double dt);
   void SetNormalFoceLimit(double fmax);
   void SetDynamicConstraintDt(double dt);
-  void SetBasePolynomialDuration(double dt);
   void SetRangeOfMotionConstraintDt(double dt);
-  void SetForwardKinematicsConstraint(double dt);
+  void SetForwardKinematicsConstraintDt(double dt);
 
   //other useful or not so useful shit
-  VecTimes GetJointPolyDurations() const;
-  VecTimes GetEEwithWheelsPolyDurations() const;
+  VecTimes GetPolyDurations() const;
   int GetEECount() const override final;
 
   std::vector<int> bounds_initial_lin_pos, bounds_initial_lin_vel, bounds_initial_ang_pos,
@@ -94,7 +95,7 @@ struct ParametersExtended : public Parameters
   double dt_joint_limit_constraint_;
   double dt_forward_kinematics_constraint_;
   double dt_ee_motion_with_wheels_constraint_;
-  double duration_joint_polynomials_;
+  double duration_polynomials_;
 
 
   std::vector<VariableSetName> variables_used_;

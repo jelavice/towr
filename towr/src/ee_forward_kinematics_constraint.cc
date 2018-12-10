@@ -53,7 +53,7 @@ EEforwardKinematicsConstraint::EEforwardKinematicsConstraint(KinematicModelWithJ
 void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, VectorXd& g) const
 {
 
-  int rowStart = GetRow(k, 0);
+  int rowStart = GetRow(k);
 
   /* first get all the variables*/
 
@@ -82,7 +82,7 @@ void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, 
 void EEforwardKinematicsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
 
-  int rowStart = GetRow(k, 0);
+  int rowStart = GetRow(k);
 
   for (int dim = 0; dim < dim3; ++dim) {
     bounds.at(rowStart++) = ifopt::BoundZero;
@@ -95,7 +95,7 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
 {
 
 
-  int row_start = GetRow(k, 0);
+  int row_start = GetRow(k);
 
   //std::cout << "time: " << t << ", k: " << k << std::endl;
 
@@ -155,9 +155,9 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
 
 }
 
-int EEforwardKinematicsConstraint::GetRow(int node, int dimension) const
+int EEforwardKinematicsConstraint::GetRow(int node) const
 {
-  return node * num_constraints_per_node_ + dimension;
+  return node * num_constraints_per_node_;
 
 }
 

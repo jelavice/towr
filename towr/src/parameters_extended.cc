@@ -33,9 +33,9 @@ ParametersExtended::ParametersExtended(int n_ee)
   bounds_initial_lin_pos = {X,Y,Z};
   bounds_initial_lin_vel = {X,Y,Z};
 
-  SetJointPolynomialDuration(0.04);
+  SetPolynomialDuration(0.04);
   SetJointLimitsConstraintDt(0.1);
-  SetForwardKinematicsConstraint(0.1);
+  SetForwardKinematicsConstraintDt(0.1);
 
 }
 //variables
@@ -111,9 +111,9 @@ void ParametersExtended::SetKinematicConstraint() {
 
 //parameters
 
-void ParametersExtended::SetJointPolynomialDuration(double dt)
+void ParametersExtended::SetPolynomialDuration(double dt)
 {
-  duration_joint_polynomials_ = dt;
+  duration_polynomials_ = dt;
 }
 
 void ParametersExtended::SetJointLimitsConstraintDt(double dt)
@@ -126,11 +126,6 @@ void ParametersExtended::SetDynamicConstraintDt(double dt)
   dt_constraint_dynamic_ = dt;
 }
 
-void ParametersExtended::SetBasePolynomialDuration(double dt)
-{
-  duration_base_polynomial_ = dt;
-}
-
 void ParametersExtended::SetNormalFoceLimit(double fmax)
 {
   force_limit_in_normal_direction_ = fmax;
@@ -141,7 +136,7 @@ void ParametersExtended::SetRangeOfMotionConstraintDt(double dt)
   dt_constraint_range_of_motion_ = dt;
 }
 
-void ParametersExtended::SetForwardKinematicsConstraint(double dt){
+void ParametersExtended::SetForwardKinematicsConstraintDt(double dt){
   dt_forward_kinematics_constraint_ = dt;
 }
 
@@ -166,13 +161,13 @@ VecTimes ParametersExtended::GetAnyPolyDurations(double polynomial_duration) con
   return any_spline_timings_;
 }
 
-VecTimes ParametersExtended::GetJointPolyDurations() const
+VecTimes ParametersExtended::GetPolyDurations() const
 {
   const double eps = 1e-6;
-  if (std::fabs(duration_joint_polynomials_) <= eps)
-    std::cerr << "Joint polynomial dt not set" << std::endl;
+  if (std::fabs(duration_polynomials_) <= eps)
+    std::cerr << "Polynomial dt not set" << std::endl;
 
-  return GetAnyPolyDurations(duration_joint_polynomials_);
+  return GetAnyPolyDurations(duration_polynomials_);
 }
 
 int ParametersExtended::GetEECount() const
@@ -200,7 +195,7 @@ void ParametersExtended::PrintAllParams(){
 
   std::cout << "STUFF FROM EXTENDED PARAMS: " << std::endl;
   std::cout << "Num endeffectors: " << n_ee_ << std::endl;
-  std::cout << "Duration of joint polynomials: " << duration_joint_polynomials_ << std::endl;
+  std::cout << "Duration of joint polynomials: " << duration_polynomials_ << std::endl;
   std::cout << "Joint limits constraint dt: " << dt_joint_limit_constraint_ << std::endl;
   std::cout << "forward kinematics constraint dt: " << dt_forward_kinematics_constraint_ << std::endl;
   PrintVectors<VariableSetName>(variables_used_, "variables used");
@@ -209,8 +204,7 @@ void ParametersExtended::PrintAllParams(){
   PrintVectors<int>(bounds_initial_ang_pos, "bounds_initial_ang_pos");
   PrintVectors<int>(bounds_initial_ang_vel, "bounds_initial_ang_vel");
   PrintVectors<bool>(use_bounds_initial_ee_pos, "use_bounds_initial_ee_pos");
-  PrintVectors<double>(GetBasePolyDurations(), "base_poly_durations");
-  PrintVectors<double>(GetJointPolyDurations(), "joint_poly_durations");
+  PrintVectors<double>(GetPolyDurations(), "poly_durations");
 
 
   std::cout << "STUFF FROM NORMAL PARAMS: " << std::endl;
@@ -229,10 +223,6 @@ void ParametersExtended::PrintAllParams(){
   PrintVectors<ConstraintName>(constraints_, "used constraints");
   std::cout << "Total time: " << GetTotalTime() << std::endl;
 
-}
-
-VecTimes ParametersExtended::GetEEwithWheelsPolyDurations() const {
-  return GetJointPolyDurations();
 }
 
 

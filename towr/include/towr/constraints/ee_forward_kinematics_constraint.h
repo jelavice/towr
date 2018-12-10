@@ -37,9 +37,6 @@ class EEforwardKinematicsConstraint : public TimeDiscretizationConstraint
 
   //todo add the boom here
 
-
-  Eigen::Vector3d max_deviation_from_nominal_;
-  Eigen::Vector3d nominal_ee_pos_B_;
   EE ee_;
   bool ee_has_wheel_;
 
@@ -56,7 +53,7 @@ class EEforwardKinematicsConstraint : public TimeDiscretizationConstraint
   void UpdateBoundsAtInstance(double t, int k, VecBound&) const final;
   void UpdateJacobianAtInstance(double t, int k, std::string, Jacobian&) const final;
 
-  int GetRow(int node, int dimension) const;
+  int GetRow(int node) const;
 
   void ComputeEEpositionWorld(double t, Vector3d *pos_ee_W) const;
   int mapToSplineHolderEEId(int absolute_ee_id) const;

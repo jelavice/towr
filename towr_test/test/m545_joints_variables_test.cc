@@ -114,7 +114,7 @@ void setParameters(NlpFormulationExtended *formulation,
 
   int boom_limb_id = static_cast<int>(loco_m545::RD::LimbEnum::BOOM);
   for (int i = 0; i < n_ee; ++i) {
-    params->ee_phase_durations_.push_back( { 1.0 });
+    params->ee_phase_durations_.push_back( { 0.2 });
     if (i == boom_limb_id)
       params->ee_in_contact_at_start_.push_back(false);
     else
@@ -140,11 +140,12 @@ void setParameters(NlpFormulationExtended *formulation,
   params->bounds_initial_lin_vel = {X,Y,Z};
 
   params->AddBaseVariables();
-  params->AddEEMotionVariables(); //add stuff w/o wheels
-  params->AddEEMotionWithWheelsVariables(); //add stuff with wheels
   params->AddJointVariables();
+  //params->AddEEMotionVariables(); //add stuff w/o wheels
+  params->AddEEMotionWithWheelsVariables(); //add stuff with wheels
 
-  params->SetTerrainConstraint();
+  //params->SetJointLimitsConstraint();
+  //params->SetTerrainConstraint();
   params->SetKinematicConstraint();
   //params->SetEEMotionWithWheelsConstraint();
 
@@ -153,9 +154,9 @@ void setParameters(NlpFormulationExtended *formulation,
   //params->SetDynamicConstraint();
   //params->SetForceConstraint();
 
-  params->SetJointPolynomialDuration(0.04);
+  params->SetPolynomialDuration(0.04);
   params->SetJointLimitsConstraintDt(0.1);
-  params->SetForwardKinematicsConstraint(0.1);
+  params->SetForwardKinematicsConstraintDt(0.1);
 
 }
 
@@ -196,7 +197,7 @@ int main(int argc, char** argv)
     nlp.AddCostSet(c);
 
 
-  params->PrintAllParams();
+  //params->PrintAllParams();
 
   auto solver = std::make_shared<ifopt::IpoptSolver>();
   solver->SetOption("linear_solver", "ma57");

@@ -45,9 +45,8 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
   CastPointers(&model, &params);
 
   std::vector<NodesVariables::Ptr> vars;
-
   //todo abstract this away, implement a method in the parameters that returns the nodes
-  int n_nodes = params->GetJointPolyDurations().size() + 1;
+  int n_nodes = params->GetPolyDurations().size() + 1;
 
   for (int ee = 0; ee < params->GetEECount(); ++ee) {
 
@@ -55,16 +54,21 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
       continue;
 
     auto ee_motion_with_wheels = std::make_shared<NodesVariablesEEMotionWithWheels>(
-        spline_holder, params->GetEEwithWheelsPolyDurations(), n_nodes, k3D,
+        spline_holder, params->GetPolyDurations(), n_nodes, k3D,
         id::EEMotionWithWheelsNodes(ee), ee);
 
     Eigen::VectorXd initialPosition(k3D);
     Eigen::VectorXd finalPosition(k3D);
 
+    initialPosition.setZero();
+    finalPosition.setZero();
+
     //todo make better initialization
     double totalTime = params->GetTotalTime();
     ee_motion_with_wheels->SetByLinearInterpolation(initialPosition, finalPosition, totalTime);
     vars.push_back(ee_motion_with_wheels);
+
+    break;
   }
 
   return vars;
@@ -73,12 +77,14 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
 std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() const
 {
 
-  auto extended_params = params_->as<Params>();
+  KinematicModelWithJoints::Ptr model;
+   ParametersExtended::Ptr params;
+   CastPointers(&model, &params);
 
   std::vector<NodesVariables::Ptr> vars;
-  int n_nodes = extended_params->GetJointPolyDurations().size() + 1;
+  int n_nodes = params->GetPolyDurations().size() + 1;
 
-  for (int ee = 0; ee < extended_params->GetEECount(); ++ee) {
+  for (int ee = 0; ee < params->GetEECount(); ++ee) {
 
     int numDof = model_.kinematic_model_->as<KinematicModelWithJoints>()->GetNumDof(ee);
     auto joint_spline = std::make_shared<NodesVariablesEEJoints>(n_nodes, numDof,
@@ -90,9 +96,11 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
       initial_joint_pos(j) = position;
       final_joint_pos(j) = position;
     }
-    double totalTime = extended_params->GetTotalTime();
+    double totalTime =params->GetTotalTime();
     joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos, totalTime);
     vars.push_back(joint_spline);
+
+    break;
   }
 
   return vars;
@@ -237,14 +245,14 @@ void NlpFormulationExtended::CreateVariableSet(Params::VariableSetName var_set, 
     case Params::JointVariables: {
       auto ee_joint_motion = MakeJointVariables();
       vars.insert(vars.end(), ee_joint_motion.begin(), ee_joint_motion.end());
-      spline_holder->InitializeJointMotion(ee_joint_motion, params->GetJointPolyDurations());
+      spline_holder->InitializeJointMotion(ee_joint_motion, params->GetPolyDurations());
       break;
     }
 
     case Params::EEMotionWithWheelsVariables: {
       auto ee_wheel_motion = MakeEEMotionWithWheelsVariables(s);
       vars.insert(vars.end(), ee_wheel_motion.begin(), ee_wheel_motion.end());
-      spline_holder->InitializeEEMotionWithWheels(ee_wheel_motion, params->GetJointPolyDurations());
+      spline_holder->InitializeEEMotionWithWheels(ee_wheel_motion, params->GetPolyDurations());
       break;
     }
   }
@@ -285,6 +293,8 @@ ConstraintPtrVec NlpFormulationExtended::MakeJointLimitsConstraint(const SplineH
                                                                params->dt_joint_limit_constraint_,
                                                                ee, s);
     c.push_back(joint_con);
+
+    break;
   }
 
   return c;
@@ -305,7 +315,7 @@ ConstraintPtrVec NlpFormulationExtended::MakeForwardKinematicsConstraint(
     auto fwdKinematicsCon = std::make_shared<EEforwardKinematicsConstraint>(
         model, totalTime, params->dt_forward_kinematics_constraint_, ee, s);
     c.push_back(fwdKinematicsCon);
-
+    break;
   }
 
   return c;
@@ -330,6 +340,7 @@ ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(
                                                               params->dt_joint_limit_constraint_,
                                                               ee, s);
     c.push_back(con);
+    break;
   }
 
   return c;
