@@ -32,7 +32,7 @@ class EEMotionWithWheelsConstraint : public TimeDiscretizationConstraint
  private:
 
   //todo remove this hardcoded constraint
-  const double vel_component_max_ = 0.5; /* m/s */
+  const double vel_component_max_ = 1.0; /* m/s */
 
   EE ee_;
 
