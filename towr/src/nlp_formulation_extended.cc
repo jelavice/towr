@@ -68,7 +68,6 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeEEMotionWithWheelsV
     ee_motion_with_wheels->SetByLinearInterpolation(initialPosition, finalPosition, totalTime);
     vars.push_back(ee_motion_with_wheels);
 
-    break;
   }
 
   return vars;
@@ -100,7 +99,6 @@ std::vector<NodesVariables::Ptr> NlpFormulationExtended::MakeJointVariables() co
     joint_spline->SetByLinearInterpolation(initial_joint_pos, final_joint_pos, totalTime);
     vars.push_back(joint_spline);
 
-    break;
   }
 
   return vars;
@@ -340,7 +338,6 @@ ConstraintPtrVec NlpFormulationExtended::MakeEEMotionWithWheelsConstraint(
                                                               params->dt_joint_limit_constraint_,
                                                               ee, s);
     c.push_back(con);
-    break;
   }
 
   return c;
