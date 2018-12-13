@@ -114,7 +114,7 @@ void setParameters(NlpFormulationExtended *formulation,
 
   int boom_limb_id = static_cast<int>(loco_m545::RD::LimbEnum::BOOM);
   for (int i = 0; i < n_ee; ++i) {
-    params->ee_phase_durations_.push_back( { 0.2 });
+    params->ee_phase_durations_.push_back( { 1.0 });
     if (i == boom_limb_id)
       params->ee_in_contact_at_start_.push_back(false);
     else
@@ -141,11 +141,11 @@ void setParameters(NlpFormulationExtended *formulation,
 
   params->AddBaseVariables();
   params->AddJointVariables();
-  //params->AddEEMotionVariables(); //add stuff w/o wheels
+  params->AddEEMotionVariables(); //add stuff w/o wheels
   params->AddEEMotionWithWheelsVariables(); //add stuff with wheels
 
-  //params->SetJointLimitsConstraint();
-  //params->SetTerrainConstraint();
+  params->SetJointLimitsConstraint();
+  params->SetTerrainConstraint();
   params->SetKinematicConstraint();
   //params->SetEEMotionWithWheelsConstraint();
 

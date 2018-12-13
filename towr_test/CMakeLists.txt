@@ -30,13 +30,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(extended_formulation_test
-  test/extended_formulation_test.cc
-)
-target_link_libraries(extended_formulation_test 
-    ${towr_LIBRARIES}
-)
-
 add_executable(m545_model_with_joints_jacobians_unit_test 
   test/m545_model_with_joints_jacobians_unit_test.cc
 )
