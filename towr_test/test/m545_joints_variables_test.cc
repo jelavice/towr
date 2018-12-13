@@ -27,73 +27,6 @@
 
 using namespace towr;
 
-void printTrajectory(const SplineHolder &x)
-{
-  // Print out the trajecetory at discrete time samples
-  using namespace std;
-  cout.precision(2);
-  cout << fixed;
-  cout << "\n====================\n m545 trajectory: \n====================\n";
-
-  double t = 0.0;
-  while (t <= x.base_linear_->GetTotalTime() + 1e-5) {
-    cout << "t=" << t << "\n";
-    cout << "Base linear position x,y,z:   \t";
-    cout << x.base_linear_->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "Base linear velocity x,y,z:   \t";
-    cout << x.base_linear_->GetPoint(t).v().transpose() << "\t[m]" << endl;
-
-    cout << "Base Euler roll, pitch, yaw:  \t";
-    Eigen::Vector3d rad = x.base_angular_->GetPoint(t).p();
-    cout << (rad / M_PI * 180).transpose() << "\t[deg]" << endl;
-
-    cout << "Feet position x,y,z:          \n";
-    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).p().transpose() << "\t[m]" << endl;
-
-    cout << "Feet velocity x,y,z:          \n";
-    cout << "LF: " << x.ee_motion_.at(LF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "RF: " << x.ee_motion_.at(RF)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "LH: " << x.ee_motion_.at(LH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-    cout << "RH: " << x.ee_motion_.at(RH)->GetPoint(t).v().transpose() << "\t[m]" << endl;
-
-    cout << "Contact force x,y,z:          \n";
-    cout << "LF: " << x.ee_force_.at(LF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "RF: " << x.ee_force_.at(RF)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "LH: " << x.ee_force_.at(LH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-    cout << "RH: " << x.ee_force_.at(RH)->GetPoint(t).p().transpose() << "\t[N]" << endl;
-
-    //not used for joints
-//    cout << "Wheel angle:          \n";
-//    cout << "LF: " << x.ee_wheel_angles_.at(LF)->GetPoint(t).p() << "\t[N]" << endl;
-//    cout << "RF: " << x.ee_wheel_angles_.at(RF)->GetPoint(t).p() << "\t[N]" << endl;
-//    cout << "LH: " << x.ee_wheel_angles_.at(LH)->GetPoint(t).p() << "\t[N]" << endl;
-//    cout << "RH: " << x.ee_wheel_angles_.at(RH)->GetPoint(t).p() << "\t[N]" << endl;
-
-    bool contact = x.phase_durations_.at(LF)->IsContactPhase(t);
-    std::string foot_in_contact = contact ? "yes" : "no";
-    cout << " LF Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(RF)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " RF Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(LH)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " LH Foot in contact:              \t" + foot_in_contact << endl;
-
-    contact = x.phase_durations_.at(RH)->IsContactPhase(t);
-    foot_in_contact = contact ? "yes" : "no";
-    cout << " RH Foot in contact:              \t" + foot_in_contact << endl;
-
-    cout << endl;
-
-    t += 0.2;
-  }
-}
-
 void setParameters(NlpFormulationExtended *formulation,
                    const std::string &urdfDescription)
 {
@@ -145,9 +78,6 @@ void setParameters(NlpFormulationExtended *formulation,
   params->AddEEMotionWithWheelsVariables(); //add stuff with wheels
 
   params->SetJointLimitsConstraint();
-  params->SetTerrainConstraint();
-  params->SetKinematicConstraint();
-  //params->SetEEMotionWithWheelsConstraint();
 
   //remowe this since we only want to have a kinematic model
   //params->AddContactForceVariables();
@@ -212,35 +142,7 @@ int main(int argc, char** argv)
   solver->SetOption("derivative_test_tol", 1e-3);
 
   solver->Solve(nlp);
-//
-//  //printTrajectory(solution);
-//  {
-//    // Defaults to /home/user/.ros/
-//    towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
-//    std::string bag_file = "towr_trajectory.bag";
-//    rosbag::Bag bag;
-//    bag.open(bag_file, rosbag::bagmode::Write);
-//    ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
-//
-//    trajectory_manager.SaveTrajectoryInRosbagCartesian(bag, xpp_msgs::robot_state_desired,
-//                                                       solution);
-//
-//    bag.close();
-//  }
-//
-//  {
-//    towr::M545TrajectoryManager trajectory_manager(formulation.terrain_.get());
-//    std::string prefix =
-//        "/home/jelavice/Documents/catkin_workspaces/towr_ws/src/xpp/xpp_examples/bags";
-//    std::string bag_file = prefix + "/m545.bag";
-//    rosbag::Bag bag;
-//    bag.open(bag_file, rosbag::bagmode::Write);
-//    ::ros::Time t0(1e-6);  // t=0.0 throws ROS exception
-//
-//    trajectory_manager.SaveTrajectoryInRosbagJoints(bag, xpp_msgs::joint_desired, solution);
-//
-//    bag.close();
-//  }
+
 
   std::cout << "Exititng" << std::endl;
 

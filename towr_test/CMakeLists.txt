@@ -44,3 +44,10 @@ target_link_libraries(m545_joints_variables_test
   ${catkin_LIBRARIES}
 )
 
+
+add_executable(m545_kinematic_formulation_test 
+  test/m545_kinematic_formulation_test.cc
+)
+target_link_libraries(m545_kinematic_formulation_test
+  ${catkin_LIBRARIES}
+)
