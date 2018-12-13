@@ -56,7 +56,8 @@ class EEforwardKinematicsConstraint : public TimeDiscretizationConstraint
   int GetRow(int node) const;
 
   void ComputeEEpositionWorld(double t, Vector3d *pos_ee_W) const;
-  int mapToSplineHolderEEId(int absolute_ee_id) const;
+
+  int EEId2SplineHolderEEId(int absolute_ee_id) const;
 
 
 

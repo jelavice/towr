@@ -33,20 +33,17 @@ EEforwardKinematicsConstraint::EEforwardKinematicsConstraint(KinematicModelWithJ
 
   ee_has_wheel_ = model->EEhasWheel(ee);
 
+  int ee_id = EEId2SplineHolderEEId(ee);
   if (model->EEhasWheel(ee))
-    ee_with_wheels_motion_ = spline_holder_ptr->ee_with_wheels_motion_.at(
-        mapToSplineHolderEEId(ee));
+    ee_with_wheels_motion_ = spline_holder_ptr->ee_with_wheels_motion_.at(ee_id);
   else
-    ee_motion_ = spline_holder_ptr->ee_motion_.at(mapToSplineHolderEEId(ee));
+    ee_motion_ = spline_holder_ptr->ee_motion_.at(ee_id);
 
   //need to include the constraints for all the joint bounds as well
-  num_constraints_per_node_ = dim3;  // position (3 position constraints)
+  num_constraints_per_node_ = k3D;  // position (3 position constraints)
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
 
-//  std::cout << "Number of nodes: " << GetNumberOfNodes() << std::endl;
-//  std::cout << "Total duration: " << T << std::endl;
-//  std::cout << "dt: " << dt << std::endl;
 }
 
 //this one is called first it seems
@@ -75,8 +72,6 @@ void EEforwardKinematicsConstraint::UpdateConstraintAtInstance(double t, int k, 
   //endeffector position
   g.middleRows(rowStart, dim3) = pos_ee_joints_B - vector_base_to_ee_B;
 
-
-
 }
 void EEforwardKinematicsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
@@ -94,12 +89,9 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
 {
 
 
-  int row_start = GetRow(k);
-
-  //std::cout << "time: " << t << ", k: " << k << std::endl;
 
   if (var_set == id::EEJointNodes(ee_)) {
-
+    int row_start = GetRow(k);
     VectorXd joint_positions = joints_motion_->GetPoint(t).p();
     kinematic_model_->UpdateModel(joint_positions, ee_);
 
@@ -109,14 +101,15 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
   }
 
   if (var_set == id::base_lin_nodes) {
-  EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
+    int row_start = GetRow(k);
+    EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
     //work out the end-effector constraint
     jac.middleRows(row_start, dim3) = b_R_w * base_linear_->GetJacobianWrtNodes(t, kPos);
 
   }
 
   if (var_set == id::base_ang_nodes) {
-
+    int row_start = GetRow(k);
     //work out the end-effector constraint
     Vector3d base_W = base_linear_->GetPoint(t).p();
     Vector3d ee_pos_W;
@@ -128,29 +121,23 @@ void EEforwardKinematicsConstraint::UpdateJacobianAtInstance(double t, int k, st
 
   if (ee_has_wheel_) {
     if (var_set == id::EEMotionWithWheelsNodes(ee_)) {
+      int row_start = GetRow(k);
       EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
       jac.middleRows(row_start, dim3) = -1 * b_R_w
           * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
 
-//      jac.middleRows(row_start, dim3) = -1
-//                * ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos);
-
-      //std::cout << "Jacobian at row: " << row_start << " \n " << ee_with_wheels_motion_->GetJacobianWrtNodes(t, kPos) << std::endl;
-
     }
   } else {
 
     if (var_set == id::EEMotionNodes(ee_)) {
+      int row_start = GetRow(k);
       EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
       jac.middleRows(row_start, dim3) = -1 * b_R_w * ee_motion_->GetJacobianWrtNodes(t, kPos);
-//      jac.middleRows(row_start, dim3) = -1  * ee_motion_->GetJacobianWrtNodes(t, kPos);
 
     }
   }
-
-
 
 }
 
@@ -169,14 +156,14 @@ void EEforwardKinematicsConstraint::ComputeEEpositionWorld(double t, Vector3d *p
     *pos_ee_W = ee_motion_->GetPoint(t).p();
 }
 
-int EEforwardKinematicsConstraint::mapToSplineHolderEEId(int absolute_ee_id) const
+int EEforwardKinematicsConstraint::EEId2SplineHolderEEId(int ee_id) const
 {
 
   //todo establish a convention, document it and remove the magic number
   if (ee_has_wheel_)
-    return absolute_ee_id;
+    return ee_id;
   else
-    return absolute_ee_id - 4;
+    return ee_id - 4;
   // 4 = num of feets with wheels, they are enumerated before the boom
 
 }
