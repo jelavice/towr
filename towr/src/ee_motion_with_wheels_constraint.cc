@@ -33,7 +33,7 @@ EEMotionWithWheelsConstraint::EEMotionWithWheelsConstraint(KinematicModelWithJoi
 
   kinematic_model_ = model;
 
-  num_constraints_per_node_ = 3;  // 3 constraints for all the velocity components, 1 constraint for the no lateral slip
+  num_constraints_per_node_ = k3D + 3;  // 3 constraints for all the velocity components, 1 constraint for the no lateral slip
 
   SetRows(GetNumberOfNodes() * num_constraints_per_node_);
 }
@@ -49,7 +49,8 @@ void EEMotionWithWheelsConstraint::UpdateConstraintAtInstance(double t, int k, V
   Eigen::VectorXd joint_angles = joints_motion_->GetPoint(t).p();
   kinematic_model_->UpdateModel(joint_angles, ee_);
 
-  Eigen::Vector2d wheel_axis_base = kinematic_model_->GetWheelAxisBase(ee_).segment<2>(0);
+
+  Eigen::Vector3d wheel_axis_base = kinematic_model_->GetRotationBaseToWheel(ee_) * Eigen::Vector3d(0.0, 1.0, 0.0);
 
   EulerConverter::MatrixSXd b_R_w = base_angular_.GetRotationMatrixBaseToWorld(t).transpose();
 
@@ -57,7 +58,7 @@ void EEMotionWithWheelsConstraint::UpdateConstraintAtInstance(double t, int k, V
   Eigen::Vector3d ee_velocity_base = Eigen::Matrix3d(b_R_w) * ee_with_wheels_motion_->GetPoint(t).v();
 
   // take the dot product
-  //g(row_start) = wheel_axis_base.dot(ee_velocity_base.segment<2>(0));
+  g.middleRows(row_start, k3D) = wheel_axis_base;
 }
 void EEMotionWithWheelsConstraint::UpdateBoundsAtInstance(double t, int k, VecBound& bounds) const
 {
@@ -71,14 +72,15 @@ void EEMotionWithWheelsConstraint::UpdateBoundsAtInstance(double t, int k, VecBo
   }
 
   // the driving direction constraint
-  //bounds.at(row_start) = ifopt::BoundZero;
+  for (int dim = 0; dim < k3D; ++dim)
+    bounds.at(row_start++) = ifopt::BoundZero;
 
 }
 void EEMotionWithWheelsConstraint::UpdateJacobianAtInstance(double t, int k, std::string var_set,
                                                             Jacobian& jac) const
 {
 
-  int row_start = GetRow(k);
+
   //variable set for the base angles
   //update jacobian
 
@@ -93,20 +95,24 @@ void EEMotionWithWheelsConstraint::UpdateJacobianAtInstance(double t, int k, std
 //
 //  //variable set joints for this specific ee
 //  //update jacobian
-//  if (var_set == id::EEJointNodes(ee_)) {
-//    Eigen::VectorXd joint_angles = joints_motion_->GetPoint(t).p();
-//    kinematic_model_->UpdateModel(joint_angles, ee_);
-//    EulerConverter::JacobianRow ee_motion_vel = ee_with_wheels_motion_->GetPoint(t).v().sparseView();
-//    EulerConverter::MatrixSXd w_R_b = base_angular_.GetRotationMatrixBaseToWorld(t);
+  if (var_set == id::EEJointNodes(ee_)) {
+    int row_start = GetRow(k) + k3D;
+    Eigen::VectorXd joint_angles = joints_motion_->GetPoint(t).p();
+    kinematic_model_->UpdateModel(joint_angles, ee_);
+    EulerConverter::JacobianRow ee_motion_vel = ee_with_wheels_motion_->GetPoint(t).v().sparseView();
+    EulerConverter::MatrixSXd w_R_b = base_angular_.GetRotationMatrixBaseToWorld(t);
 //    jac.middleRows(row_start, 1) = ee_motion_vel * w_R_b
 //        * kinematic_model_->GetWheelAxisJacobianBase(ee_)
 //        * joints_motion_->GetJacobianWrtNodes(t, kPos);
-//  }
+
+    jac.middleRows(row_start, k3D) =  kinematic_model_->GetDerivOfRotVecMult(Eigen::Vector3d(0.0, 1.0, 0.0), ee_, false) * joints_motion_->GetJacobianWrtNodes(t, kPos);
+  }
 
   //variable set for ee motin with wheels
   //do the same again
 
   if (var_set == id::EEMotionWithWheelsNodes(ee_)) {
+    int row_start = GetRow(k);
     jac.middleRows(row_start, k3D) = ee_with_wheels_motion_->GetJacobianWrtNodes(t,kVel);
 
 //    Eigen::VectorXd joint_angles = joints_motion_->GetPoint(t).p();

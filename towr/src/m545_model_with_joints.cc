@@ -637,6 +637,20 @@ SparseMatrix M545KinematicModelWithJoints::GetDerivOfRotVecMult(const Eigen::Vec
 
   SparseMatrix retVal = temp.sparseView() * GetOrientationJacobiansWRTjointsBase(ee_id);
 
+  //todo ugly hack
+  /*ipopt needs to prealoccate number of non zeros in jacobians; since this jacobian is inserted in the
+   * ipopt, the total num zeros depends on the numberod non-zeros in this jacobian. that however changes depending on the
+   * joint configuration. Then it might segfault during the optimization as the joint angle change. Hence the sparse matrix,
+   * becomes the dense matrix with the smallest elemtn initialized to the "nonZero" value.
+  */
+  const double nonZero = 1e-10;
+  Eigen::Matrix<double, Eigen::Dynamic,Eigen::Dynamic, Eigen::RowMajor > constant(retVal.rows(), retVal.cols());
+  constant.setOnes();
+  constant *= nonZero;
+
+  retVal +=  constant.sparseView();
+
+
   return retVal;
 }
 
