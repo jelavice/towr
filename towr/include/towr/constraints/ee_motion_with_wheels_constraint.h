@@ -31,6 +31,12 @@ class EEMotionWithWheelsConstraint : public TimeDiscretizationConstraint
 
  private:
 
+  enum {
+    X,
+    Y,
+    Z
+  };
+
   //todo remove this hardcoded constraint
   const double vel_component_max_ = 1.0; /* m/s */
 
@@ -50,6 +56,8 @@ class EEMotionWithWheelsConstraint : public TimeDiscretizationConstraint
   void UpdateJacobianAtInstance(double t, int k, std::string var_set, Jacobian&) const final;
 
   int GetRow(int node) const;
+
+  Jacobian ExtractRow(const Jacobian &jac, int row) const;
 
 
 
