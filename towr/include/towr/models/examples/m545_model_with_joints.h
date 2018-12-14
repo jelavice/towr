@@ -76,6 +76,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   M545KinematicModelWithJoints() = delete;
   M545KinematicModelWithJoints(const std::string &urdfDescription, double dt);
 
+  //todo remove all overrides
   int GetNumDof(int ee_id) const override final;
   int GetNumDofTotal() const override final;
   bool EEhasWheel(int ee_id) const override final;
@@ -89,6 +90,9 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   Vector3d GetBasePositionFromFeetPostions() override final;
   SparseMatrix GetTranslationalJacobiansWRTjointsBase(int ee_id) override final;
   SparseMatrix GetOrientationJacobiansWRTjointsBase(int ee_id) override final;
+
+  Eigen::Matrix3d GetRotationBaseToWheel(int ee_id) override final;
+  Eigen::Matrix3d GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) final;
 
   Eigen::Vector3d GetWheelAxisBase(int ee_id) override final;
   SparseMatrix GetWheelAxisJacobianBase(int ee_id) override final;

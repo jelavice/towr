@@ -591,7 +591,7 @@ SparseMatrix M545KinematicModelWithJoints::GetWheelAxisJacobianBase(int ee_id)
 {
 
   if (ee_id > GetNumWheels())
-    throw std::runtime_error("Bomm has no wheels. can't calculate the wheel axis jacobian");
+    throw std::runtime_error("Boom has no wheels. can't calculate the wheel axis jacobian");
 
   CalculateRotationalJacobiansWRTjointsBase(ee_id);
 
@@ -601,7 +601,41 @@ SparseMatrix M545KinematicModelWithJoints::GetWheelAxisJacobianBase(int ee_id)
   return ee_wheel_axis_jac_base_.at(ee_id);
 
 }
-;
+
+Eigen::Matrix3d M545KinematicModelWithJoints::GetRotationBaseToWheel(int ee_id) {
+
+  Eigen::Matrix3d rot;
+
+  rot = GetOrientationBase(ee_id);
+
+  return rot;
+
+}
+
+Eigen::Matrix3d M545KinematicModelWithJoints::GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) {
+
+
+  //rotation of endeffector to base in the base frame!
+  Eigen::Matrix3d derivative;
+
+  //ZYX convention from kindr
+  Eigen::Vector3d ypr= rotMat2ypr(GetOrientationBase(ee_id));
+
+  double x = ypr.x();
+  double y = ypr.y();
+  double z = ypr.z();
+  double vx = vector.x();
+  double vy = vector.y();
+  double vz = vector.z();
+
+  derivative.row(0) <<   vy*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) + vz*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)), cos(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vy*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)) - vx*cos(y)*sin(z);
+  derivative.row(1) << - vy*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vz*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)), sin(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) - vy*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)) + vx*cos(y)*cos(z);
+  derivative.row(2) <<                                                          cos(y)*(vy*cos(x) - vz*sin(x)),        - vx*cos(y) - vz*cos(x)*sin(y) - vy*sin(x)*sin(y),                                                                                                      0.0;
+
+
+  return derivative;
+}
+
 
 }/*namespace*/
 
