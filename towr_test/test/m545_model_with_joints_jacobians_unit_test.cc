@@ -127,6 +127,19 @@ void runTest(const ros::NodeHandle &nh, const std::string &which_test, int numTe
 
       }
 
+      if (which_test == "rotation_matrix_test") {
+
+              Eigen::Vector3d random_vector;
+              random_vector.Random();
+
+              func_to_evaluate = [=](int ee_id) {
+                return kinematic_model->GetRotationBaseToWheel(ee_id) * random_vector;
+              };
+
+              ee_jac_base.at(i) = kinematic_model->GetDerivOfRotVecMult(random_vector, i);
+
+            }
+
       ee_jac_base_num.at(i) = getJacobianNumerically(kinematic_model.get(), i,
                                                      joint_angles_vector.at(i), func_to_evaluate);
 
@@ -166,6 +179,7 @@ int main(int argc, char** argv)
   srand((unsigned int) time(nullptr));
   ros::NodeHandle nh;
 
+  runTest(nh, "rotation_matrix_test", 10000);
   runTest(nh, "wheel_axis_test", 10000);
   runTest(nh, "trans_test", 10000);
   runTest(nh, "rot_test", 10000);

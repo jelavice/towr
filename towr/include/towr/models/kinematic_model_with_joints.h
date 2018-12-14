@@ -71,7 +71,7 @@ class KinematicModelWithJoints : public KinematicModel
     throw std::runtime_error("Not implemented the get rotation matrix base to wheel method");
   }
 
-  virtual Eigen::Matrix3d GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id){
+  virtual SparseMatrix GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id){
     throw std::runtime_error("NOt implemented Get derivative of rotation matrix multiplying a vector");
   }
 

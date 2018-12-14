@@ -612,11 +612,11 @@ Eigen::Matrix3d M545KinematicModelWithJoints::GetRotationBaseToWheel(int ee_id) 
 
 }
 
-Eigen::Matrix3d M545KinematicModelWithJoints::GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) {
+SparseMatrix M545KinematicModelWithJoints::GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) {
 
 
   //rotation of endeffector to base in the base frame!
-  Eigen::Matrix3d derivative;
+  Eigen::Matrix3d temp;
 
   //ZYX convention from kindr
   Eigen::Vector3d ypr= rotMat2ypr(GetOrientationBase(ee_id));
@@ -628,12 +628,13 @@ Eigen::Matrix3d M545KinematicModelWithJoints::GetDerivOfRotVecMult(const Eigen::
   double vy = vector.y();
   double vz = vector.z();
 
-  derivative.row(0) <<   vy*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) + vz*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)), cos(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vy*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)) - vx*cos(y)*sin(z);
-  derivative.row(1) << - vy*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vz*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)), sin(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) - vy*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)) + vx*cos(y)*cos(z);
-  derivative.row(2) <<                                                          cos(y)*(vy*cos(x) - vz*sin(x)),        - vx*cos(y) - vz*cos(x)*sin(y) - vy*sin(x)*sin(y),                                                                                                      0.0;
+  temp.row(0) <<   vy*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) + vz*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)), cos(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vy*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)) - vx*cos(y)*sin(z);
+  temp.row(1) << - vy*(cos(z)*sin(x) - cos(x)*sin(y)*sin(z)) - vz*(cos(x)*cos(z) + sin(x)*sin(y)*sin(z)), sin(z)*(vz*cos(x)*cos(y) - vx*sin(y) + vy*cos(y)*sin(x)), vz*(sin(x)*sin(z) + cos(x)*cos(z)*sin(y)) - vy*(cos(x)*sin(z) - cos(z)*sin(x)*sin(y)) + vx*cos(y)*cos(z);
+  temp.row(2) <<                                                          cos(y)*(vy*cos(x) - vz*sin(x)),        - vx*cos(y) - vz*cos(x)*sin(y) - vy*sin(x)*sin(y),                                                                                                      0.0;
 
+  SparseMatrix retVal = temp.sparseView() * GetOrientationJacobiansWRTjointsBase(ee_id);
 
-  return derivative;
+  return retVal;
 }
 
 

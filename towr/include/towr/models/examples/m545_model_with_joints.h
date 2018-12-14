@@ -92,7 +92,7 @@ class M545KinematicModelWithJoints : public KinematicModelWithJoints
   SparseMatrix GetOrientationJacobiansWRTjointsBase(int ee_id) override final;
 
   Eigen::Matrix3d GetRotationBaseToWheel(int ee_id) override final;
-  Eigen::Matrix3d GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) final;
+  SparseMatrix GetDerivOfRotVecMult(const Eigen::Vector3d &vector, int ee_id) final;
 
   Eigen::Vector3d GetWheelAxisBase(int ee_id) override final;
   SparseMatrix GetWheelAxisJacobianBase(int ee_id) override final;

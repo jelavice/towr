@@ -12,7 +12,7 @@ syms z y x %euler angles yaw, pitch, roll
 
 
 %% derivative of rotation matrix defined by euler angles
-% from kindr cheet sheet, using convention xyz
+% from kindr cheet sheet, using convention zyx
 % see https://docs.leggedrobotics.com/kindr/cheatsheet_latest.pdf
 
 R = [cos(y)*cos(z), cos(z)*sin(x)*sin(y) - cos(x)*sin(z), sin(x)*sin(z) + cos(x)*cos(z)*sin(y);
